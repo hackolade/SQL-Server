@@ -1,0 +1,41 @@
+{
+    "name": "MSSQLServer",
+    "version": "0.1.0",
+    "versionDate": "2020-04-07",
+    "author": "hackolade",
+    "engines": {
+        "hackolade": "4.0.0",
+        "hackoladePlugin": "1.2.0"
+    },
+    "contributes": {
+        "target": {
+            "applicationTarget": "MSSQLServer",
+            "title": "MS SQL Server",
+            "versions": [
+                "2016",
+                "2017",
+                "2019"
+            ]
+        },
+        "features": {
+            "nestedCollections": false,
+            "disablePatternField": false,
+            "disableMultipleTypes": true,
+            "enableForwardEngineering": true,
+            "disableReverseEngineering": false,
+            "disableChoices": true,
+            "enableJsonType": true,
+            "useJsonTypesWithComplexTypes": true,
+            "reverseSchemaIntoOneColumn": true,
+            "disableDenormalization": true,
+            "views": {
+                "enabled": true,
+                "viewLevel": "model",
+                "disablePipelines": true
+            }
+        }
+    },
+    "description": "Hackolade plugin for Microsoft SQL Server and Azure SQL Database",
+    "icon_url": "logo.jpg",
+    "disabled": false
+}
