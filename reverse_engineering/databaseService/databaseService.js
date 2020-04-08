@@ -205,6 +205,13 @@ const getViewColumnRelations = async (connectionClient, dbName, viewName, schema
 	`;
 };
 
+const getViewStatement = async (connectionClient, dbName, viewName, schemaName) => {
+	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+	const objectId = `${schemaName}.${viewName}`;
+	return currentDbConnectionClient
+		.query`SELECT * FROM sys.sql_modules WHERE object_id=object_id(${objectId})`;
+};
+
 const getTableKeyConstraints = async (connectionClient, dbName, tableName, schemaName) => {
 	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
 	const objectId = `${schemaName}.${tableName}`;
@@ -299,4 +306,5 @@ module.exports = {
 	getDatabaseXmlSchemaCollection,
 	getTableDefaultConstraintNames,
 	getDatabaseUserDefinedTypes,
+	getViewStatement,
 }

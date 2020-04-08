@@ -12,11 +12,37 @@
 		"lowerTab": "Details",
 		"structure": [
 			{
+				"propertyName": "Partitioned",
+				"propertyKeyword": "partitioned",
+				"shouldValidate": false,
+				"propertyTooltip": "",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Partitioned tables",
+				"propertyKeyword": "partitionedTables",
+				"shouldValidate": false,
+				"propertyTooltip": "",
+				"propertyType": "group",
+				"dependency": {
+					"key": "partitioned",
+					"value": true
+				},
+				"structure": [{
+					"propertyName": "Table",
+					"propertyKeyword": "table",
+					"shouldValidate": false,
+					"propertyTooltip": "",
+					"fieldType": "selecthashed",
+					"template": "entities",
+					"options": []	
+				}]
+			},
+			{
 				"propertyName": "Comments",
 				"propertyKeyword": "description",
 				"shouldValidate": false,
 				"propertyTooltip": "comments",
-				"addTimestampButton": false,
 				"propertyType": "details",
 				"template": "textarea"
 			},
@@ -25,12 +51,15 @@
 				"propertyKeyword": "comments",
 				"shouldValidate": false,
 				"propertyTooltip": "remarks",
-				"addTimestampButton": true,
 				"propertyType": "details",
 				"template": "textarea"
 			},
 			{
 				"propertyKeyword": "pipeline",
+				"hidden": true
+			},
+			{
+				"propertyKeyword": "viewOn",
 				"hidden": true
 			}
 		]
