@@ -72,16 +72,16 @@ const getStandardDocumentByJsonSchema = (jsonSchema) => {
 
 const isViewPartitioned = (viewStatement) => {
 	viewStatement = String(viewStatement).trim();
-	const viewContentRegexp = /CREATE[\s\S]+?VIEW[\s\S]+AS([\s\S]+)/i;
+	const viewContentRegexp = /CREATE[\s\S]+?VIEW[\s\S]+?AS([\s\S]+)/i;
 
 	if (!viewContentRegexp.test(viewStatement)) {
 		return false;
 	}
 
 	const content = viewStatement.match(viewContentRegexp)[1] || '';
-	const hasUnionAll = content.toLowerCase().split(/union[\s\S]+?all/i).length;
+	const hasUnionAll = content.toLowerCase().split(/union[\s\S]+?all/i).length > 1;
 
-	return Boolean(hasUnionAll);
+	return hasUnionAll;
 };
 
 const getPartitionedJsonSchema = (viewInfo, viewColumnRelations) => {
