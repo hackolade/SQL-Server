@@ -14,6 +14,7 @@ const {
 	getTableDefaultConstraintNames,
 	getDatabaseUserDefinedTypes,
 	getViewStatement,
+	getViewsIndexes,
 } = require('../databaseService/databaseService');
 const {
 	transformDatabaseTableInfoToJSON,
@@ -178,14 +179,16 @@ const cleanDocuments = (documents) => {
 const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo, reverseEngineeringOptions) => {
 	const dbName = dbConnectionClient.config.database;
 	const [
-		databaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints, xmlSchemaCollections, databaseUDT
+		databaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints, xmlSchemaCollections, databaseUDT, viewsIndexes
 	] = await Promise.all([
-		await getDatabaseIndexes(dbConnectionClient, dbName),
-		await getDatabaseMemoryOptimizedTables(dbConnectionClient, dbName),
-		await getDatabaseCheckConstraints(dbConnectionClient, dbName),
-		await getDatabaseXmlSchemaCollection(dbConnectionClient, dbName),
-		await getDatabaseUserDefinedTypes(dbConnectionClient, dbName),
+		getDatabaseIndexes(dbConnectionClient, dbName),
+		getDatabaseMemoryOptimizedTables(dbConnectionClient, dbName),
+		getDatabaseCheckConstraints(dbConnectionClient, dbName),
+		getDatabaseXmlSchemaCollection(dbConnectionClient, dbName),
+		getDatabaseUserDefinedTypes(dbConnectionClient, dbName),
+		getViewsIndexes(dbConnectionClient, dbName)
 	]);
+
 	return await Object.entries(tablesInfo).reduce(async (jsonSchemas, [schemaName, tableNames]) => {
 		logger.progress({ message: 'Fetching database information', containerName: dbName, entityName: '' });
 		const tablesInfo = await Promise.all(
@@ -221,7 +224,7 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 					? reorderedTableRows
 					: reorderTableRows([getStandardDocumentByJsonSchema(jsonSchema)], reverseEngineeringOptions.isFieldOrderAlphabetic);
 
-				return {
+				let result = {
 					collectionName: tableName,
 					dbName: schemaName,
 					entityLevel: {
@@ -241,14 +244,25 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 						definitions: getUserDefinedTypes(tableInfo, databaseUDT),
 					},
 					emptyBucket: false,
-					...(isView
-						? await prepareViewJSON(dbConnectionClient, dbName, tableName, schemaName)(jsonSchema)
-						: {
-							validation: { jsonSchema },
-							views: [],
-						}
-					)
+					validation: { jsonSchema },
+					views: [],
 				};
+
+				if (isView) {
+					const viewData = await prepareViewJSON(dbConnectionClient, dbName, tableName, schemaName)(jsonSchema)
+					const indexes = viewsIndexes.filter(index => index.TableName === tableName && index.schemaName === schemaName);
+
+					result = {
+						...result,
+						...viewData,
+						data: {
+							...(viewData.data || {}),
+							Indxs: reverseTableIndexes(indexes),
+						}
+					};
+				}
+
+				return result;
 			})
 		);
 		return [...await jsonSchemas, ...tablesInfo.filter(Boolean)];

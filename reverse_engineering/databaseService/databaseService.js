@@ -103,6 +103,32 @@ const getDatabaseIndexes = async (connectionClient, dbName) => {
 		`;
 };
 
+const getViewsIndexes = async (connectionClient, dbName) => {
+	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+	return await currentDbConnectionClient.query`
+		SELECT
+			TableName = t.name,
+			IndexName = ind.name,
+			ic.is_descending_key,
+			ic.is_included_column,
+			COL_NAME(t.object_id, ic.column_id) as columnName,
+			OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
+			p.data_compression_desc as dataCompression,
+			ind.*
+		FROM sys.indexes ind
+		LEFT JOIN sys.views t
+			ON ind.object_id = t.object_id
+		INNER JOIN sys.index_columns ic
+			ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
+		INNER JOIN sys.partitions p
+			ON p.object_id = t.object_id AND ind.index_id = p.index_id
+		WHERE
+			ind.is_primary_key = 0
+			AND ind.is_unique_constraint = 0
+			AND t.is_ms_shipped = 0
+		`;
+};
+
 const getTableColumnsDescription = async (connectionClient, dbName, tableName, schemaName) => {
 	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
 	return currentDbConnectionClient.query`
@@ -307,4 +333,5 @@ module.exports = {
 	getTableDefaultConstraintNames,
 	getDatabaseUserDefinedTypes,
 	getViewStatement,
+	getViewsIndexes,
 }
