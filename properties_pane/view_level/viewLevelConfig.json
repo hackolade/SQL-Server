@@ -63,5 +63,149 @@
 				"hidden": true
 			}
 		]
+	},
+	{
+		"lowerTab": "Indexes",
+		"structure": [{
+			"propertyName": "Index",
+			"propertyType": "group",
+			"propertyKeyword": "Indxs",
+			"propertyTooltip": "",
+			"structure": [
+				{
+					"propertyName": "Name",
+					"propertyKeyword": "indxName",
+					"propertyTooltip": "",
+					"propertyType": "text"
+				},
+				{
+					"propertyName": "Type",
+					"propertyKeyword": "indxType",
+					"propertyType": "select",
+					"options": [
+						"Index",
+						"Columnstore"
+					]
+				},
+				{
+					"propertyName": "Unique",
+					"propertyKeyword": "uniqueIndx",
+					"propertyType": "checkbox",
+					"dependency": {
+						"key": "indxType",
+						"value": "Index"
+					}
+				},
+				{
+					"propertyName": "Clustered",
+					"propertyKeyword": "clusteredIndx",
+					"propertyType": "checkbox"
+				},
+				{
+					"propertyName": "Keys",
+					"propertyKeyword": "indxKey",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"attributeList": [
+						"ascending",
+						"descending"
+					]
+				},
+				{
+					"propertyName": "Include non-key columns",
+					"propertyKeyword": "indxInclude",
+					"propertyType": "fieldList",
+					"template": "orderedList"
+				},
+				{
+					"propertyName": "Description",
+					"propertyKeyword": "indxDescription",
+					"propertyTooltip": "description",
+					"propertyType": "details",
+					"template": "textarea"
+				},
+				{
+					"propertyName": "Pad index",
+					"propertyKeyword": "PAD_INDEX",
+					"propertyType": "checkbox"
+				},
+				{
+					"propertyName": "Fill factor",
+					"propertyKeyword": "FILLFACTOR",
+					"propertyType": "numeric",
+					"valueType": "number",
+					"allowNegative": false,
+					"minValue": 0,
+					"maxValue": 100
+				},
+				{
+					"propertyName": "Ignore duplicate key",
+					"propertyKeyword": "IGNORE_DUP_KEY",
+					"propertyType": "checkbox"
+				},
+				{
+					"propertyName": "Included columns",
+					"propertyKeyword": "indxIncludedColumn",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"attributeList": [
+						"ascending",
+						"descending"
+					]
+				},
+				{
+					"propertyName": "Statistics no recompute",
+					"propertyKeyword": "STATISTICS_NORECOMPUTE",
+					"propertyType": "checkbox"
+				},
+				{
+					"propertyName": "Statistics incremental",
+					"propertyKeyword": "STATISTICS_INCREMENTAL",
+					"propertyType": "checkbox"
+				},
+				{
+					"propertyName": "Allow row locks",
+					"propertyKeyword": "ALLOW_ROW_LOCKS",
+					"propertyType": "checkbox"
+				},
+				{
+					"propertyName": "Allow page locks",
+					"propertyKeyword": "ALLOW_PAGE_LOCKS",
+					"propertyType": "checkbox"
+				},
+				{
+					"propertyName": "Optimize for sequential key",
+					"propertyKeyword": "OPTIMIZE_FOR_SEQUENTIAL_KEY",
+					"propertyType": "checkbox"
+				},
+				{
+					"propertyName": "Compression delay (minutes)",
+					"propertyKeyword": "COMPRESSION_DELAY",
+					"propertyType": "numeric",
+					"valueType": "number",
+					"allowNegative": false
+				},
+				{
+					"propertyName": "Data compression",
+					"propertyKeyword": "DATA_COMPRESSION",
+					"propertyType": "select",
+					"options": [
+						"NONE",
+						"ROW",
+						"PAGE",
+						"COLUMNSTORE",
+						"COLUMNSTORE_ARCHIVE"
+					]
+				},
+				{
+					"propertyName": "Comments",
+					"propertyKeyword": "indxComments",
+					"propertyTooltip": "comments",
+					"addTimestampButton": false,
+					"propertyType": "details",
+					"template": "textarea"
+				}
+			]
+		}]
 	}
 ]
