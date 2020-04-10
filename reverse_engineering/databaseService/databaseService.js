@@ -235,7 +235,10 @@ const getViewStatement = async (connectionClient, dbName, viewName, schemaName) 
 	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
 	const objectId = `${schemaName}.${viewName}`;
 	return currentDbConnectionClient
-		.query`SELECT * FROM sys.sql_modules WHERE object_id=object_id(${objectId})`;
+		.query`SELECT M.*, V.with_check_option
+			FROM sys.sql_modules M INNER JOIN sys.views V ON M.object_id=V.object_id
+			WHERE M.object_id=object_id(${objectId})
+		`;
 };
 
 const getTableKeyConstraints = async (connectionClient, dbName, tableName, schemaName) => {
