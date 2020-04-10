@@ -12,6 +12,25 @@
 		"lowerTab": "Details",
 		"structure": [
 			{
+				"propertyName": "View Attribute",
+				"propertyKeyword": "viewAttrbute",
+				"propertyType": "select",
+				"options": [
+					"",
+					"ENCRYPTION",
+					"SCHEMABINDING",
+					"VIEW_METADATA"
+				]
+			},
+			{
+				"propertyName": "Select Statement",
+				"propertyKeyword": "selectStatement",
+				"propertyType": "details",
+				"propertyTooltip": "select statement. To reference on partitioned table you shoud use ${tableName} template",
+				"template": "textarea",
+				"markdown": false
+			},
+			{
 				"propertyName": "Partitioned",
 				"propertyKeyword": "partitioned",
 				"shouldValidate": false,
@@ -37,6 +56,13 @@
 					"template": "entities",
 					"options": []	
 				}]
+			},
+			{
+				"propertyName": "With Check Option",
+				"propertyKeyword": "withCheckOption",
+				"shouldValidate": false,
+				"propertyTooltip": "",
+				"propertyType": "checkbox"
 			},
 			{
 				"propertyName": "Comments",

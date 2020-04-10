@@ -72,8 +72,8 @@ const getStandardDocumentByJsonSchema = (jsonSchema) => {
 };
 
 const isViewPartitioned = (viewStatement) => {
-	viewStatement = String(viewStatement).trim();
-	const viewContentRegexp = /CREATE[\s\S]+?VIEW[\s\S]+?AS([\s\S]+)/i;
+	viewStatement = cleanComments(String(viewStatement).trim());
+	const viewContentRegexp = /CREATE[\s\S]+?VIEW[\s\S]+?AS\s+(?:WITH[\s\S]+AS\s+\([\s\S]+\))?([\s\S]+)/i;
 
 	if (!viewContentRegexp.test(viewStatement)) {
 		return false;
@@ -121,6 +121,45 @@ const getPartitionedTables = (viewInfo) => {
 	}, []);
 };
 
+const cleanComments = (definition) => {
+	return definition.split('\n').filter(line => !/^--/.test(line.trim())).join('\n');
+};
+
+const getSelectStatementFromDefinition = (definition) => {
+	const regExp = /CREATE[\s]+VIEW[\s\S]+?(?:WITH[\s]+(?:ENCRYPTION,?|SCHEMABINDING,?|VIEW_METADATA,?)+[\s]+)?AS\s+((?:WITH|SELECT)[\s\S]+?)(WITH\s+CHECK\s+OPTION|$)/i;
+
+	if (!regExp.test(definition.trim())) {
+		return '';
+	}
+
+	return definition.trim().match(regExp)[1];
+};
+
+const getPartitionedSelectStatement = (definition, table, dbName) => {
+	const tableRef = new RegExp(`(\\[?${dbName}\\]?\\.)?(\\[?${table[0]}\\]?\\.)?\\[?${table[1]}\\]?`, 'i');
+	const statement = getSelectStatementFromDefinition(definition).split(/UNION\s+ALL/i).find(item => tableRef.test(item));
+
+	if (!statement) {
+		return '';
+	}
+
+	return statement.replace(tableRef, '${tableName}').trim();
+};
+
+const getViewProperties = (viewData) => {
+	if (!viewData) {
+		return {};
+	}
+
+	const isSchemaBound = viewData.is_schema_bound;
+	const withCheckOption = viewData.with_check_option;
+	
+	return {
+		viewAttrbute: isSchemaBound ? 'SCHEMABINDING' : '',
+		withCheckOption,
+	}; 
+};
+
 const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName) => async jsonSchema => {
 	const [viewInfo, viewColumnRelations, viewStatement] = await Promise.all([
 		await getViewTableInfo(dbConnectionClient, dbName, viewName, schemaName),
@@ -132,6 +171,7 @@ const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName) => as
 			viewInfo,
 			viewColumnRelations
 		);
+		const partitionedTables = getPartitionedTables(viewInfo);
 
 		return {
 			jsonSchema: JSON.stringify({
@@ -142,8 +182,10 @@ const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName) => as
 				}
 			}),
 			data: {
+				...getViewProperties(viewStatement[0]),
+				selectStatement: getPartitionedSelectStatement(cleanComments(String(viewStatement[0].definition)), (partitionedTables[0] || {}).table, dbName),
 				partitioned: true,
-				partitionedTables: getPartitionedTables(viewInfo),
+				partitionedTables,
 			},
 			name: viewName,
 			relatedTables: [{
@@ -155,6 +197,10 @@ const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName) => as
 		return {
 			jsonSchema: JSON.stringify(changeViewPropertiesToReferences(jsonSchema, viewInfo, viewColumnRelations)),
 			name: viewName,
+			data: {
+				...getViewProperties(viewStatement[0]),
+				selectStatement: getSelectStatementFromDefinition(cleanComments(String(viewStatement[0].definition)))
+			},
 			relatedTables: viewInfo.map((columnInfo => ({
 				tableName: columnInfo['ReferencedTableName'],
 				schemaName: columnInfo['ReferencedSchemaName'],
