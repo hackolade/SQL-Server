@@ -24,7 +24,6 @@ const reverseIndex = index => ({
 	FILLFACTOR: index.fill_factor,
 	DATA_COMPRESSION: handleDataCompression(index),
 	indxHash: index.type_desc === "NONCLUSTERED HASH",
-	memoryOptimizedClustering: isClusteredIndex(index) ? 'clustered' : 'nonclustered',
 	indxBucketCount: !isNaN(Number(index.total_bucket_count)) ? Number(index.total_bucket_count) : ''
 });
 

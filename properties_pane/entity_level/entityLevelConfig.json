@@ -385,14 +385,9 @@ making sure that you maintain a proper JSON format.
 					]
 				},
 				{
-					"propertyName": "Clustering",
-					"propertyKeyword": "memoryOptimizedClustering",
-					"propertyType": "select",
-					"options": [
-						"",
-						"nonclustered",
-						"clustered"
-					]
+					"propertyName": "Clustered",
+					"propertyKeyword": "clusteredIndx",
+					"propertyType": "checkbox"
 				},
 				{
 					"propertyName": "Unique",
@@ -401,14 +396,11 @@ making sure that you maintain a proper JSON format.
 					"dependency": {
 						"type": "or",
 						"values": [{
-							"key": "memoryOptimizedClustering",
+							"key": "clusteredIndx",
 							"exist": false
 						}, {
-							"key": "memoryOptimizedClustering",
-							"value": ""
-						}, {
-							"key": "memoryOptimizedClustering",
-							"value": "nonclustered"
+							"key": "clusteredIndx",
+							"value": false
 						}]
 					}
 				},
@@ -420,14 +412,11 @@ making sure that you maintain a proper JSON format.
 					"dependency": {
 						"type": "or",
 						"values": [{
-							"key": "memoryOptimizedClustering",
+							"key": "clusteredIndx",
 							"exist": false
 						}, {
-							"key": "memoryOptimizedClustering",
-							"value": ""
-						}, {
-							"key": "memoryOptimizedClustering",
-							"value": "nonclustered"
+							"key": "clusteredIndx",
+							"value": false
 						}]
 					}
 				},
@@ -448,14 +437,11 @@ making sure that you maintain a proper JSON format.
 							{
 								"type": "or",
 								"values": [{
-									"key": "memoryOptimizedClustering",
+									"key": "clusteredIndx",
 									"exist": false
 								}, {
-									"key": "memoryOptimizedClustering",
-									"value": ""
-								}, {
-									"key": "memoryOptimizedClustering",
-									"value": "nonclustered"
+									"key": "clusteredIndx",
+									"value": false
 								}]
 							}
 						]
@@ -468,8 +454,8 @@ making sure that you maintain a proper JSON format.
 					"valueType": "number",
 					"allowNegative": false,
 					"dependency": {
-						"key": "memoryOptimizedClustering",
-						"value": "clustered"
+						"key": "clusteredIndx",
+						"value": true
 					}
 				},
 				{
