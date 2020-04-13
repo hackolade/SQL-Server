@@ -222,6 +222,19 @@ const cleanDocuments = (documents) => {
 	return documents.map(cleanNull);
 }
 
+const getMemoryOptimizedOptions = (options) => {
+	if (!options) {
+		return {};
+	}
+
+	return {
+		memory_optimized: true,
+		durability: ['SCHEMA_ONLY', 'SCHEMA_AND_DATA'].includes(String(options.durability_desc).toUpperCase()) ? String(options.durability_desc).toUpperCase() : '',
+		systemVersioning: options.temporal_type_desc === 'SYSTEM_VERSIONED_TEMPORAL_TABLE',
+		historyTable: options.history_table ? `${options.history_schema}.${options.history_table}` : '',
+	};
+};
+
 const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo, reverseEngineeringOptions) => {
 	const dbName = dbConnectionClient.config.database;
 	const [
@@ -275,8 +288,8 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 					dbName: schemaName,
 					entityLevel: {
 						Indxs: reverseTableIndexes(tableIndexes),
-						memory_optimized: databaseMemoryOptimizedTables.includes(tableName),
 						chkConstr: reverseTableCheckConstraints(tableCheckConstraints),
+						...getMemoryOptimizedOptions(databaseMemoryOptimizedTables.find(item => item.name === tableName)),
 						...defineFieldsCompositeKeyConstraints(fieldsKeyConstraints),
 					},
 					standardDoc: standardDoc,

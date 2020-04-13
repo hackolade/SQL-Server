@@ -147,6 +147,49 @@ making sure that you maintain a proper JSON format.
 				}
 			},
 			{
+				"propertyName": "System versioning",
+				"propertyKeyword": "systemVersioning",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "memory_optimized",
+					"value": true
+				}
+			},
+			{
+				"propertyName": "History table",
+				"propertyKeyword": "historyTable",
+				"shouldValidate": false,
+				"propertyTooltip": "",
+				"propertyType": "text",
+				"dependency": {
+					"type": "and",
+					"values": [{
+						"key": "memory_optimized",
+						"value": true
+					}, {
+						"key": "systemVersioning",
+						"value": true
+					}]
+				}
+			},
+			{
+				"propertyName": "Data consistency check",
+				"propertyKeyword": "dataConsistencyCheck",
+				"shouldValidate": false,
+				"propertyTooltip": "",
+				"propertyType": "checkbox",
+				"dependency": {
+					"type": "and",
+					"values": [{
+						"key": "memory_optimized",
+						"value": true
+					}, {
+						"key": "systemVersioning",
+						"value": true
+					}]
+				}
+			},
+			{
 				"propertyName": "Remarks",
 				"propertyKeyword": "comments",
 				"propertyTooltip": "remarks",

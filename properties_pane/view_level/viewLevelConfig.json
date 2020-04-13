@@ -52,7 +52,7 @@
 					"propertyKeyword": "table",
 					"shouldValidate": false,
 					"propertyTooltip": "",
-					"fieldType": "selecthashed",
+					"propertyType": "selecthashed",
 					"template": "entities",
 					"options": []	
 				}]

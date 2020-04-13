@@ -148,11 +148,17 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 
 const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName) => {
 	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+
 	return currentDbConnectionClient.query`
-		SELECT o.name
-		FROM sys.memory_optimized_tables_internal_attributes AS moa
-		LEFT JOIN sys.objects o ON o.object_id=moa.object_id
-		WHERE o.type='U'
+		SELECT
+			T.name,
+			T.durability,
+			T.durability_desc,
+			OBJECT_NAME(T.history_table_id) AS history_table,
+			SCHEMA_NAME(O.schema_id) AS history_schema,
+			T.temporal_type_desc
+		FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
+		WHERE T.is_memory_optimized=1
 	`;
 };
 
