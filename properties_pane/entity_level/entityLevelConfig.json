@@ -537,6 +537,14 @@ making sure that you maintain a proper JSON format.
 					"template": "orderedList"
 				},
 				{
+					"propertyName": "Filter Expression",
+					"propertyKeyword": "indxFilterExpression",
+					"propertyTooltip": "description",
+					"propertyType": "details",
+					"template": "textarea",
+					"markdown": false
+				},
+				{
 					"propertyName": "Description",
 					"propertyKeyword": "indxDescription",
 					"propertyTooltip": "description",
