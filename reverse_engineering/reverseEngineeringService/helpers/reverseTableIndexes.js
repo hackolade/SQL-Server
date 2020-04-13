@@ -23,6 +23,9 @@ const reverseIndex = index => ({
 	PAD_INDEX: Boolean(index.is_padded),
 	FILLFACTOR: index.fill_factor,
 	DATA_COMPRESSION: handleDataCompression(index),
+	indxHash: index.type_desc === "NONCLUSTERED HASH",
+	memoryOptimizedClustering: isClusteredIndex(index) ? 'clustered' : 'nonclustered',
+	indxBucketCount: !isNaN(Number(index.total_bucket_count)) ? Number(index.total_bucket_count) : ''
 });
 
 const reverseIndexKey = index => {

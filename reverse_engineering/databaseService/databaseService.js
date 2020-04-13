@@ -88,6 +88,7 @@ const getDatabaseIndexes = async (connectionClient, dbName) => {
 			COL_NAME(t.object_id, ic.column_id) as columnName,
 			OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
 			p.data_compression_desc as dataCompression,
+			hs.total_bucket_count,
 			ind.*
 		FROM sys.indexes ind
 		LEFT JOIN sys.tables t
@@ -96,6 +97,8 @@ const getDatabaseIndexes = async (connectionClient, dbName) => {
 			ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
 		INNER JOIN sys.partitions p
 			ON p.object_id = t.object_id AND ind.index_id = p.index_id
+		LEFT JOIN sys.dm_db_xtp_hash_index_stats hs
+			ON ind.index_id = hs.index_id
 		WHERE
 			ind.is_primary_key = 0
 			AND ind.is_unique_constraint = 0

@@ -363,6 +363,147 @@ making sure that you maintain a proper JSON format.
 			"propertyType": "group",
 			"propertyKeyword": "Indxs",
 			"propertyTooltip": "",
+			"dependency": {
+				"key": "memory_optimized",
+				"value": true
+			},
+			"structure": [
+				{
+					"propertyName": "Name",
+					"propertyKeyword": "indxName",
+					"propertyTooltip": "",
+					"propertyType": "text"
+				},
+				{
+					"propertyName": "Keys",
+					"propertyKeyword": "indxKey",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"attributeList": [
+						"ascending",
+						"descending"
+					]
+				},
+				{
+					"propertyName": "Clustering",
+					"propertyKeyword": "memoryOptimizedClustering",
+					"propertyType": "select",
+					"options": [
+						"",
+						"nonclustered",
+						"clustered"
+					]
+				},
+				{
+					"propertyName": "Unique",
+					"propertyKeyword": "uniqueIndx",
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "memoryOptimizedClustering",
+							"exist": false
+						}, {
+							"key": "memoryOptimizedClustering",
+							"value": ""
+						}, {
+							"key": "memoryOptimizedClustering",
+							"value": "nonclustered"
+						}]
+					}
+				},
+				{
+					"propertyName": "Hash",
+					"propertyKeyword": "indxHash",
+					"propertyTooltip": "",
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "memoryOptimizedClustering",
+							"exist": false
+						}, {
+							"key": "memoryOptimizedClustering",
+							"value": ""
+						}, {
+							"key": "memoryOptimizedClustering",
+							"value": "nonclustered"
+						}]
+					}
+				},
+				{
+					"propertyName": "Bucket count",
+					"propertyKeyword": "indxBucketCount",
+					"propertyTooltip": "",
+					"propertyType": "numeric",
+					"valueType": "number",
+					"allowNegative": false,
+					"dependency": {
+						"type": "and",
+						"values": [
+							{
+								"key": "indxHash",
+								"value": true
+							},
+							{
+								"type": "or",
+								"values": [{
+									"key": "memoryOptimizedClustering",
+									"exist": false
+								}, {
+									"key": "memoryOptimizedClustering",
+									"value": ""
+								}, {
+									"key": "memoryOptimizedClustering",
+									"value": "nonclustered"
+								}]
+							}
+						]
+					}
+				},
+				{
+					"propertyName": "Compression delay (minutes)",
+					"propertyKeyword": "COMPRESSION_DELAY",
+					"propertyType": "numeric",
+					"valueType": "number",
+					"allowNegative": false,
+					"dependency": {
+						"key": "memoryOptimizedClustering",
+						"value": "clustered"
+					}
+				},
+				{
+					"propertyName": "Filegroup name",
+					"propertyKeyword": "indxFileGroupName",
+					"propertyTooltip": "",
+					"propertyType": "text",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxHash",
+							"value": false
+						}, {
+							"key": "indxHash",
+							"exist": false
+						}]
+					}
+				}
+			]
+		}, {
+			"propertyName": "Index",
+			"propertyType": "group",
+			"propertyKeyword": "Indxs",
+			"propertyTooltip": "",
+			"dependency": {
+				"type": "or",
+				"values": [{
+					"key": "memory_optimized",
+					"value": false
+				}, {
+					"key": "memory_optimized",
+					"exist": false
+				}]
+			},
 			"structure": [
 				{
 					"propertyName": "Name",
