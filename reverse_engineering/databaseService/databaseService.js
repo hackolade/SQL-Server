@@ -106,6 +106,42 @@ const getDatabaseIndexes = async (connectionClient, dbName) => {
 		`;
 };
 
+const getFullTextIndexes = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+	
+	try {
+		const result = await currentDbConnectionClient.query`
+			SELECT
+				OBJECT_SCHEMA_NAME(F.object_id) as schemaName,
+				OBJECT_NAME(F.object_id) as TableName,
+				COL_NAME(FC.object_id, FC.column_id) as columnName,
+				COL_NAME(FC.object_id, FC.type_column_id) as columnTypeName,
+				FC.statistical_semantics AS statistical_semantics,
+				FC.language_id AS language,
+				I.name AS indexKeyName,
+				F.change_tracking_state_desc AS changeTracking,
+				CASE WHEN F.stoplist_id IS NULL THEN 'OFF' WHEN F.stoplist_id = 0 THEN 'SYSTEM' ELSE SL.name END AS stopListName,
+				SPL.name AS searchPropertyList,
+				FG.name AS fileGroup,
+				FCAT.name AS catalogName,
+				type = 'FullText',
+				IndexName = 'full_text_idx'
+			FROM sys.fulltext_indexes F
+			INNER JOIN sys.fulltext_index_columns FC ON FC.object_id = F.object_id
+			LEFT JOIN sys.indexes I ON F.unique_index_id = I.index_id AND I.object_id = F.object_id
+			LEFT JOIN sys.fulltext_stoplists SL ON SL.stoplist_id = F.stoplist_id
+			LEFT JOIN sys.registered_search_property_lists SPL ON SPL.property_list_id = F.property_list_id
+			LEFT JOIN sys.filegroups FG ON FG.data_space_id = F.data_space_id
+			LEFT JOIN sys.fulltext_catalogs FCAT ON FCAT.fulltext_catalog_id = F.fulltext_catalog_id
+			WHERE F.is_enabled = 1`;
+
+		return result;
+	} catch (error) {
+		logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering full text indexes');
+		return [];
+	}
+};
+
 const getViewsIndexes = async (connectionClient, dbName) => {
 	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
 	return await currentDbConnectionClient.query`
@@ -346,4 +382,5 @@ module.exports = {
 	getDatabaseUserDefinedTypes,
 	getViewStatement,
 	getViewsIndexes,
+	getFullTextIndexes,
 }
