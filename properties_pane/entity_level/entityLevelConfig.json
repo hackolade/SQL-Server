@@ -503,7 +503,8 @@ making sure that you maintain a proper JSON format.
 					"propertyType": "select",
 					"options": [
 						"Index",
-						"Columnstore"
+						"Columnstore",
+						"FullText"
 					]
 				},
 				{
@@ -518,7 +519,17 @@ making sure that you maintain a proper JSON format.
 				{
 					"propertyName": "Clustered",
 					"propertyKeyword": "clusteredIndx",
-					"propertyType": "checkbox"
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Keys",
@@ -528,33 +539,83 @@ making sure that you maintain a proper JSON format.
 					"attributeList": [
 						"ascending",
 						"descending"
-					]
+					],
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Include non-key columns",
 					"propertyKeyword": "indxInclude",
 					"propertyType": "fieldList",
-					"template": "orderedList"
+					"template": "orderedList",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Filter Expression",
 					"propertyKeyword": "indxFilterExpression",
-					"propertyTooltip": "description",
+					"propertyTooltip": "Expression for index WHERE clause",
 					"propertyType": "details",
 					"template": "textarea",
-					"markdown": false
+					"markdown": false,
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Description",
 					"propertyKeyword": "indxDescription",
 					"propertyTooltip": "description",
 					"propertyType": "details",
-					"template": "textarea"
+					"template": "textarea",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Pad index",
 					"propertyKeyword": "PAD_INDEX",
-					"propertyType": "checkbox"
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Fill factor",
@@ -563,12 +624,32 @@ making sure that you maintain a proper JSON format.
 					"valueType": "number",
 					"allowNegative": false,
 					"minValue": 0,
-					"maxValue": 100
+					"maxValue": 100,
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Ignore duplicate key",
 					"propertyKeyword": "IGNORE_DUP_KEY",
-					"propertyType": "checkbox"
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Included columns",
@@ -578,39 +659,109 @@ making sure that you maintain a proper JSON format.
 					"attributeList": [
 						"ascending",
 						"descending"
-					]
+					],
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Statistics no recompute",
 					"propertyKeyword": "STATISTICS_NORECOMPUTE",
-					"propertyType": "checkbox"
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Statistics incremental",
 					"propertyKeyword": "STATISTICS_INCREMENTAL",
-					"propertyType": "checkbox"
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Allow row locks",
 					"propertyKeyword": "ALLOW_ROW_LOCKS",
-					"propertyType": "checkbox"
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Allow page locks",
 					"propertyKeyword": "ALLOW_PAGE_LOCKS",
-					"propertyType": "checkbox"
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Optimize for sequential key",
 					"propertyKeyword": "OPTIMIZE_FOR_SEQUENTIAL_KEY",
-					"propertyType": "checkbox"
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Compression delay (minutes)",
 					"propertyKeyword": "COMPRESSION_DELAY",
 					"propertyType": "numeric",
 					"valueType": "number",
-					"allowNegative": false
+					"allowNegative": false,
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
 				},
 				{
 					"propertyName": "Data compression",
@@ -622,7 +773,145 @@ making sure that you maintain a proper JSON format.
 						"PAGE",
 						"COLUMNSTORE",
 						"COLUMNSTORE_ARCHIVE"
+					],
+					"dependency": {
+						"type": "or",
+						"values": [{
+							"key": "indxType",
+							"value": "Index"
+						}, {
+							"key": "indxType",
+							"value": "Columnstore"
+						}]
+					}
+				},
+				{
+					"propertyName": "Keys",
+					"propertyKeyword": "indxKey",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"dependency": {
+						"key": "indxType",
+						"value": "FullText"
+					}
+				},
+				{
+					"propertyName": "Keys properties",
+					"propertyKeyword": "indxFullTextKeysProperties",
+					"propertyType": "group",
+					"dependency": {
+						"key": "indxType",
+						"value": "FullText"
+					},
+					"structure": [{
+						"propertyName": "Type column name",
+						"propertyKeyword": "columnType",
+						"propertyType": "text"
+					}, {
+						"propertyName": "Language term",
+						"propertyKeyword": "languageTerm",
+						"propertyType": "text"
+					}, {
+						"propertyName": "Statistical semantics",
+						"propertyKeyword": "statisticalSemantics",
+						"propertyType": "checkbox"
+					}]
+				},
+				{
+					"propertyName": "Key index",
+					"propertyKeyword": "indxFullTextKeyIndex",
+					"propertyType": "text",
+					"dependency": {
+						"key": "indxType",
+						"value": "FullText"
+					}
+				},
+				{
+					"propertyName": "Catalog name",
+					"propertyKeyword": "indxFullTextCatalogName",
+					"propertyType": "text",
+					"dependency": {
+						"key": "indxType",
+						"value": "FullText"
+					}
+				},
+				{
+					"propertyName": "File group",
+					"propertyKeyword": "indxFullTextFileGroup",
+					"propertyType": "text",
+					"dependency": {
+						"key": "indxType",
+						"value": "FullText"
+					}
+				},
+				{
+					"propertyName": "Change tracking",
+					"propertyKeyword": "indxFullTextChangeTracking",
+					"propertyType": "select",
+					"dependency": {
+						"key": "indxType",
+						"value": "FullText"
+					},
+					"options": [
+						"",
+						"MANUAL",
+						"AUTO",
+						"OFF"
 					]
+				},
+				{
+					"propertyName": "No population",
+					"propertyKeyword": "indxFullTextNoPopulation",
+					"propertyType": "checkbox",
+					"dependency": {
+						"type": "and",
+						"values": [{
+							"key": "indxType",
+							"value": "FullText"
+						}, {
+							"key": "indxFullTextChangeTracking",
+							"value": "OFF"
+						}]
+					}
+				},
+				{
+					"propertyName": "Stop list",
+					"propertyKeyword": "indxFullTextStopList",
+					"propertyType": "select",
+					"dependency": {
+						"key": "indxType",
+						"value": "FullText"
+					},
+					"options": [
+						"",
+						"OFF",
+						"SYSTEM",
+						"Stoplist name"
+					]
+				},
+				{
+					"propertyName": "Stoplist name",
+					"propertyKeyword": "indxFullTextStopListName",
+					"propertyType": "text",
+					"dependency": {
+						"type": "and",
+						"values": [{
+							"key": "indxType",
+							"value": "FullText"
+						}, {
+							"key": "indxFullTextStopList",
+							"value": "Stoplist name"
+						}]
+					}
+				},
+				{
+					"propertyName": "Search property list",
+					"propertyKeyword": "indxFullTextSearchPropertyList",
+					"propertyType": "text",
+					"dependency": {
+						"key": "indxType",
+						"value": "FullText"
+					}
 				},
 				{
 					"propertyName": "Comments",
