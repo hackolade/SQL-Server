@@ -15,6 +15,7 @@ const {
 	getDatabaseUserDefinedTypes,
 	getViewStatement,
 	getViewsIndexes,
+	getFullTextIndexes,
 } = require('../databaseService/databaseService');
 const {
 	transformDatabaseTableInfoToJSON,
@@ -238,14 +239,15 @@ const getMemoryOptimizedOptions = (options) => {
 const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo, reverseEngineeringOptions) => {
 	const dbName = dbConnectionClient.config.database;
 	const [
-		databaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints, xmlSchemaCollections, databaseUDT, viewsIndexes
+		databaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints, xmlSchemaCollections, databaseUDT, viewsIndexes, fullTextIndexes
 	] = await Promise.all([
 		getDatabaseIndexes(dbConnectionClient, dbName),
 		getDatabaseMemoryOptimizedTables(dbConnectionClient, dbName),
 		getDatabaseCheckConstraints(dbConnectionClient, dbName),
 		getDatabaseXmlSchemaCollection(dbConnectionClient, dbName),
 		getDatabaseUserDefinedTypes(dbConnectionClient, dbName),
-		getViewsIndexes(dbConnectionClient, dbName)
+		getViewsIndexes(dbConnectionClient, dbName),
+		getFullTextIndexes(dbConnectionClient, dbName, logger),
 	]);
 
 	return await Object.entries(tablesInfo).reduce(async (jsonSchemas, [schemaName, tableNames]) => {
@@ -253,8 +255,11 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 		const tablesInfo = await Promise.all(
 			tableNames.map(async untrimmedTableName => {
 				const tableName = untrimmedTableName.replace(/ \(v\)$/, '');
-				const tableIndexes = databaseIndexes.filter(index =>
-					index.TableName === tableName && index.schemaName === schemaName);
+				const tableIndexes = databaseIndexes.filter(
+					index => index.TableName === tableName && index.schemaName === schemaName
+				).concat(fullTextIndexes.filter(
+					index => index.TableName === tableName && index.schemaName === schemaName
+				));
 				const tableXmlSchemas = xmlSchemaCollections.filter(collection =>
 					collection.tableName === tableName && collection.schemaName === schemaName);
 				const tableCheckConstraints = databaseCheckConstraints.filter(cc => cc.table === tableName);
