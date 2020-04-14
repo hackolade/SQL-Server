@@ -42,7 +42,7 @@ const getFullTextIndex = index => ({
 	indxType: FULL_TEXT,
 	indxFullTextKeyIndex: index.indexKeyName,
 	indxFullTextCatalogName: index.catalogName,
-	indxFullTextFileGroup: index.fileGroup,
+	indxFullTextFileGroup: index.fileGroup === 'PRIMARY' ? '' : index.fileGroup,
 	indxFullTextChangeTracking: index.changeTracking,
 	indxFullTextStopList: ['OFF', 'SYSTEM'].includes(index.stopListName) ? index.stopListName : 'Stoplist name',
 	indxFullTextStopListName: !['OFF', 'SYSTEM'].includes(index.stopListName) ? index.stopListName : '',
