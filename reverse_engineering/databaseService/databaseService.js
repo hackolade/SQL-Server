@@ -88,6 +88,7 @@ const getDatabaseIndexes = async (connectionClient, dbName) => {
 			COL_NAME(t.object_id, ic.column_id) as columnName,
 			OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
 			p.data_compression_desc as dataCompression,
+			hs.total_bucket_count,
 			ind.*
 		FROM sys.indexes ind
 		LEFT JOIN sys.tables t
@@ -96,6 +97,8 @@ const getDatabaseIndexes = async (connectionClient, dbName) => {
 			ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
 		INNER JOIN sys.partitions p
 			ON p.object_id = t.object_id AND ind.index_id = p.index_id
+		LEFT JOIN sys.dm_db_xtp_hash_index_stats hs
+			ON ind.index_id = hs.index_id
 		WHERE
 			ind.is_primary_key = 0
 			AND ind.is_unique_constraint = 0
@@ -148,11 +151,17 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 
 const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName) => {
 	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+
 	return currentDbConnectionClient.query`
-		SELECT o.name
-		FROM sys.memory_optimized_tables_internal_attributes AS moa
-		LEFT JOIN sys.objects o ON o.object_id=moa.object_id
-		WHERE o.type='U'
+		SELECT
+			T.name,
+			T.durability,
+			T.durability_desc,
+			OBJECT_NAME(T.history_table_id) AS history_table,
+			SCHEMA_NAME(O.schema_id) AS history_schema,
+			T.temporal_type_desc
+		FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
+		WHERE T.is_memory_optimized=1
 	`;
 };
 
