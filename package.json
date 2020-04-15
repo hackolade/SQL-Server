@@ -27,7 +27,8 @@
             "enableJsonType": true,
             "useJsonTypesWithComplexTypes": true,
             "reverseSchemaIntoOneColumn": true,
-            "disableDenormalization": true,
+			"disableDenormalization": true,
+			"enableComplexTypesNormalization": true,
             "views": {
                 "enabled": true,
                 "viewLevel": "model",
