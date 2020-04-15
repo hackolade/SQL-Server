@@ -504,7 +504,8 @@ making sure that you maintain a proper JSON format.
 					"options": [
 						"Index",
 						"Columnstore",
-						"FullText"
+						"FullText",
+						"Spatial"
 					]
 				},
 				{
@@ -552,6 +553,19 @@ making sure that you maintain a proper JSON format.
 					}
 				},
 				{
+					"propertyName": "Keys",
+					"propertyKeyword": "indxKey",
+					"propertyType": "fieldList",
+					"template": "orderedList",
+					"dependency": {
+						"key": "indxType",
+						"value": "Spatial"
+					},
+					"templateOptions": {
+						"maxFields": 1
+					}
+				},
+				{
 					"propertyName": "Include non-key columns",
 					"propertyKeyword": "indxInclude",
 					"propertyType": "fieldList",
@@ -590,16 +604,137 @@ making sure that you maintain a proper JSON format.
 					"propertyKeyword": "indxDescription",
 					"propertyTooltip": "description",
 					"propertyType": "details",
-					"template": "textarea",
+					"template": "textarea"
+				},
+				{
+					"propertyName": "Using",
+					"propertyKeyword": "indxUsing",
+					"propertyType": "select",
+					"options": [
+						"GEOMETRY_GRID",
+						"GEOGRAPHY_GRID",
+						"GEOMETRY_AUTO_GRID",
+						"GEOGRAPHY_AUTO_GRID"
+					],
 					"dependency": {
-						"type": "or",
+						"key": "indxType",
+						"value": "Spatial"
+					}
+				},
+				{
+					"propertyName": "Bounding box",
+					"propertyKeyword": "indxBoundingBox",
+					"propertyType": "block",
+					"dependency": {
+						"type": "and",
 						"values": [{
 							"key": "indxType",
-							"value": "Index"
+							"value": "Spatial"
 						}, {
-							"key": "indxType",
-							"value": "Columnstore"
+							"type": "or",
+							"values": [{
+								"key": "indxUsing",
+								"value": "GEOMETRY_AUTO_GRID"
+							}, {
+								"key": "indxUsing",
+								"value": "GEOMETRY_GRID"
+							}]
 						}]
+					},
+					"structure": [{
+						"propertyName": "XMIN",
+						"propertyKeyword": "XMIN",
+						"propertyType": "numeric",
+						"valueType": "number",
+						"allowNegative": false
+					}, {
+						"propertyName": "YMIN",
+						"propertyKeyword": "YMIN",
+						"propertyType": "numeric",
+						"valueType": "number",
+						"allowNegative": false
+					}, {
+						"propertyName": "XMAX",
+						"propertyKeyword": "XMAX",
+						"propertyType": "numeric",
+						"valueType": "number",
+						"allowNegative": false
+					}, {
+						"propertyName": "YMAX",
+						"propertyKeyword": "YMAX",
+						"propertyType": "numeric",
+						"valueType": "number",
+						"allowNegative": false
+					}]
+				}, {
+					"propertyName": "Grids",
+					"propertyKeyword": "indxGrids",
+					"propertyType": "group",
+					"groupItemLimit": 4,
+					"dependency": {
+						"type": "and",
+						"values": [{
+							"key": "indxType",
+							"value": "Spatial"
+						}, {
+							"type": "or",
+							"values": [{
+								"key": "indxUsing",
+								"value": "GEOMETRY_GRID"
+							}, {
+								"key": "indxUsing",
+								"value": "GEOGRAPHY_GRID"
+							}]
+						}]
+					},
+					"structure": [{
+						"propertyName": "Level",
+						"propertyKeyword": "LEVEL",
+						"propertyType": "select",
+						"options": [
+							"LOW",
+							"MEDIUM",
+							"HIGH"
+						]
+					}]
+				},
+				{
+					"propertyName": "Cells per object",
+					"propertyKeyword": "CELLS_PER_OBJECT",
+					"propertyType": "numeric",
+					"valueType": "integer",
+					"allowNegative": false,
+					"dependency": {
+						"key": "indxType",
+						"value": "Spatial"
+					}
+				},
+				{
+					"propertyName": "Sort in tempdb",
+					"propertyKeyword": "SORT_IN_TEMPDB",
+					"propertyType": "checkbox",
+					"dependency": {
+						"key": "indxType",
+						"value": "Spatial"
+					}
+				},
+				{
+					"propertyName": "Drop existing",
+					"propertyKeyword": "DROP_EXISTING",
+					"propertyType": "checkbox",
+					"dependency": {
+						"key": "indxType",
+						"value": "Spatial"
+					}
+				},
+				{
+					"propertyName": "Max degree of parallelism",
+					"propertyKeyword": "MAXDOP",
+					"propertyType": "numeric",
+					"allowNegative": false,
+					"dependency": {
+						"key": "indxType",
+						"value": "Spatial"
 					}
 				},
 				{
@@ -614,6 +749,9 @@ making sure that you maintain a proper JSON format.
 						}, {
 							"key": "indxType",
 							"value": "Columnstore"
+						}, {
+							"key": "indxType",
+							"value": "Spatial"
 						}]
 					}
 				},
@@ -633,6 +771,9 @@ making sure that you maintain a proper JSON format.
 						}, {
 							"key": "indxType",
 							"value": "Columnstore"
+						}, {
+							"key": "indxType",
+							"value": "Spatial"
 						}]
 					}
 				},
@@ -648,6 +789,9 @@ making sure that you maintain a proper JSON format.
 						}, {
 							"key": "indxType",
 							"value": "Columnstore"
+						}, {
+							"key": "indxType",
+							"value": "Spatial"
 						}]
 					}
 				},
@@ -683,6 +827,9 @@ making sure that you maintain a proper JSON format.
 						}, {
 							"key": "indxType",
 							"value": "Columnstore"
+						}, {
+							"key": "indxType",
+							"value": "Spatial"
 						}]
 					}
 				},
@@ -713,6 +860,9 @@ making sure that you maintain a proper JSON format.
 						}, {
 							"key": "indxType",
 							"value": "Columnstore"
+						}, {
+							"key": "indxType",
+							"value": "Spatial"
 						}]
 					}
 				},
@@ -728,6 +878,9 @@ making sure that you maintain a proper JSON format.
 						}, {
 							"key": "indxType",
 							"value": "Columnstore"
+						}, {
+							"key": "indxType",
+							"value": "Spatial"
 						}]
 					}
 				},
@@ -782,6 +935,9 @@ making sure that you maintain a proper JSON format.
 						}, {
 							"key": "indxType",
 							"value": "Columnstore"
+						}, {
+							"key": "indxType",
+							"value": "Spatial"
 						}]
 					}
 				},
