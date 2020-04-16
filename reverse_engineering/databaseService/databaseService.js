@@ -106,6 +106,41 @@ const getDatabaseIndexes = async (connectionClient, dbName) => {
 		`;
 };
 
+const getSpatialIndexes = async (connectionClient, dbName, logger) => {
+	try {
+		const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+		return await currentDbConnectionClient.query`
+			SELECT
+				TableName = t.name,
+				IndexName = ind.name,
+				COL_NAME(t.object_id, ic.column_id) as columnName,
+				OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
+				sit.bounding_box_xmin AS XMIN,
+				sit.bounding_box_ymin AS YMIN,
+				sit.bounding_box_xmax AS XMAX,
+				sit.bounding_box_ymax AS YMAX,
+				sit.level_1_grid_desc AS LEVEL_1,
+				sit.level_2_grid_desc AS LEVEL_2,
+				sit.level_3_grid_desc AS LEVEL_3,
+				sit.level_4_grid_desc AS LEVEL_4,
+				sit.cells_per_object AS CELLS_PER_OBJECT,
+				p.data_compression_desc as dataCompression,
+				ind.*
+			FROM sys.spatial_indexes ind
+			LEFT JOIN sys.tables t
+				ON ind.object_id = t.object_id
+			INNER JOIN sys.index_columns ic
+				ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
+			LEFT JOIN sys.spatial_index_tessellations sit
+				ON ind.object_id = sit.object_id AND ind.index_id = sit.index_id
+			LEFT JOIN sys.partitions p
+				ON p.object_id = t.object_id AND ind.index_id = p.index_id`;
+	} catch (error) {
+		logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering spatial indexes');
+		return [];
+	}
+};
+
 const getFullTextIndexes = async (connectionClient, dbName, logger) => {
 	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
 	
@@ -383,4 +418,5 @@ module.exports = {
 	getViewStatement,
 	getViewsIndexes,
 	getFullTextIndexes,
+	getSpatialIndexes,
 }
