@@ -34,7 +34,7 @@ const getIndexData = index => ({
 	OPTIMIZE_FOR_SEQUENTIAL_KEY: Boolean(index.optimize_for_sequential_key),
 	PAD_INDEX: Boolean(index.is_padded),
 	FILLFACTOR: index.fill_factor,
-	DATA_COMPRESSION: handleDataCompression(index),
+	DATA_COMPRESSION: handleDataCompression(index.dataCompression || ''),
 	indxHash: index.type_desc === "NONCLUSTERED HASH",
 	indxBucketCount: !isNaN(Number(index.total_bucket_count)) ? Number(index.total_bucket_count) : '',
 	indxFilterExpression: index.has_filter ? index.filter_definition : '',
