@@ -557,6 +557,7 @@ making sure that you maintain a proper JSON format.
 					"propertyKeyword": "indxKey",
 					"propertyType": "fieldList",
 					"template": "orderedList",
+					"attributeList": [],
 					"dependency": {
 						"key": "indxType",
 						"value": "Spatial"
@@ -669,8 +670,7 @@ making sure that you maintain a proper JSON format.
 				}, {
 					"propertyName": "Grids",
 					"propertyKeyword": "indxGrids",
-					"propertyType": "group",
-					"groupItemLimit": 4,
+					"propertyType": "block",
 					"dependency": {
 						"type": "and",
 						"values": [{
@@ -688,10 +688,41 @@ making sure that you maintain a proper JSON format.
 						}]
 					},
 					"structure": [{
-						"propertyName": "Level",
-						"propertyKeyword": "LEVEL",
+						"propertyName": "LEVEL_1",
+						"propertyKeyword": "LEVEL_1",
 						"propertyType": "select",
 						"options": [
+							"",
+							"LOW",
+							"MEDIUM",
+							"HIGH"
+						]
+					}, {
+						"propertyName": "LEVEL_2",
+						"propertyKeyword": "LEVEL_2",
+						"propertyType": "select",
+						"options": [
+							"",
+							"LOW",
+							"MEDIUM",
+							"HIGH"
+						]
+					}, {
+						"propertyName": "LEVEL_3",
+						"propertyKeyword": "LEVEL_3",
+						"propertyType": "select",
+						"options": [
+							"",
+							"LOW",
+							"MEDIUM",
+							"HIGH"
+						]
+					}, {
+						"propertyName": "LEVEL_4",
+						"propertyKeyword": "LEVEL_4",
+						"propertyType": "select",
+						"options": [
+							"",
 							"LOW",
 							"MEDIUM",
 							"HIGH"
@@ -946,6 +977,7 @@ making sure that you maintain a proper JSON format.
 					"propertyKeyword": "indxKey",
 					"propertyType": "fieldList",
 					"template": "orderedList",
+					"attributeList": [],
 					"dependency": {
 						"key": "indxType",
 						"value": "FullText"
