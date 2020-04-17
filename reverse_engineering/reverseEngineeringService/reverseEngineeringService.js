@@ -103,7 +103,7 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 		databaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints, xmlSchemaCollections, databaseUDT
 	] = await Promise.all([
 		await getDatabaseIndexes(dbConnectionClient, dbName),
-		await getDatabaseMemoryOptimizedTables(dbConnectionClient, dbName),
+		await getDatabaseMemoryOptimizedTables(dbConnectionClient, dbName, logger),
 		await getDatabaseCheckConstraints(dbConnectionClient, dbName),
 		await getDatabaseXmlSchemaCollection(dbConnectionClient, dbName),
 		await getDatabaseUserDefinedTypes(dbConnectionClient, dbName),

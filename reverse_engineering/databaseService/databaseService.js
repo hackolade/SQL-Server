@@ -123,7 +123,7 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName, logger) => {
 	try {
 		const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
-		return currentDbConnectionClient.query`
+		return await currentDbConnectionClient.query`
 			SELECT o.name
 			FROM sys.memory_optimized_tables_internal_attributes AS moa
 			LEFT JOIN sys.objects o ON o.object_id=moa.object_id
