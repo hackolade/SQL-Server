@@ -120,14 +120,20 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 	`;
 };
 
-const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
-	return currentDbConnectionClient.query`
-		SELECT o.name
-		FROM sys.memory_optimized_tables_internal_attributes AS moa
-		LEFT JOIN sys.objects o ON o.object_id=moa.object_id
-		WHERE o.type='U'
-	`;
+const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName, logger) => {
+	try {
+		const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+		return currentDbConnectionClient.query`
+			SELECT o.name
+			FROM sys.memory_optimized_tables_internal_attributes AS moa
+			LEFT JOIN sys.objects o ON o.object_id=moa.object_id
+			WHERE o.type='U'
+		`;
+	} catch (error) {
+		logger.log('error', { message: error.message, stack: error.stack, error }, 'Retrieve memory optimzed tables');
+
+		return [];
+	}
 };
 
 const getDatabaseCheckConstraints = async (connectionClient, dbName) => {
