@@ -88,9 +88,109 @@ const getDatabaseIndexes = async (connectionClient, dbName) => {
 			COL_NAME(t.object_id, ic.column_id) as columnName,
 			OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
 			p.data_compression_desc as dataCompression,
+			hs.total_bucket_count,
 			ind.*
 		FROM sys.indexes ind
 		LEFT JOIN sys.tables t
+			ON ind.object_id = t.object_id
+		INNER JOIN sys.index_columns ic
+			ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
+		INNER JOIN sys.partitions p
+			ON p.object_id = t.object_id AND ind.index_id = p.index_id
+		LEFT JOIN sys.dm_db_xtp_hash_index_stats hs
+			ON ind.index_id = hs.index_id
+		WHERE
+			ind.is_primary_key = 0
+			AND ind.is_unique_constraint = 0
+			AND t.is_ms_shipped = 0
+		`;
+};
+
+const getSpatialIndexes = async (connectionClient, dbName, logger) => {
+	try {
+		const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+		return await currentDbConnectionClient.query`
+			SELECT
+				TableName = t.name,
+				IndexName = ind.name,
+				COL_NAME(t.object_id, ic.column_id) as columnName,
+				OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
+				sit.bounding_box_xmin AS XMIN,
+				sit.bounding_box_ymin AS YMIN,
+				sit.bounding_box_xmax AS XMAX,
+				sit.bounding_box_ymax AS YMAX,
+				sit.level_1_grid_desc AS LEVEL_1,
+				sit.level_2_grid_desc AS LEVEL_2,
+				sit.level_3_grid_desc AS LEVEL_3,
+				sit.level_4_grid_desc AS LEVEL_4,
+				sit.cells_per_object AS CELLS_PER_OBJECT,
+				p.data_compression_desc as dataCompression,
+				ind.*
+			FROM sys.spatial_indexes ind
+			LEFT JOIN sys.tables t
+				ON ind.object_id = t.object_id
+			INNER JOIN sys.index_columns ic
+				ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
+			LEFT JOIN sys.spatial_index_tessellations sit
+				ON ind.object_id = sit.object_id AND ind.index_id = sit.index_id
+			LEFT JOIN sys.partitions p
+				ON p.object_id = t.object_id AND ind.index_id = p.index_id`;
+	} catch (error) {
+		logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering spatial indexes');
+		return [];
+	}
+};
+
+const getFullTextIndexes = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+	
+	try {
+		const result = await currentDbConnectionClient.query`
+			SELECT
+				OBJECT_SCHEMA_NAME(F.object_id) as schemaName,
+				OBJECT_NAME(F.object_id) as TableName,
+				COL_NAME(FC.object_id, FC.column_id) as columnName,
+				COL_NAME(FC.object_id, FC.type_column_id) as columnTypeName,
+				FC.statistical_semantics AS statistical_semantics,
+				FC.language_id AS language,
+				I.name AS indexKeyName,
+				F.change_tracking_state_desc AS changeTracking,
+				CASE WHEN F.stoplist_id IS NULL THEN 'OFF' WHEN F.stoplist_id = 0 THEN 'SYSTEM' ELSE SL.name END AS stopListName,
+				SPL.name AS searchPropertyList,
+				FG.name AS fileGroup,
+				FCAT.name AS catalogName,
+				type = 'FullText',
+				IndexName = 'full_text_idx'
+			FROM sys.fulltext_indexes F
+			INNER JOIN sys.fulltext_index_columns FC ON FC.object_id = F.object_id
+			LEFT JOIN sys.indexes I ON F.unique_index_id = I.index_id AND I.object_id = F.object_id
+			LEFT JOIN sys.fulltext_stoplists SL ON SL.stoplist_id = F.stoplist_id
+			LEFT JOIN sys.registered_search_property_lists SPL ON SPL.property_list_id = F.property_list_id
+			LEFT JOIN sys.filegroups FG ON FG.data_space_id = F.data_space_id
+			LEFT JOIN sys.fulltext_catalogs FCAT ON FCAT.fulltext_catalog_id = F.fulltext_catalog_id
+			WHERE F.is_enabled = 1`;
+
+		return result;
+	} catch (error) {
+		logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering full text indexes');
+		return [];
+	}
+};
+
+const getViewsIndexes = async (connectionClient, dbName) => {
+	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+	return await currentDbConnectionClient.query`
+		SELECT
+			TableName = t.name,
+			IndexName = ind.name,
+			ic.is_descending_key,
+			ic.is_included_column,
+			COL_NAME(t.object_id, ic.column_id) as columnName,
+			OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
+			p.data_compression_desc as dataCompression,
+			ind.*
+		FROM sys.indexes ind
+		LEFT JOIN sys.views t
 			ON ind.object_id = t.object_id
 		INNER JOIN sys.index_columns ic
 			ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
@@ -120,14 +220,20 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 	`;
 };
 
-const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName, logger) => {
+const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName) => {
 	try {
 		const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
-		return await currentDbConnectionClient.query`
-			SELECT o.name
-			FROM sys.memory_optimized_tables_internal_attributes AS moa
-			LEFT JOIN sys.objects o ON o.object_id=moa.object_id
-			WHERE o.type='U'
+
+		return currentDbConnectionClient.query`
+			SELECT
+				T.name,
+				T.durability,
+				T.durability_desc,
+				OBJECT_NAME(T.history_table_id) AS history_table,
+				SCHEMA_NAME(O.schema_id) AS history_schema,
+				T.temporal_type_desc
+			FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
+			WHERE T.is_memory_optimized=1
 		`;
 	} catch (error) {
 		logger.log('error', { message: error.message, stack: error.stack, error }, 'Retrieve memory optimzed tables');
@@ -209,6 +315,16 @@ const getViewColumnRelations = async (connectionClient, dbName, viewName, schema
 			FROM sys.dm_exec_describe_first_result_set(N'SELECT TOP 1 * FROM [' + @TableSchema + '].[' + @TableName + ']', null, 1)
 			WHERE is_hidden=0
 	`;
+};
+
+const getViewStatement = async (connectionClient, dbName, viewName, schemaName) => {
+	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+	const objectId = `${schemaName}.${viewName}`;
+	return currentDbConnectionClient
+		.query`SELECT M.*, V.with_check_option
+			FROM sys.sql_modules M INNER JOIN sys.views V ON M.object_id=V.object_id
+			WHERE M.object_id=object_id(${objectId})
+		`;
 };
 
 const getTableKeyConstraints = async (connectionClient, dbName, tableName, schemaName) => {
@@ -305,4 +421,8 @@ module.exports = {
 	getDatabaseXmlSchemaCollection,
 	getTableDefaultConstraintNames,
 	getDatabaseUserDefinedTypes,
+	getViewStatement,
+	getViewsIndexes,
+	getFullTextIndexes,
+	getSpatialIndexes,
 }

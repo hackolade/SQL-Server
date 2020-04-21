@@ -19,6 +19,7 @@
 			"constrEnforceReplication": true
 		},
 		"Indxs": {
+			"indxType": "Index",
 			"ALLOW_ROW_LOCKS": true,
 			"ALLOW_PAGE_LOCKS": true
 		}
