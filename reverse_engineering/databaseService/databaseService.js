@@ -221,19 +221,25 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 };
 
 const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+	try {
+		const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
 
-	return currentDbConnectionClient.query`
-		SELECT
-			T.name,
-			T.durability,
-			T.durability_desc,
-			OBJECT_NAME(T.history_table_id) AS history_table,
-			SCHEMA_NAME(O.schema_id) AS history_schema,
-			T.temporal_type_desc
-		FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
-		WHERE T.is_memory_optimized=1
-	`;
+		return currentDbConnectionClient.query`
+			SELECT
+				T.name,
+				T.durability,
+				T.durability_desc,
+				OBJECT_NAME(T.history_table_id) AS history_table,
+				SCHEMA_NAME(O.schema_id) AS history_schema,
+				T.temporal_type_desc
+			FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
+			WHERE T.is_memory_optimized=1
+		`;
+	} catch (error) {
+		logger.log('error', { message: error.message, stack: error.stack, error }, 'Retrieve memory optimzed tables');
+
+		return [];
+	}
 };
 
 const getDatabaseCheckConstraints = async (connectionClient, dbName) => {

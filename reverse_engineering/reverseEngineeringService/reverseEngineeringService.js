@@ -244,7 +244,7 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 		spatialIndexes
 	] = await Promise.all([
 		getDatabaseIndexes(dbConnectionClient, dbName),
-		getDatabaseMemoryOptimizedTables(dbConnectionClient, dbName),
+		getDatabaseMemoryOptimizedTables(dbConnectionClient, dbName, logger),
 		getDatabaseCheckConstraints(dbConnectionClient, dbName),
 		getDatabaseXmlSchemaCollection(dbConnectionClient, dbName),
 		getDatabaseUserDefinedTypes(dbConnectionClient, dbName),
