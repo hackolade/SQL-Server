@@ -1,5 +1,5 @@
 {
-    "name": "SQLServer",
+    "name": "MSSQLServer",
     "version": "0.1.2",
     "versionDate": "2020-04-21",
     "author": "hackolade",
