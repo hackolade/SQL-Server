@@ -142,7 +142,10 @@ making sure that you maintain a proper JSON format.
 				"propertyName": "JSON Type",
 				"propertyKeyword": "physicalType",
 				"propertyType": "select",
-				"hidden": true
+				"dependency": {
+					"key": "mode",
+					"value": "mode"
+				}
 			},
 			{
 				"propertyName": "JSON Types",
