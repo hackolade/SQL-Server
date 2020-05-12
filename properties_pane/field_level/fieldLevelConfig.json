@@ -139,39 +139,6 @@ making sure that you maintain a proper JSON format.
 				"cleanDependency": true
 			},
 			{
-				"propertyName": "JSON Type",
-				"propertyKeyword": "physicalType",
-				"propertyType": "select",
-				"dependency": {
-					"key": "mode",
-					"value": "mode"
-				}
-			},
-			{
-				"propertyName": "JSON Types",
-				"propertyKeyword": "subtype",
-				"propertyType": "select",
-				"dependency": {
-					"type": "or",
-					"values": [
-						{
-							"key": "mode",
-							"value": "nvarchar"
-						},
-						{
-							"key": "mode",
-							"value": "varchar"
-						}
-					]
-				},
-				"options": [
-					{ "name": " ", "value": "string" },
-					{ "name": "object", "value": "object" },
-					{ "name": "array", "value": "array" }
-				],
-				"defaultValue": "string"
-			},
-			{
 				"propertyName": "Has max length",
 				"propertyKeyword": "hasMaxLength",
 				"propertyType": "checkbox",
@@ -252,6 +219,39 @@ making sure that you maintain a proper JSON format.
 						}
 					}]
 				}]
+			},
+			{
+				"propertyName": "JSON Type",
+				"propertyKeyword": "physicalType",
+				"propertyType": "select",
+				"dependency": {
+					"key": "mode",
+					"value": "mode"
+				}
+			},
+			{
+				"propertyName": "JSON Types",
+				"propertyKeyword": "subtype",
+				"propertyType": "select",
+				"dependency": {
+					"type": "or",
+					"values": [
+						{
+							"key": "mode",
+							"value": "nvarchar"
+						},
+						{
+							"key": "mode",
+							"value": "varchar"
+						}
+					]
+				},
+				"options": [
+					{ "name": " ", "value": "string" },
+					{ "name": "object", "value": "object" },
+					{ "name": "array", "value": "array" }
+				],
+				"defaultValue": "string"
 			},
 			"default",
 			{
