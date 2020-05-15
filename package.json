@@ -34,7 +34,9 @@
                 "viewLevel": "model",
                 "disablePipelines": true
             },
-			"compositeRelationship": true
+            "relationships": {
+                "compositeRelationships": true
+            }
         }
     },
     "description": "Hackolade plugin for Microsoft SQL Server and Azure SQL Database",
