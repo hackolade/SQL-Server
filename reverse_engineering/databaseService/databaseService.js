@@ -186,10 +186,13 @@ const getIndexesBucketCount = async (connectionClient, dbName, indexesId, logger
 		],
 		skip: true
 	}, logger);
-	return await currentDbConnectionClient.query`
+	return await currentDbConnectionClient
+	.request()
+	.input('idList', sql.VarChar, indexesId.join(', '))
+	.query`
 		SELECT hs.total_bucket_count, hs.index_id
 		FROM sys.dm_db_xtp_hash_index_stats hs
-		WHERE hs.index_id IN (${indexesId.join(', ')})`;
+		WHERE hs.index_id IN (SELECT value FROM string_split(@idList, ','))`;
 };
 
 const getSpatialIndexes = async (connectionClient, dbName, logger) => {
