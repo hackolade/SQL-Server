@@ -1,7 +1,7 @@
 {
     "name": "SQLServer",
-    "version": "0.1.5",
-    "versionDate": "2020-05-20",
+    "version": "0.1.6",
+    "versionDate": "2020-05-27",
     "author": "hackolade",
     "engines": {
         "hackolade": "4.0.0",
