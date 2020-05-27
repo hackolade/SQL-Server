@@ -18,8 +18,61 @@ const getConnectionClient = async connectionInfo => {
 	return await sql.connect(connectionInfo.connectionString);
 };
 
-const getTableInfo = async (connectionClient, dbName, tableName, tableSchema) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const PERMISSION_DENIED_CODE = 297;
+
+const addPermissionDeniedMetaData = (error, meta) => {
+	error.message = 'The user does not have permission to perform ' + meta.action +
+		'. Please, check the access to the next objects: ' + meta.objects.join(', ');
+
+	return error;
+};
+
+const getClient = async (connectionClient, dbName, meta, logger) => {
+	let currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+
+	const _inst = {
+		request(...args) {
+			currentDbConnectionClient = currentDbConnectionClient.request(...args);
+			return _inst;
+		},
+		input(...args) {
+			currentDbConnectionClient = currentDbConnectionClient.input(...args);
+			return _inst;
+		},
+		async query(...queryParams) {
+			try {
+				return await currentDbConnectionClient.query(...queryParams);
+			} catch (error) {
+				if (error.number === PERMISSION_DENIED_CODE && meta) {
+					error = addPermissionDeniedMetaData(error, meta);
+
+					if (meta.skip) {
+						logger.log('error', { message: error.message, stack: error.stack, error }, 'Perform ' + meta.action);
+						logger.progress({ message: 'Failed: ' + meta.action, containerName: '', entityName: ''});
+
+						return [];
+					} else {
+						throw error;
+					}
+				} else {
+					throw error
+				}
+			}
+		}
+	};
+
+	return _inst;
+};
+
+const getTableInfo = async (connectionClient, dbName, tableName, tableSchema, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'table information query',
+		objects: [
+			'information_schema.columns',
+			'sys.identity_columns',
+			'sys.objects',
+		]
+	}, logger);
 	const objectId = `${tableSchema}.${tableName}`;
 	return await currentDbConnectionClient.query`
 		SELECT c.*,
@@ -36,24 +89,37 @@ const getTableInfo = async (connectionClient, dbName, tableName, tableSchema) =>
 	;`
 };
 
-const getTableRow = async (connectionClient, dbName, tableName, tableSchema, reverseEngineeringOptions) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getTableRow = async (connectionClient, dbName, tableName, tableSchema, reverseEngineeringOptions, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting data query',
+		objects: [
+			`[${tableSchema}].[${tableName}]`
+		],
+		skip: true
+	}, logger);
 	const percentageWord = reverseEngineeringOptions.isAbsoluteValue ? '' : 'PERCENT';
-	try {
-		return await currentDbConnectionClient
+
+	return await currentDbConnectionClient
 			.request()
 			.input('tableName', sql.VarChar, tableName)
 			.input('tableSchema', sql.VarChar, tableSchema)
 			.input('amount', sql.Int, reverseEngineeringOptions.value)
 			.input('percent', sql.VarChar, percentageWord)
 			.query`EXEC('SELECT TOP '+ @Amount +' '+ @Percent +' * FROM [' + @TableSchema + '].[' + @TableName + '];');`;
-	} catch (e) {
-		return [];
-	}
 };
 
-const getTableForeignKeys = async (connectionClient, dbName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getTableForeignKeys = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting foreign keys query',
+		objects: [
+			'sys.foreign_key_columns',
+			'sys.objects',
+			'sys.tables',
+			'sys.schemas',
+			'sys.columns',
+		],
+		skip: true
+	}, logger);
 	return await currentDbConnectionClient.query`
 		SELECT obj.name AS FK_NAME,
 				sch.name AS [schema_name],
@@ -77,8 +143,18 @@ const getTableForeignKeys = async (connectionClient, dbName) => {
 		`
 };
 
-const getDatabaseIndexes = async (connectionClient, dbName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getDatabaseIndexes = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting indexes query',
+		objects: [
+			'sys.indexes',
+			'sys.tables',
+			'sys.index_columns',
+			'sys.partitions',
+			'sys.dm_db_xtp_hash_index_stats',
+		],
+		skip: true
+	}, logger);
 	return await currentDbConnectionClient.query`
 		SELECT
 			TableName = t.name,
@@ -107,78 +183,99 @@ const getDatabaseIndexes = async (connectionClient, dbName) => {
 };
 
 const getSpatialIndexes = async (connectionClient, dbName, logger) => {
-	try {
-		const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
-		return await currentDbConnectionClient.query`
-			SELECT
-				TableName = t.name,
-				IndexName = ind.name,
-				COL_NAME(t.object_id, ic.column_id) as columnName,
-				OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
-				sit.bounding_box_xmin AS XMIN,
-				sit.bounding_box_ymin AS YMIN,
-				sit.bounding_box_xmax AS XMAX,
-				sit.bounding_box_ymax AS YMAX,
-				sit.level_1_grid_desc AS LEVEL_1,
-				sit.level_2_grid_desc AS LEVEL_2,
-				sit.level_3_grid_desc AS LEVEL_3,
-				sit.level_4_grid_desc AS LEVEL_4,
-				sit.cells_per_object AS CELLS_PER_OBJECT,
-				p.data_compression_desc as dataCompression,
-				ind.*
-			FROM sys.spatial_indexes ind
-			LEFT JOIN sys.tables t
-				ON ind.object_id = t.object_id
-			INNER JOIN sys.index_columns ic
-				ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
-			LEFT JOIN sys.spatial_index_tessellations sit
-				ON ind.object_id = sit.object_id AND ind.index_id = sit.index_id
-			LEFT JOIN sys.partitions p
-				ON p.object_id = t.object_id AND ind.index_id = p.index_id`;
-	} catch (error) {
-		logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering spatial indexes');
-		return [];
-	}
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting spatial indexes',
+		objects: [
+			'sys.spatial_indexes',
+			'sys.tables',
+			'sys.index_columns',
+			'sys.partitions',
+			'sys.spatial_index_tessellations',
+		],
+		skip: true
+	}, logger);
+	return await currentDbConnectionClient.query`
+		SELECT
+			TableName = t.name,
+			IndexName = ind.name,
+			COL_NAME(t.object_id, ic.column_id) as columnName,
+			OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
+			sit.bounding_box_xmin AS XMIN,
+			sit.bounding_box_ymin AS YMIN,
+			sit.bounding_box_xmax AS XMAX,
+			sit.bounding_box_ymax AS YMAX,
+			sit.level_1_grid_desc AS LEVEL_1,
+			sit.level_2_grid_desc AS LEVEL_2,
+			sit.level_3_grid_desc AS LEVEL_3,
+			sit.level_4_grid_desc AS LEVEL_4,
+			sit.cells_per_object AS CELLS_PER_OBJECT,
+			p.data_compression_desc as dataCompression,
+			ind.*
+		FROM sys.spatial_indexes ind
+		LEFT JOIN sys.tables t
+			ON ind.object_id = t.object_id
+		INNER JOIN sys.index_columns ic
+			ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
+		LEFT JOIN sys.spatial_index_tessellations sit
+			ON ind.object_id = sit.object_id AND ind.index_id = sit.index_id
+		LEFT JOIN sys.partitions p
+			ON p.object_id = t.object_id AND ind.index_id = p.index_id`;
 };
 
 const getFullTextIndexes = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+	const currentDbConnectionClient = await getClient(connectionClient, dbName,  {
+		action: 'getting full text indexes',
+		objects: [
+			'sys.fulltext_indexes',
+			'sys.fulltext_index_columns',
+			'sys.indexes',
+			'sys.fulltext_stoplists',
+			'sys.registered_search_property_lists',
+			'sys.filegroups',
+			'sys.fulltext_catalogs',
+		],
+		skip: true
+	}, logger);
 	
-	try {
-		const result = await currentDbConnectionClient.query`
-			SELECT
-				OBJECT_SCHEMA_NAME(F.object_id) as schemaName,
-				OBJECT_NAME(F.object_id) as TableName,
-				COL_NAME(FC.object_id, FC.column_id) as columnName,
-				COL_NAME(FC.object_id, FC.type_column_id) as columnTypeName,
-				FC.statistical_semantics AS statistical_semantics,
-				FC.language_id AS language,
-				I.name AS indexKeyName,
-				F.change_tracking_state_desc AS changeTracking,
-				CASE WHEN F.stoplist_id IS NULL THEN 'OFF' WHEN F.stoplist_id = 0 THEN 'SYSTEM' ELSE SL.name END AS stopListName,
-				SPL.name AS searchPropertyList,
-				FG.name AS fileGroup,
-				FCAT.name AS catalogName,
-				type = 'FullText',
-				IndexName = 'full_text_idx'
-			FROM sys.fulltext_indexes F
-			INNER JOIN sys.fulltext_index_columns FC ON FC.object_id = F.object_id
-			LEFT JOIN sys.indexes I ON F.unique_index_id = I.index_id AND I.object_id = F.object_id
-			LEFT JOIN sys.fulltext_stoplists SL ON SL.stoplist_id = F.stoplist_id
-			LEFT JOIN sys.registered_search_property_lists SPL ON SPL.property_list_id = F.property_list_id
-			LEFT JOIN sys.filegroups FG ON FG.data_space_id = F.data_space_id
-			LEFT JOIN sys.fulltext_catalogs FCAT ON FCAT.fulltext_catalog_id = F.fulltext_catalog_id
-			WHERE F.is_enabled = 1`;
+	const result = await currentDbConnectionClient.query`
+		SELECT
+			OBJECT_SCHEMA_NAME(F.object_id) as schemaName,
+			OBJECT_NAME(F.object_id) as TableName,
+			COL_NAME(FC.object_id, FC.column_id) as columnName,
+			COL_NAME(FC.object_id, FC.type_column_id) as columnTypeName,
+			FC.statistical_semantics AS statistical_semantics,
+			FC.language_id AS language,
+			I.name AS indexKeyName,
+			F.change_tracking_state_desc AS changeTracking,
+			CASE WHEN F.stoplist_id IS NULL THEN 'OFF' WHEN F.stoplist_id = 0 THEN 'SYSTEM' ELSE SL.name END AS stopListName,
+			SPL.name AS searchPropertyList,
+			FG.name AS fileGroup,
+			FCAT.name AS catalogName,
+			type = 'FullText',
+			IndexName = 'full_text_idx'
+		FROM sys.fulltext_indexes F
+		INNER JOIN sys.fulltext_index_columns FC ON FC.object_id = F.object_id
+		LEFT JOIN sys.indexes I ON F.unique_index_id = I.index_id AND I.object_id = F.object_id
+		LEFT JOIN sys.fulltext_stoplists SL ON SL.stoplist_id = F.stoplist_id
+		LEFT JOIN sys.registered_search_property_lists SPL ON SPL.property_list_id = F.property_list_id
+		LEFT JOIN sys.filegroups FG ON FG.data_space_id = F.data_space_id
+		LEFT JOIN sys.fulltext_catalogs FCAT ON FCAT.fulltext_catalog_id = F.fulltext_catalog_id
+		WHERE F.is_enabled = 1`;
 
-		return result;
-	} catch (error) {
-		logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering full text indexes');
-		return [];
-	}
+	return result;
 };
 
-const getViewsIndexes = async (connectionClient, dbName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getViewsIndexes = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting view indexes query',
+		objects: [
+			'sys.indexes',
+			'sys.views',
+			'sys.index_columns',
+			'sys.partitions',
+		],
+		skip: true
+	}, logger);
 	return await currentDbConnectionClient.query`
 		SELECT
 			TableName = t.name,
@@ -203,8 +300,16 @@ const getViewsIndexes = async (connectionClient, dbName) => {
 		`;
 };
 
-const getTableColumnsDescription = async (connectionClient, dbName, tableName, schemaName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getTableColumnsDescription = async (connectionClient, dbName, tableName, schemaName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting table columns description',
+		objects: [
+			'sys.tables',
+			'sys.columns',
+			'sys.extended_properties',
+		],
+		skip: true
+	}, logger);
 	return currentDbConnectionClient.query`
 		select
 			st.name [Table],
@@ -220,30 +325,39 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 	`;
 };
 
-const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName) => {
-	try {
-		const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting memory optimized tables',
+		objects: [
+			'sys.tables',
+			'sys.objects',
+		],
+		skip: true
+	}, logger);
 
-		return currentDbConnectionClient.query`
-			SELECT
-				T.name,
-				T.durability,
-				T.durability_desc,
-				OBJECT_NAME(T.history_table_id) AS history_table,
-				SCHEMA_NAME(O.schema_id) AS history_schema,
-				T.temporal_type_desc
-			FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
-			WHERE T.is_memory_optimized=1
-		`;
-	} catch (error) {
-		logger.log('error', { message: error.message, stack: error.stack, error }, 'Retrieve memory optimzed tables');
-
-		return [];
-	}
+	return currentDbConnectionClient.query`
+		SELECT
+			T.name,
+			T.durability,
+			T.durability_desc,
+			OBJECT_NAME(T.history_table_id) AS history_table,
+			SCHEMA_NAME(O.schema_id) AS history_schema,
+			T.temporal_type_desc
+		FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
+		WHERE T.is_memory_optimized=1
+	`;
 };
 
-const getDatabaseCheckConstraints = async (connectionClient, dbName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getDatabaseCheckConstraints = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting check constraints',
+		objects: [
+			'sys.check_constraints',
+			'sys.objects',
+			'sys.all_columns',
+		],
+		skip: true
+	}, logger);
 	return currentDbConnectionClient.query`
 		select con.[name],
 			t.[name] as [table],
@@ -261,8 +375,17 @@ const getDatabaseCheckConstraints = async (connectionClient, dbName) => {
 	`;
 };
 
-const getViewTableInfo = async (connectionClient, dbName, viewName, schemaName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getViewTableInfo = async (connectionClient, dbName, viewName, schemaName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'information view query',
+		objects: [
+			'sys.sql_dependencies',
+			'sys.objects',
+			'sys.columns',
+			'sys.types',
+		],
+		skip: true
+	}, logger);
 	const objectId = `${schemaName}.${viewName}`;
 	return currentDbConnectionClient.query`
 		SELECT
@@ -303,22 +426,35 @@ const getViewTableInfo = async (connectionClient, dbName, viewName, schemaName) 
 	`;
 };
 
-const getViewColumnRelations = async (connectionClient, dbName, viewName, schemaName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getViewColumnRelations = async (connectionClient, dbName, viewName, schemaName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting view column relations',
+		objects: [
+			'sys.dm_exec_describe_first_result_set',
+		],
+		skip: true
+	}, logger);
 	return currentDbConnectionClient
-		.request()
-		.input('tableName', sql.VarChar, viewName)
-		.input('tableSchema', sql.VarChar, schemaName)
-		.query`
+	.request()
+	.input('tableName', sql.VarChar, viewName)
+	.input('tableSchema', sql.VarChar, schemaName)
+	.query`
 			SELECT name, source_database, source_schema,
 				source_table, source_column
-			FROM sys.dm_exec_describe_first_result_set(N'SELECT TOP 1 * FROM [' + @TableSchema + '].[' + @TableName + ']', null, 1)
+				FROM sys.dm_exec_describe_first_result_set(N'SELECT TOP 1 * FROM [' + @TableSchema + '].[' + @TableName + ']', null, 1)
 			WHERE is_hidden=0
 	`;
 };
 
-const getViewStatement = async (connectionClient, dbName, viewName, schemaName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getViewStatement = async (connectionClient, dbName, viewName, schemaName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting view statements',
+		objects: [
+			'sys.sql_modules',
+			'sys.views',
+		],
+		skip: true
+	}, logger);
 	const objectId = `${schemaName}.${viewName}`;
 	return currentDbConnectionClient
 		.query`SELECT M.*, V.with_check_option
@@ -327,8 +463,20 @@ const getViewStatement = async (connectionClient, dbName, viewName, schemaName) 
 		`;
 };
 
-const getTableKeyConstraints = async (connectionClient, dbName, tableName, schemaName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getTableKeyConstraints = async (connectionClient, dbName, tableName, schemaName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting constraints of keys',
+		objects: [
+			'information_schema.table_constraints',
+			'information_schema.constraint_column_usage',
+			'sys.indexes',
+			'sys.stats',
+			'sys.data_spaces',
+			'sys.index_columns',
+			'sys.partitions',
+		],
+		skip: true
+	}, logger);
 	const objectId = `${schemaName}.${tableName}`;
 	return currentDbConnectionClient.query`
 		SELECT TC.TABLE_NAME as tableName, TC.Constraint_Name as constraintName,
@@ -352,8 +500,14 @@ const getTableKeyConstraints = async (connectionClient, dbName, tableName, schem
 	`;
 };
 
-const getTableMaskedColumns = async (connectionClient, dbName, tableName, schemaName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getTableMaskedColumns = async (connectionClient, dbName, tableName, schemaName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting masked columns',
+		objects: [
+			'sys.masked_columns'
+		],
+		skip: true
+	}, logger);
 	const objectId = `${schemaName}.${tableName}`;
 	return currentDbConnectionClient.query`
 		select name, masking_function from sys.masked_columns
@@ -361,8 +515,15 @@ const getTableMaskedColumns = async (connectionClient, dbName, tableName, schema
 	`;
 };
 
-const getDatabaseXmlSchemaCollection = async (connectionClient, dbName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getDatabaseXmlSchemaCollection = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting xml schema collections',
+		objects: [
+			'sys.column_xml_schema_collection_usages',
+			'sys.xml_schema_collections'
+		],
+		skip: true
+	}, logger);
 	return currentDbConnectionClient.query`
 		SELECT xsc.name as collectionName,
 				SCHEMA_NAME(xsc.schema_id) as schemaName,
@@ -373,8 +534,17 @@ const getDatabaseXmlSchemaCollection = async (connectionClient, dbName) => {
 	`
 };
 
-const getTableDefaultConstraintNames = async (connectionClient, dbName, tableName, schemaName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getTableDefaultConstraintNames = async (connectionClient, dbName, tableName, schemaName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting default cosntraint names',
+		objects: [
+			'sys.all_columns',
+			'sys.tables',
+			'sys.schemas',
+			'sys.default_constraints',
+		],
+		skip: true
+	}, logger);
 	return currentDbConnectionClient.query`
 	SELECT
 		ac.name as columnName,
@@ -396,8 +566,14 @@ const getTableDefaultConstraintNames = async (connectionClient, dbName, tableNam
 	`
 };
 
-const getDatabaseUserDefinedTypes = async (connectionClient, dbName) => {
-	const currentDbConnectionClient = await getNewConnectionClientByDb(connectionClient, dbName);
+const getDatabaseUserDefinedTypes = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting user defined types',
+		objects: [
+			'sys.types',
+		],
+		skip: true
+	}, logger);
 	return currentDbConnectionClient.query`
 		select * from sys.types
 		where is_user_defined = 1
