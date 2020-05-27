@@ -48,7 +48,7 @@ const getClient = async (connectionClient, dbName, meta, logger) => {
 
 					if (meta.skip) {
 						logger.log('error', { message: error.message, stack: error.stack, error }, 'Perform ' + meta.action);
-						logger.progress({ message: 'Failed: ' + meta.action, containerName: '', entityName: ''});
+						logger.progress({ message: 'Failed: ' + meta.action, containerName: dbName, entityName: ''});
 
 						return [];
 					} else {
@@ -151,7 +151,6 @@ const getDatabaseIndexes = async (connectionClient, dbName, logger) => {
 			'sys.tables',
 			'sys.index_columns',
 			'sys.partitions',
-			'sys.dm_db_xtp_hash_index_stats',
 		],
 		skip: true
 	}, logger);
@@ -164,7 +163,6 @@ const getDatabaseIndexes = async (connectionClient, dbName, logger) => {
 			COL_NAME(t.object_id, ic.column_id) as columnName,
 			OBJECT_SCHEMA_NAME(t.object_id) as schemaName,
 			p.data_compression_desc as dataCompression,
-			hs.total_bucket_count,
 			ind.*
 		FROM sys.indexes ind
 		LEFT JOIN sys.tables t
@@ -173,13 +171,28 @@ const getDatabaseIndexes = async (connectionClient, dbName, logger) => {
 			ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
 		INNER JOIN sys.partitions p
 			ON p.object_id = t.object_id AND ind.index_id = p.index_id
-		LEFT JOIN sys.dm_db_xtp_hash_index_stats hs
-			ON ind.index_id = hs.index_id
 		WHERE
 			ind.is_primary_key = 0
 			AND ind.is_unique_constraint = 0
 			AND t.is_ms_shipped = 0
 		`;
+};
+
+const getIndexesBucketCount = async (connectionClient, dbName, indexesId, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting total buckets of indexes',
+		objects: [
+			'sys.dm_db_xtp_hash_index_stats',
+		],
+		skip: true
+	}, logger);
+	return await currentDbConnectionClient
+	.request()
+	.input('idList', sql.VarChar, indexesId.join(', '))
+	.query`
+		SELECT hs.total_bucket_count, hs.index_id
+		FROM sys.dm_db_xtp_hash_index_stats hs
+		WHERE hs.index_id IN (SELECT value FROM string_split(@idList, ','))`;
 };
 
 const getSpatialIndexes = async (connectionClient, dbName, logger) => {
@@ -601,4 +614,5 @@ module.exports = {
 	getViewsIndexes,
 	getFullTextIndexes,
 	getSpatialIndexes,
+	getIndexesBucketCount,
 }
