@@ -60,7 +60,7 @@ const mergeCollectionsWithViews = jsonSchemas =>
 const getCollectionsRelationships = logger => async (dbConnectionClient) => {
 	const dbName = dbConnectionClient.config.database;
 	logger.progress({ message: 'Fetching tables relationships', containerName: dbName, entityName: '' });
-	const tableForeignKeys = await getTableForeignKeys(dbConnectionClient, dbName);
+	const tableForeignKeys = await getTableForeignKeys(dbConnectionClient, dbName, logger);
 	return reverseTableForeignKeys(tableForeignKeys, dbName);
 };
 
@@ -162,11 +162,11 @@ const getViewProperties = (viewData) => {
 	}; 
 };
 
-const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName) => async jsonSchema => {
+const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName, logger) => async jsonSchema => {
 	const [viewInfo, viewColumnRelations, viewStatement] = await Promise.all([
-		await getViewTableInfo(dbConnectionClient, dbName, viewName, schemaName),
-		await getViewColumnRelations(dbConnectionClient, dbName, viewName, schemaName),
-		await getViewStatement(dbConnectionClient, dbName, viewName, schemaName),
+		await getViewTableInfo(dbConnectionClient, dbName, viewName, schemaName, logger),
+		await getViewColumnRelations(dbConnectionClient, dbName, viewName, schemaName, logger),
+		await getViewStatement(dbConnectionClient, dbName, viewName, schemaName, logger),
 	]);
 	if (isViewPartitioned(viewStatement[0].definition)) {
 		const partitionedSchema = getPartitionedJsonSchema(
@@ -243,12 +243,12 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 		databaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints, xmlSchemaCollections, databaseUDT, viewsIndexes, fullTextIndexes,
 		spatialIndexes
 	] = await Promise.all([
-		getDatabaseIndexes(dbConnectionClient, dbName),
+		getDatabaseIndexes(dbConnectionClient, dbName, logger),
 		getDatabaseMemoryOptimizedTables(dbConnectionClient, dbName, logger),
-		getDatabaseCheckConstraints(dbConnectionClient, dbName),
-		getDatabaseXmlSchemaCollection(dbConnectionClient, dbName),
-		getDatabaseUserDefinedTypes(dbConnectionClient, dbName),
-		getViewsIndexes(dbConnectionClient, dbName),
+		getDatabaseCheckConstraints(dbConnectionClient, dbName, logger),
+		getDatabaseXmlSchemaCollection(dbConnectionClient, dbName, logger),
+		getDatabaseUserDefinedTypes(dbConnectionClient, dbName, logger),
+		getViewsIndexes(dbConnectionClient, dbName, logger),
 		getFullTextIndexes(dbConnectionClient, dbName, logger),
 		getSpatialIndexes(dbConnectionClient, dbName, logger),
 	]);
@@ -267,21 +267,21 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				logger.progress({ message: 'Fetching table information', containerName: dbName, entityName: tableName });
 
 				const [tableInfo, tableRows, fieldsKeyConstraints] = await Promise.all([
-					await getTableInfo(dbConnectionClient, dbName, tableName, schemaName),
-					await getTableRow(dbConnectionClient, dbName, tableName, schemaName, reverseEngineeringOptions.rowCollectionSettings),
-					await getTableKeyConstraints(dbConnectionClient, dbName, tableName, schemaName)
+					await getTableInfo(dbConnectionClient, dbName, tableName, schemaName, logger),
+					await getTableRow(dbConnectionClient, dbName, tableName, schemaName, reverseEngineeringOptions.rowCollectionSettings, logger),
+					await getTableKeyConstraints(dbConnectionClient, dbName, tableName, schemaName, logger)
 				]);
 				const isView = tableInfo[0]['TABLE_TYPE'].trim() === 'V';
 
 				const jsonSchema = pipe(
 					transformDatabaseTableInfoToJSON(tableInfo),
 					defineRequiredFields,
-					defineFieldsDescription(await getTableColumnsDescription(dbConnectionClient, dbName, tableName, schemaName)),
+					defineFieldsDescription(await getTableColumnsDescription(dbConnectionClient, dbName, tableName, schemaName, logger)),
 					defineFieldsKeyConstraints(fieldsKeyConstraints),
-					defineMaskedColumns(await getTableMaskedColumns(dbConnectionClient, dbName, tableName, schemaName)),
+					defineMaskedColumns(await getTableMaskedColumns(dbConnectionClient, dbName, tableName, schemaName, logger)),
 					defineJSONTypes(tableRows),
 					defineXmlFieldsCollections(tableXmlSchemas),
-					defineFieldsDefaultConstraintNames(await getTableDefaultConstraintNames(dbConnectionClient, dbName, tableName, schemaName)),
+					defineFieldsDefaultConstraintNames(await getTableDefaultConstraintNames(dbConnectionClient, dbName, tableName, schemaName, logger)),
 				)({ required: [], properties: {} });
 
 				const reorderedTableRows = reorderTableRows(tableRows, reverseEngineeringOptions.isFieldOrderAlphabetic);
@@ -314,7 +314,7 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				};
 
 				if (isView) {
-					const viewData = await prepareViewJSON(dbConnectionClient, dbName, tableName, schemaName)(jsonSchema)
+					const viewData = await prepareViewJSON(dbConnectionClient, dbName, tableName, schemaName, logger)(jsonSchema)
 					const indexes = viewsIndexes.filter(index => index.TableName === tableName && index.schemaName === schemaName);
 
 					result = {
