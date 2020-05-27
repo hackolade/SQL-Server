@@ -17,6 +17,7 @@ const {
 	getViewsIndexes,
 	getFullTextIndexes,
 	getSpatialIndexes,
+	getIndexesBucketCount,
 } = require('../databaseService/databaseService');
 const {
 	transformDatabaseTableInfoToJSON,
@@ -237,10 +238,23 @@ const getMemoryOptimizedOptions = (options) => {
 	};
 };
 
+const addTotalBucketCountToDatabaseIndexes = (databaseIndexes, indexesBucketCount) => {
+	const hash = indexesBucketCount.reduce((hash, i) => {
+		return Object.assign({}, hash, { [i.index_id]: i.total_bucket_count });
+	}, {});
+	return databaseIndexes.map(i => {
+		if (hash[i.index_id] === undefined) {
+			return i;
+		} else {
+			return Object.assign({}, i, { total_bucket_count: hash[i.index_id] });
+		}
+	});
+};
+
 const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo, reverseEngineeringOptions) => {
 	const dbName = dbConnectionClient.config.database;
 	const [
-		databaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints, xmlSchemaCollections, databaseUDT, viewsIndexes, fullTextIndexes,
+		rawDatabaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints, xmlSchemaCollections, databaseUDT, viewsIndexes, fullTextIndexes,
 		spatialIndexes
 	] = await Promise.all([
 		getDatabaseIndexes(dbConnectionClient, dbName, logger),
@@ -252,6 +266,8 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 		getFullTextIndexes(dbConnectionClient, dbName, logger),
 		getSpatialIndexes(dbConnectionClient, dbName, logger),
 	]);
+	const indexesBucketCount = await getIndexesBucketCount(dbConnectionClient, dbName, rawDatabaseIndexes.map(i => i.index_id), logger);
+	const databaseIndexes = addTotalBucketCountToDatabaseIndexes(rawDatabaseIndexes, indexesBucketCount);
 
 	return await Object.entries(tablesInfo).reduce(async (jsonSchemas, [schemaName, tableNames]) => {
 		logger.progress({ message: 'Fetching database information', containerName: dbName, entityName: '' });
