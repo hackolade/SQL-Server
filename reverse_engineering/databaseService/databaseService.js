@@ -43,20 +43,20 @@ const getClient = async (connectionClient, dbName, meta, logger) => {
 			try {
 				return await currentDbConnectionClient.query(...queryParams);
 			} catch (error) {
-				if (error.number === PERMISSION_DENIED_CODE && meta) {
-					error = addPermissionDeniedMetaData(error, meta);
+				if (meta) {
+					if (error.number === PERMISSION_DENIED_CODE) {
+						error = addPermissionDeniedMetaData(error, meta);
+					}
 
 					if (meta.skip) {
 						logger.log('error', { message: error.message, stack: error.stack, error }, 'Perform ' + meta.action);
 						logger.progress({ message: 'Failed: ' + meta.action, containerName: dbName, entityName: ''});
 
 						return [];
-					} else {
-						throw error;
 					}
-				} else {
-					throw error
 				}
+
+				throw error;
 			}
 		}
 	};
