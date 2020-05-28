@@ -15,8 +15,8 @@ const getNewConnectionClientByDb = async (connectionClient, currentDbName) => {
 		password,
 		server,
 		port,
-		connectionTimeout: 120000,
-		requestTimeout: 120000,
+		connectionTimeout: 90000,
+		requestTimeout: 90000,
 		options: {
 			encrypt: true,
 		},
