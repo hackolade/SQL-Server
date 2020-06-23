@@ -10,7 +10,7 @@
 	"additionalOptions": [
 		{
 			"id": "useGoStatement",
-			"value": true,
+			"value": false,
 			"name": "Use GO statements"
 		}
 	]
