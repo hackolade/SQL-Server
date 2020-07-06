@@ -36,7 +36,10 @@
 				"defaultValue": "Username / Password",
 				"options": [{
 					"value": "Username / Password",
-					"label": "Username / Password"
+					"label": "Username / Password (SQL Server authentication)"
+				},{
+					"value": "Username / Password (Windows)",
+					"label": "Username / Password (Windows authentication)"
 				},{
 					"value": "Connection string",
 					"label": "Connection string"
@@ -47,10 +50,13 @@
 				"inputKeyword": "host",
 				"description": "Specify host IP address or DNS name of Microsoft SQL server",
 				"inputType": "text",
-				"dependency": {
+				"dependency": [{
 					"key": "authMethod",
 					"value": "Username / Password"
-				},
+				},{
+					"key": "authMethod",
+					"value": "Username / Password (Windows)"
+				}],
 				"regex": "([^\\s])"
 			},
 			{
@@ -59,10 +65,13 @@
 				"description": "Specify port number of Microsoft SQL server",
 				"inputType": "numeric",
 				"defaultValue": 1433,
-				"dependency": {
+				"dependency": [{
 					"key": "authMethod",
 					"value": "Username / Password"
-				}
+				},{
+					"key": "authMethod",
+					"value": "Username / Password (Windows)"
+				}]
 			},
 			{
 				"inputLabel": "Connection string",
@@ -85,14 +94,30 @@
 		"tab": "Authentication",
 		"structure": [
 			{
+				"inputLabel": "User Domain",
+				"inputKeyword": "userDomain",
+				"inputType": "text",
+				"inputPlaceholder": "User Domain",
+				"dependency": {
+					"key": "authMethod",
+					"value": "Username / Password (Windows)"
+				},
+				"validation": {
+					"regex": "([^\\s])"
+				}
+			},
+			{
 				"inputLabel": "User Name",
 				"inputKeyword": "userName",
 				"inputType": "text",
 				"inputPlaceholder": "User Name",
-				"dependency": {
+				"dependency": [{
 					"key": "authMethod",
 					"value": "Username / Password"
-				},
+				},{
+					"key": "authMethod",
+					"value": "Username / Password (Windows)"
+				}],
 				"validation": {
 					"regex": "([^\\s])"
 				}
@@ -102,10 +127,13 @@
 				"inputKeyword": "userPassword",
 				"inputType": "password",
 				"inputPlaceholder": "Password",
-				"dependency": {
+				"dependency": [{
 					"key": "authMethod",
 					"value": "Username / Password"
-				},
+				},{
+					"key": "authMethod",
+					"value": "Username / Password (Windows)"
+				}],
 				"isHiddenKey": true,
 				"validation": {
 					"regex": "([^\\s])"
