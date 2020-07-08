@@ -50,13 +50,10 @@
 				"inputKeyword": "host",
 				"description": "Specify host IP address or DNS name of Microsoft SQL server",
 				"inputType": "text",
-				"dependency": [{
+				"dependency": {
 					"key": "authMethod",
-					"value": "Username / Password"
-				},{
-					"key": "authMethod",
-					"value": "Username / Password (Windows)"
-				}],
+					"value": ["Username / Password", "Username / Password (Windows)"]
+				},
 				"regex": "([^\\s])"
 			},
 			{
@@ -65,13 +62,10 @@
 				"description": "Specify port number of Microsoft SQL server",
 				"inputType": "numeric",
 				"defaultValue": 1433,
-				"dependency": [{
+				"dependency": {
 					"key": "authMethod",
-					"value": "Username / Password"
-				},{
-					"key": "authMethod",
-					"value": "Username / Password (Windows)"
-				}]
+					"value": ["Username / Password", "Username / Password (Windows)"]
+				}
 			},
 			{
 				"inputLabel": "Connection string",
@@ -111,13 +105,10 @@
 				"inputKeyword": "userName",
 				"inputType": "text",
 				"inputPlaceholder": "User Name",
-				"dependency": [{
+				"dependency": {
 					"key": "authMethod",
-					"value": "Username / Password"
-				},{
-					"key": "authMethod",
-					"value": "Username / Password (Windows)"
-				}],
+					"value": ["Username / Password", "Username / Password (Windows)"]
+				},
 				"validation": {
 					"regex": "([^\\s])"
 				}
@@ -127,13 +118,10 @@
 				"inputKeyword": "userPassword",
 				"inputType": "password",
 				"inputPlaceholder": "Password",
-				"dependency": [{
+				"dependency": {
 					"key": "authMethod",
-					"value": "Username / Password"
-				},{
-					"key": "authMethod",
-					"value": "Username / Password (Windows)"
-				}],
+					"value": ["Username / Password", "Username / Password (Windows)"]
+				},
 				"isHiddenKey": true,
 				"validation": {
 					"regex": "([^\\s])"
