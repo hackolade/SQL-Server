@@ -30,22 +30,6 @@
 				"regex": "([^\\s])"
 			},
 			{
-				"inputLabel": "Authentication method",
-				"inputKeyword": "authMethod",
-				"inputType": "select",
-				"defaultValue": "Username / Password",
-				"options": [{
-					"value": "Username / Password",
-					"label": "Username / Password (SQL Server authentication)"
-				},{
-					"value": "Username / Password (Windows)",
-					"label": "Username / Password (Windows authentication)"
-				},{
-					"value": "Connection string",
-					"label": "Connection string"
-				}]
-			},
-			{
 				"inputLabel": "Host",
 				"inputKeyword": "host",
 				"description": "Specify host IP address or DNS name of Microsoft SQL server",
@@ -66,6 +50,27 @@
 					"key": "authMethod",
 					"value": ["Username / Password", "Username / Password (Windows)"]
 				}
+			}
+		]
+	},
+	{
+		"tab": "Authentication",
+		"structure": [
+			{
+				"inputLabel": "Authentication method",
+				"inputKeyword": "authMethod",
+				"inputType": "select",
+				"defaultValue": "Username / Password",
+				"options": [{
+					"value": "Username / Password",
+					"label": "Username / Password (SQL Server authentication)"
+				},{
+					"value": "Username / Password (Windows)",
+					"label": "Username / Password (Windows authentication)"
+				},{
+					"value": "Connection string",
+					"label": "Connection string"
+				}]
 			},
 			{
 				"inputLabel": "Connection string",
@@ -81,12 +86,7 @@
 				"validation": {
 					"regex": "([^\\s])"
 				}
-			}
-		]
-	},
-	{
-		"tab": "Authentication",
-		"structure": [
+			},
 			{
 				"inputLabel": "User Domain",
 				"inputKeyword": "userDomain",
