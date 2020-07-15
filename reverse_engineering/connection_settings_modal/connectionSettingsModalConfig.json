@@ -7,22 +7,7 @@
 				"inputKeyword": "name",
 				"inputType": "text",
 				"inputPlaceholder": "Name",
-				"customStyle": true
-			},
-			{
-				"inputLabel": "From connection string",
-				"inputKeyword": "connectionStringParser",
-				"inputType": "custom",
-				"inputPlaceholder": "mssql://username:password@localhost:1433/database?encrypt=true",
-				"modalTitle": "From connection string",
-				"modalInputs": [
-					{
-						"inputKeyword": "connectionString",
-						"inputType": "text",
-						"inputPlaceholder": "mssql://username:password@localhost:1433/database",
-						"description": "URI or classic connection string"
-					}
-				]
+				"description": "Choose a friendly connection name"
 			},
 			{
 				"inputLabel": "Source",
@@ -35,7 +20,24 @@
 				},{
 					"value": "azure",
 					"label": "Azure SQL database"
-				}]
+				}],
+				"customStyle": { "width": "43%" },
+				"description": "Choose source"
+			},
+			{
+				"inputLabel": "From connection string",
+				"inputKeyword": "connectionStringParser",
+				"inputType": "custom",
+				"inputPlaceholder": "mssql://username:password@localhost:1433/database?encrypt=true",
+				"modalTitle": "From connection string",
+				"modalInputs": [
+					{
+						"inputKeyword": "connectionString",
+						"inputType": "text",
+						"inputPlaceholder": "mssql://username:password@localhost:1433/database",
+						"description": "Specify URI or classic connection string"
+					}
+				]
 			},
 			{
 				"inputLabel": "Database name",
@@ -83,9 +85,6 @@
 				},{
 					"value": "Username / Password (Windows)",
 					"label": "Username / Password (Windows authentication)"
-				},{
-					"value": "Connection string",
-					"label": "Connection string"
 				}]
 			},
 			{
