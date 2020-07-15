@@ -6,7 +6,23 @@
 				"inputLabel": "Name",
 				"inputKeyword": "name",
 				"inputType": "text",
-				"inputPlaceholder": "Name"
+				"inputPlaceholder": "Name",
+				"customStyle": true
+			},
+			{
+				"inputLabel": "From connection string",
+				"inputKeyword": "connectionStringParser",
+				"inputType": "custom",
+				"inputPlaceholder": "mssql://username:password@localhost:1433/database?encrypt=true",
+				"modalTitle": "From connection string",
+				"modalInputs": [
+					{
+						"inputKeyword": "connectionString",
+						"inputType": "text",
+						"inputPlaceholder": "mssql://username:password@localhost:1433/database",
+						"description": "URI or classic connection string"
+					}
+				]
 			},
 			{
 				"inputLabel": "Source",
@@ -71,21 +87,6 @@
 					"value": "Connection string",
 					"label": "Connection string"
 				}]
-			},
-			{
-				"inputLabel": "Connection string",
-				"inputKeyword": "connectionString",
-				"inputType": "text",
-				"description": "Specify URI or classic connection string",
-				"inputPlaceholder": "mssql://username:password@localhost:1433/database?encrypt=true",
-				"dependency": {
-					"key": "authMethod",
-					"value": "Connection string"
-				},
-				"isHiddenKey": true,
-				"validation": {
-					"regex": "([^\\s])"
-				}
 			},
 			{
 				"inputLabel": "User Domain",
