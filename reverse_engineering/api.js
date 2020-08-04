@@ -1,5 +1,6 @@
 'use strict';
 
+const connectionStringParser = require('mssql/lib/connectionstring');
 const { getClient, setClient, clearClient } = require('./connectionState');
 const { getObjectsFromDatabase } = require('./databaseService/databaseService');
 const {
@@ -81,6 +82,24 @@ module.exports = {
 		} catch (error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering process failed');
 			callback({ message: error.message, stack: error.stack })
+		}
+	},
+
+	parseConnectionString({ connectionString = '' }, logger, callback) {
+		try {
+			const parsedConnectionStringData = connectionStringParser.resolve(connectionString);
+			const parsedData = {
+				databaseName: parsedConnectionStringData.database,
+				host: parsedConnectionStringData.server,
+				port: parsedConnectionStringData.port,
+				authMethod: 'Username / Password',
+				userName: parsedConnectionStringData.user,
+				userPassword: parsedConnectionStringData.password
+			}; 
+			callback(null, { parsedData });
+		} catch(err) {
+			logger.log('error', { message: err.message, stack: err.stack, err }, 'Parsing connection string failed');
+			callback({ message: err.message, stack: err.stack });
 		}
 	}
 };

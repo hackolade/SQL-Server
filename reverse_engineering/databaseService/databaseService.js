@@ -13,6 +13,18 @@ const getConnectionClient = async connectionInfo => {
 				encrypt: true,
 			},
 		});
+	} else if (connectionInfo.authMethod === 'Username / Password (Windows)') {
+		return await sql.connect({
+			user: connectionInfo.userName,
+			password: connectionInfo.userPassword,
+			server: connectionInfo.host,
+			port: connectionInfo.port,
+			database: connectionInfo.databaseName,
+			domain: connectionInfo.userDomain,
+			options: {
+				encrypt: false
+			},
+		});
 	}
 
 	return await sql.connect(connectionInfo.connectionString);
