@@ -9,5 +9,13 @@
 		"primaryKey": false,
 		"mode": "binary",
 		"length": 10
-	}
+	},
+	"descriptor": [
+		{
+			"schema": {
+				"mode": "binary"
+			},
+			"mode": "binary"
+		}
+	]
 }
