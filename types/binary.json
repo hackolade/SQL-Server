@@ -15,6 +15,20 @@
 			"schema": {
 				"mode": "binary"
 			},
+			"size": 8000,
+			"mode": "binary"
+		},
+		{
+			"schema": {
+				"mode": "image"
+			},
+			"mode": "binary"
+		},
+		{
+			"schema": {
+				"mode": "varbinary"
+			},
+			"size": 2147483649,
 			"mode": "binary"
 		}
 	]
