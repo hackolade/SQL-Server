@@ -54,7 +54,7 @@
 				"inputType": "text",
 				"dependency": {
 					"key": "authMethod",
-					"value": ["Username / Password", "Username / Password (Windows)"]
+					"value": ["Username / Password", "Username / Password (Windows)", "Azure Active Directory (Username / Password)"]
 				},
 				"regex": "([^\\s])"
 			},
@@ -66,7 +66,7 @@
 				"defaultValue": 1433,
 				"dependency": {
 					"key": "authMethod",
-					"value": ["Username / Password", "Username / Password (Windows)"]
+					"value": ["Username / Password", "Username / Password (Windows)", "Azure Active Directory (Username / Password)"]
 				}
 			}
 		]
@@ -85,6 +85,9 @@
 				},{
 					"value": "Username / Password (Windows)",
 					"label": "Username / Password (Windows authentication)"
+				},{
+					"value": "Azure Active Directory (Username / Password)",
+					"label": "Azure Active Directory (Username / Password)"
 				}]
 			},
 			{
@@ -107,7 +110,7 @@
 				"inputPlaceholder": "User Name",
 				"dependency": {
 					"key": "authMethod",
-					"value": ["Username / Password", "Username / Password (Windows)"]
+					"value": ["Username / Password", "Username / Password (Windows)", "Azure Active Directory (Username / Password)"]
 				},
 				"validation": {
 					"regex": "([^\\s])"
@@ -120,7 +123,7 @@
 				"inputPlaceholder": "Password",
 				"dependency": {
 					"key": "authMethod",
-					"value": ["Username / Password", "Username / Password (Windows)"]
+					"value": ["Username / Password", "Username / Password (Windows)", "Azure Active Directory (Username / Password)"]
 				},
 				"isHiddenKey": true,
 				"validation": {
