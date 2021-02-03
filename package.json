@@ -1,7 +1,7 @@
 {
     "name": "SQLServer",
-    "version": "0.1.12",
-    "versionDate": "2020-08-05",
+    "version": "0.1.16",
+    "versionDate": "2020-12-09",
     "author": "hackolade",
     "engines": {
         "hackolade": "4.1.10",
@@ -36,7 +36,8 @@
             },
             "relationships": {
                 "compositeRelationships": true
-            }
+            },
+            "FEScriptCommentsSupported": true
         }
     },
     "description": "Hackolade plugin for Microsoft SQL Server and Azure SQL Database",
