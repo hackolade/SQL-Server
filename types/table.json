@@ -2,22 +2,31 @@
 	"name": "table",
 	"erdAbbreviation": "<tbl>",
 	"dtdAbbreviation": "{tbl}",
-	"parentType": "string",
-	"useSample": true,
-	"hiddenOnEntity": "view",
+	"parentType": "document",
+	"structureType": true,
 	"defaultValues": {
-		"primaryKey": false,
-		"relationshipType": "",
-		"parentRelationship": "",
-		"childRelationships": [],
-		"foreignCollection": "",
-		"foreignField": [],
-		"default": "",
-		"minLength": "",
-		"maxLength": "",
-		"pattern": "",
-		"enum": [],
-		"sample":"",
-		"comments":""
-	}
+		"subtype": "object",
+		"properties": []
+	},
+	"subtypes": {
+		"object": {
+			"childValueType": [
+				"char",
+				"numeric",
+				"binary",
+				"datetime",
+				"geography",
+				"geometry",
+				"hierarchyid",
+				"sql_variant",
+				"uniqueidentifier",
+				"xml",
+				"rowversion",
+				"table",
+				"reference",
+				"multiple"
+			]
+		}
+	},
+	"hiddenOnEntity": "view"
 }
