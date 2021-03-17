@@ -3,14 +3,14 @@ const mapJsonSchema = require('./mapJsonSchema');
 const handleDate = field => {
 	return Object.assign({}, field, {
 		type: 'datetime',
-        mode: 'datetime',
+        mode: 'date',
 	});
 };
 
 const handleTime = field => {
 	return Object.assign({}, field, {
 		type: 'datetime',
-        mode: 'datetime',
+        mode: 'time',
 	});
 };
 
