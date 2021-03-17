@@ -2,19 +2,22 @@ const mapJsonSchema = require('./mapJsonSchema');
 
 const handleDate = field => {
 	return Object.assign({}, field, {
-		type: 'datetime'
+		type: 'datetime',
+        mode: 'datetime',
 	});
 };
 
 const handleTime = field => {
 	return Object.assign({}, field, {
-		type: 'datetime'
+		type: 'datetime',
+        mode: 'datetime',
 	});
 };
 
 const handleDateTime = field => {
 	return Object.assign({}, field, {
-		type: 'datetime'
+		type: 'datetime',
+        mode: 'datetime',
 	});
 };
 
