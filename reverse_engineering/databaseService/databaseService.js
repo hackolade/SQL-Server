@@ -212,13 +212,11 @@ const getIndexesBucketCount = async (connectionClient, dbName, indexesId, logger
 		],
 		skip: true
 	}, logger);
-	return mapResponse(await currentDbConnectionClient
-	.request()
-	.input('idList', sql.VarChar, indexesId.join(', '))
-	.query`
+    return mapResponse(await currentDbConnectionClient.query(`
 		SELECT hs.total_bucket_count, hs.index_id
 		FROM sys.dm_db_xtp_hash_index_stats hs
-		WHERE hs.index_id IN (SELECT value FROM string_split(@idList, ','))`);
+		WHERE hs.index_id IN (${indexesId.join(', ')})`)
+    );
 };
 
 const getSpatialIndexes = async (connectionClient, dbName, logger) => {
@@ -620,7 +618,9 @@ const getDatabaseUserDefinedTypes = async (connectionClient, dbName, logger) => 
 }
 
 const mapResponse = async (response = {}) => {
-	return (await response).recordset;
+	const resp = await response;
+
+	return resp.recordset ? resp.recordset : resp;
 }
 
 module.exports = {
