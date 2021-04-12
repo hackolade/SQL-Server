@@ -1,5 +1,5 @@
 const getColumnInfoByName = (columnsInfo, columnName, propertyName) => {
-	const relatedColumn = columnsInfo.find(column => column['ColumnName'] === columnName) || columnsInfo[0];
+	const relatedColumn = columnsInfo.find(column => column['ColumnName'] === columnName) || columnsInfo[0] || {};
 	return relatedColumn[propertyName];
 };
 
@@ -13,6 +13,10 @@ const changeViewPropertiesToReferences = (jsonSchema, viewInfo, viewColumnRelati
 		const referenceSchema = column['source_schema']
 			|| getColumnInfoByName(viewInfo, columnName, 'ReferencedSchemaName');
 		if (!jsonSchemaAcc.properties[columnName]) {
+			return jsonSchemaAcc;
+		}
+
+		if(!referenceTable || !referenceColumn || !referenceSchema) {
 			return jsonSchemaAcc;
 		}
 
