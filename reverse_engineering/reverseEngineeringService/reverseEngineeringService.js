@@ -288,7 +288,8 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 					containsJson(tableInfo) ? await getTableRow(dbConnectionClient, dbName, tableName, schemaName, reverseEngineeringOptions.rowCollectionSettings, logger) : Promise.resolve([]),
 					await getTableKeyConstraints(dbConnectionClient, dbName, tableName, schemaName, logger)
 				]);
-				const isView = tableInfo[0]['TABLE_TYPE'].trim() === 'V';
+				const tableType = tableInfo[0]['TABLE_TYPE'];
+				const isView = tableType && tableType.trim() === 'V';
 
 				const jsonSchema = pipe(
 					transformDatabaseTableInfoToJSON(tableInfo),
