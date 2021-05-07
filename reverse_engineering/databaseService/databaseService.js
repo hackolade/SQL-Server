@@ -11,7 +11,10 @@ const getConnectionClient = async connectionInfo => {
 			database: connectionInfo.databaseName,
 			options: {
 				encrypt: true,
+				enableArithAbort: true
 			},
+			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
+			requestTimeout:  Number(connectionInfo.queryRequestTimeout) || 60000
 		});
 	} else if (connectionInfo.authMethod === 'Username / Password (Windows)') {
 		return await sql.connect({
@@ -22,8 +25,11 @@ const getConnectionClient = async connectionInfo => {
 			database: connectionInfo.databaseName,
 			domain: connectionInfo.userDomain,
 			options: {
-				encrypt: false
+				encrypt: false,
+				enableArithAbort: true
 			},
+			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
+			requestTimeout:  Number(connectionInfo.queryRequestTimeout) || 60000
 		});
 	} else if (connectionInfo.authMethod === 'Azure Active Directory (Username / Password)') {
 		return await sql.connect({
@@ -33,11 +39,14 @@ const getConnectionClient = async connectionInfo => {
 			port: +connectionInfo.port,
 			database: connectionInfo.databaseName,
 			options: {
-				encrypt: true
+				encrypt: true,
+				enableArithAbort: true
 			},
 			authentication: {
 				type: 'azure-active-directory-password',
-			}
+			},
+			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
+			requestTimeout:  Number(connectionInfo.queryRequestTimeout) || 60000
 		});
 	}
 

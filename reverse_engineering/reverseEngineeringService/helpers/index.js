@@ -17,6 +17,7 @@ const defineFieldsCompositeKeyConstraints = require('./defineFieldsCompositeKeyC
 const reverseTableColumn = require('./reverseTableColumn');
 const reorderTableRows = require('./reorderTableRows');
 const getUserDefinedTypes = require('./getUserDefinedTypes');
+const containsJson = require('./containsJson');
 
 module.exports = {
 	transformDatabaseTableInfoToJSON,
@@ -38,4 +39,5 @@ module.exports = {
 	reverseTableColumn,
 	reorderTableRows,
 	getUserDefinedTypes,
+	containsJson,
 }
