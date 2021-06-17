@@ -626,6 +626,23 @@ const getDatabaseUserDefinedTypes = async (connectionClient, dbName, logger) => 
 	`);
 }
 
+const getDatabaseCollationOption = async (connectionClient, dbName, logger) => {
+    const currentDbConnectionClient = await getClient(
+        connectionClient,
+        dbName,
+        {
+            action: 'getting database collation',
+            objects: [],
+            skip: true,
+        },
+        logger
+    );
+
+    return mapResponse(
+        currentDbConnectionClient.query(`SELECT CONVERT (varchar(256), DATABASEPROPERTYEX('${dbName}','collation'));`)
+    );
+};
+
 const mapResponse = async (response = {}) => {
 	const resp = await response;
 
@@ -654,4 +671,5 @@ module.exports = {
 	getFullTextIndexes,
 	getSpatialIndexes,
 	getIndexesBucketCount,
+	getDatabaseCollationOption,
 }
