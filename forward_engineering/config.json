@@ -2,6 +2,7 @@
 	"type": "ddl",
 	"ddlType": "mssql",
 	"namePrefix": "MS SQL Server",
+	"combinedContainers": true,
 	"level": {
 		"container": true,
 		"entity": true,
@@ -13,5 +14,9 @@
 			"value": false,
 			"name": "Use GO statements"
 		}
-	]
+	],
+	"feLevelSelector": {
+		"container": true,
+		"model": true
+	}
 }

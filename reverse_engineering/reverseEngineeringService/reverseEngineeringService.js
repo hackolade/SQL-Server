@@ -36,6 +36,7 @@ const {
 	defineFieldsCompositeKeyConstraints,
 	getUserDefinedTypes,
 	reorderTableRows,
+	containsJson,
 } = require('./helpers');
 const pipe = require('../helpers/pipe');
 
@@ -281,13 +282,14 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 					collection.tableName === tableName && collection.schemaName === schemaName);
 				const tableCheckConstraints = databaseCheckConstraints.filter(cc => cc.table === tableName);
 				logger.progress({ message: 'Fetching table information', containerName: dbName, entityName: tableName });
+				const tableInfo = await getTableInfo(dbConnectionClient, dbName, tableName, schemaName, logger);
 
-				const [tableInfo, tableRows, fieldsKeyConstraints] = await Promise.all([
-					await getTableInfo(dbConnectionClient, dbName, tableName, schemaName, logger),
-					await getTableRow(dbConnectionClient, dbName, tableName, schemaName, reverseEngineeringOptions.rowCollectionSettings, logger),
+				const [tableRows, fieldsKeyConstraints] = await Promise.all([
+					containsJson(tableInfo) ? await getTableRow(dbConnectionClient, dbName, tableName, schemaName, reverseEngineeringOptions.rowCollectionSettings, logger) : Promise.resolve([]),
 					await getTableKeyConstraints(dbConnectionClient, dbName, tableName, schemaName, logger)
 				]);
-				const isView = tableInfo[0]['TABLE_TYPE'].trim() === 'V';
+				const tableType = tableInfo[0]['TABLE_TYPE'];
+				const isView = tableType && tableType.trim() === 'V';
 
 				const jsonSchema = pipe(
 					transformDatabaseTableInfoToJSON(tableInfo),

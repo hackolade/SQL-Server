@@ -2,7 +2,7 @@
 
 const connectionStringParser = require('mssql/lib/connectionstring');
 const { getClient, setClient, clearClient } = require('./connectionState');
-const { getObjectsFromDatabase } = require('./databaseService/databaseService');
+const { getObjectsFromDatabase, getDatabaseCollationOption } = require('./databaseService/databaseService');
 const {
 	reverseCollectionsToJSON,
 	mergeCollectionsWithViews,
@@ -11,6 +11,7 @@ const {
 const logInfo = require('./helpers/logInfo');
 const filterRelationships = require('./helpers/filterRelationships');
 const getOptionsFromConnectionInfo = require('./helpers/getOptionsFromConnectionInfo');
+const { adaptJsonSchema } = require('./helpers/adaptJsonSchema');
 
 module.exports = {
 	async connect(connectionInfo, logger, callback, app) {
@@ -56,6 +57,9 @@ module.exports = {
 			}
 
 			const objects = await getObjectsFromDatabase(client);
+			const dbName = client.config.database;
+            const collationData = (await getDatabaseCollationOption(client, dbName, logger)) || [];
+			logInfo('Database collation: ', collationData[0], logger);
 			callback(null, objects);
 		} catch(error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Retrieving databases and tables information');
@@ -100,6 +104,30 @@ module.exports = {
 		} catch(err) {
 			logger.log('error', { message: err.message, stack: err.stack, err }, 'Parsing connection string failed');
 			callback({ message: err.message, stack: err.stack });
+		}
+	},
+
+	adaptJsonSchema(data, logger, callback, app) {
+		const formatError = error => {
+			return Object.assign({ title: 'Adapt JSON Schema' }, Object.getOwnPropertyNames(error).reduce((accumulator, key) => {
+				return Object.assign(accumulator, {
+					[key]: error[key]
+				});
+			}, {}));
+		};
+		logger.log('info', 'Adaptation of JSON Schema started...', 'Adapt JSON Schema');
+		try {
+			const jsonSchema = JSON.parse(data.jsonSchema);
+			const adaptedJsonSchema = adaptJsonSchema(app.require('lodash'), jsonSchema);
+			
+			logger.log('info', 'Adaptation of JSON Schema finished.', 'Adapt JSON Schema');
+
+			callback(null, {
+				jsonSchema: JSON.stringify(adaptedJsonSchema)
+			});
+		} catch(error) {
+			const formattedError = formatError(error);
+			callback(formattedError);
 		}
 	}
 };
