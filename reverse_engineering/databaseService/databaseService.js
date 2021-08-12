@@ -2,9 +2,12 @@ const sql = require('mssql');
 const { getObjectsFromDatabase, getNewConnectionClientByDb } = require('./helpers');
 
 const getConnectionClient = async connectionInfo => {
+	const hostName = getHostName(connectionInfo.host);
+	const userName = isEmail(connectionInfo.userName) && hostName ? `${connectionInfo.userName}@${hostName}` : connectionInfo.userName;
+
 	if (connectionInfo.authMethod === 'Username / Password') {
 		return await sql.connect({
-			user: connectionInfo.userName,
+			user: userName,
 			password: connectionInfo.userPassword,
 			server: connectionInfo.host,
 			port: +connectionInfo.port,
@@ -18,7 +21,7 @@ const getConnectionClient = async connectionInfo => {
 		});
 	} else if (connectionInfo.authMethod === 'Username / Password (Windows)') {
 		return await sql.connect({
-			user: connectionInfo.userName,
+			user: userName,
 			password: connectionInfo.userPassword,
 			server: connectionInfo.host,
 			port: +connectionInfo.port,
@@ -33,7 +36,7 @@ const getConnectionClient = async connectionInfo => {
 		});
 	} else if (connectionInfo.authMethod === 'Azure Active Directory (Username / Password)') {
 		return await sql.connect({
-			user: connectionInfo.userName,
+			user: userName,
 			password: connectionInfo.userPassword,
 			server: connectionInfo.host,
 			port: +connectionInfo.port,
@@ -52,6 +55,10 @@ const getConnectionClient = async connectionInfo => {
 
 	return await sql.connect(connectionInfo.connectionString);
 };
+
+const isEmail = name => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(name || '');
+
+const getHostName = url => (url || '').split('.')[0];
 
 const PERMISSION_DENIED_CODE = 297;
 
