@@ -1,5 +1,5 @@
 const getObjectsFromDatabase = async client => {
-	const { recordset } = await client.query`select * from INFORMATION_SCHEMA.tables`;
+	const { recordset } = await client.query`SELECT * from INFORMATION_SCHEMA.TABLES`;
 	const schemaObjects = recordset.reduce((schemas, { TABLE_NAME, TABLE_TYPE, TABLE_SCHEMA }) => {
 		const schema = schemas[TABLE_SCHEMA] || { dbName: TABLE_SCHEMA, dbCollections: [], views: [] };
 		if (TABLE_TYPE === 'VIEW') {

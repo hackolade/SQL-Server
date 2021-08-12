@@ -2,7 +2,7 @@
 
 const connectionStringParser = require('mssql/lib/connectionstring');
 const { getClient, setClient, clearClient } = require('./connectionState');
-const { getObjectsFromDatabase } = require('./databaseService/databaseService');
+const { getObjectsFromDatabase, getDatabaseCollationOption } = require('./databaseService/databaseService');
 const {
 	reverseCollectionsToJSON,
 	mergeCollectionsWithViews,
@@ -57,6 +57,9 @@ module.exports = {
 			}
 
 			const objects = await getObjectsFromDatabase(client);
+			const dbName = client.config.database;
+            const collationData = (await getDatabaseCollationOption(client, dbName, logger)) || [];
+			logInfo('Database collation: ', collationData[0], logger);
 			callback(null, objects);
 		} catch(error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Retrieving databases and tables information');
