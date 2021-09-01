@@ -40,9 +40,25 @@
  * }
  */
  {
-	"delete": {
+    "modify": {
+        "field": [
+			{
+				"from": {
+                    "type": "Condition",
+                    "value": "maxLength,length,>"
+				},
+				"to": {
+					"length": {
+                        "type": "Source",
+                        "path": "maxLength"
+                    }
+				}
+			}
+		]
+    },
+    "delete": {
 		"field": {
-			"char": ["maxLength", "minLength"]
+			"char": ["maxLength"]
 		}
-	}
+	}  
 }
