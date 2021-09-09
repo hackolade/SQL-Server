@@ -526,6 +526,16 @@ making sure that you maintain a proper JSON format.
 				"disabled": true
 			},
 			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "alternateKey",
+					"value": true
+				},
+				"disabled": true
+			},
+			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
 				"enableForReference": true,
@@ -678,7 +688,6 @@ making sure that you maintain a proper JSON format.
 			"foreignField",
 			"relationshipType",
 			"minLength",
-			"maxLength",
 			"pattern",
 			"format",
 			"enum",
@@ -986,6 +995,16 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "checkbox",
 				"dependency": {
 					"key": "compositeUniqueKey",
+					"value": true
+				},
+				"disabled": true
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "alternateKey",
 					"value": true
 				},
 				"disabled": true
@@ -1431,6 +1450,16 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "checkbox",
 				"dependency": {
 					"key": "compositeUniqueKey",
+					"value": true
+				},
+				"disabled": true
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "alternateKey",
 					"value": true
 				},
 				"disabled": true
@@ -1886,6 +1915,16 @@ making sure that you maintain a proper JSON format.
 				"disabled": true
 			},
 			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "alternateKey",
+					"value": true
+				},
+				"disabled": true
+			},
+			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
 				"enableForReference": true,
@@ -2314,6 +2353,16 @@ making sure that you maintain a proper JSON format.
 				"disabled": true
 			},
 			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "alternateKey",
+					"value": true
+				},
+				"disabled": true
+			},
+			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
 				"enableForReference": true,
@@ -2720,6 +2769,16 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "checkbox",
 				"dependency": {
 					"key": "compositeUniqueKey",
+					"value": true
+				},
+				"disabled": true
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "alternateKey",
 					"value": true
 				},
 				"disabled": true
@@ -3146,6 +3205,16 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "checkbox",
 				"dependency": {
 					"key": "compositeUniqueKey",
+					"value": true
+				},
+				"disabled": true
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "alternateKey",
 					"value": true
 				},
 				"disabled": true
