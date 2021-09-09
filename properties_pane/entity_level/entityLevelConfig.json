@@ -298,7 +298,15 @@ making sure that you maintain a proper JSON format.
 					"ascending",
 					"descending"
 				]
-			}, {
+			}, 
+			{
+				"propertyName": "Alternate key",
+				"propertyKeyword": "alternateKey",
+				"propertyTooltip": "",
+				"propertyType": "checkbox",
+				"setFieldPropertyBy": "compositeUniqueKey"
+			},
+			{
 				"propertyName": "Partition name",
 				"propertyKeyword": "partitionName",
 				"propertyType": "text"
