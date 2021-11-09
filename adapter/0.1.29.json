@@ -39,18 +39,16 @@
  * 		},
  * }
  */
- {
-	"add": {
-		"entity": [
+{
+	"modify": {
+		"field": [
 			{
-				"path": ["Indxs", "isActivated"],
-				"value": true
-			}
-		],
-		"view": [
-			{
-				"path": ["Indxs", "isActivated"],
-				"value": true
+				"from": {
+					"compositeUniqueKey": true
+				},
+				"to": {
+					"primaryKey": false
+				}
 			}
 		]
 	}

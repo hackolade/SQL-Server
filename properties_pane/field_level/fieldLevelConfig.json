@@ -528,6 +528,7 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
+				"cleanDependency": true,
 				"enableForReference": true,
 				"propertyType": "checkbox",
 				"dependency": {
@@ -555,6 +556,30 @@ making sure that you maintain a proper JSON format.
 						}
 					]
 				}
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"defaultValue": false,
+				"enableForReference": true,
+				"propertyType": "checkbox",
+				"dependency": {
+					"type": "or",
+					"values": [
+						{
+							"key": "unique",
+							"value": true
+						},
+						{
+							"key": "compositeUniqueKey",
+							"value": true
+						}
+					]
+				},
+				"disabledOnCondition": [{
+					"key": "compositeUniqueKey",
+					"value": true
+				}]
 			},
 			{
 				"propertyName": "Unique key options",
@@ -678,7 +703,6 @@ making sure that you maintain a proper JSON format.
 			"foreignField",
 			"relationshipType",
 			"minLength",
-			"maxLength",
 			"pattern",
 			"format",
 			"enum",
@@ -993,6 +1017,7 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
+				"cleanDependency": true,
 				"enableForReference": true,
 				"propertyType": "checkbox",
 				"dependency": {
@@ -1020,6 +1045,30 @@ making sure that you maintain a proper JSON format.
 						}
 					]
 				}
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"defaultValue": false,
+				"enableForReference": true,
+				"propertyType": "checkbox",
+				"dependency": {
+					"type": "or",
+					"values": [
+						{
+							"key": "unique",
+							"value": true
+						},
+						{
+							"key": "compositeUniqueKey",
+							"value": true
+						}
+					]
+				},
+				"disabledOnCondition": [{
+					"key": "compositeUniqueKey",
+					"value": true
+				}]
 			},
 			{
 				"propertyName": "Unique key options",
@@ -1438,6 +1487,7 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
+				"cleanDependency": true,
 				"enableForReference": true,
 				"propertyType": "checkbox",
 				"dependency": {
@@ -1465,6 +1515,30 @@ making sure that you maintain a proper JSON format.
 						}
 					]
 				}
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"defaultValue": false,
+				"enableForReference": true,
+				"propertyType": "checkbox",
+				"dependency": {
+					"type": "or",
+					"values": [
+						{
+							"key": "unique",
+							"value": true
+						},
+						{
+							"key": "compositeUniqueKey",
+							"value": true
+						}
+					]
+				},
+				"disabledOnCondition": [{
+					"key": "compositeUniqueKey",
+					"value": true
+				}]
 			},
 			{
 				"propertyName": "Unique key options",
@@ -1888,6 +1962,7 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
+				"cleanDependency": true,
 				"enableForReference": true,
 				"propertyType": "checkbox",
 				"dependency": {
@@ -1915,6 +1990,30 @@ making sure that you maintain a proper JSON format.
 						}
 					]
 				}
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"defaultValue": false,
+				"enableForReference": true,
+				"propertyType": "checkbox",
+				"dependency": {
+					"type": "or",
+					"values": [
+						{
+							"key": "unique",
+							"value": true
+						},
+						{
+							"key": "compositeUniqueKey",
+							"value": true
+						}
+					]
+				},
+				"disabledOnCondition": [{
+					"key": "compositeUniqueKey",
+					"value": true
+				}]
 			},
 			{
 				"propertyName": "Unique key options",
@@ -2316,6 +2415,7 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
+				"cleanDependency": true,
 				"enableForReference": true,
 				"propertyType": "checkbox",
 				"dependency": {
@@ -2343,6 +2443,30 @@ making sure that you maintain a proper JSON format.
 						}
 					]
 				}
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"defaultValue": false,
+				"enableForReference": true,
+				"propertyType": "checkbox",
+				"dependency": {
+					"type": "or",
+					"values": [
+						{
+							"key": "unique",
+							"value": true
+						},
+						{
+							"key": "compositeUniqueKey",
+							"value": true
+						}
+					]
+				},
+				"disabledOnCondition": [{
+					"key": "compositeUniqueKey",
+					"value": true
+				}]
 			},
 			{
 				"propertyName": "Unique key options",
@@ -2727,6 +2851,7 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
+				"cleanDependency": true,
 				"enableForReference": true,
 				"propertyType": "checkbox",
 				"dependency": {
@@ -2754,6 +2879,30 @@ making sure that you maintain a proper JSON format.
 						}
 					]
 				}
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"defaultValue": false,
+				"enableForReference": true,
+				"propertyType": "checkbox",
+				"dependency": {
+					"type": "or",
+					"values": [
+						{
+							"key": "unique",
+							"value": true
+						},
+						{
+							"key": "compositeUniqueKey",
+							"value": true
+						}
+					]
+				},
+				"disabledOnCondition": [{
+					"key": "compositeUniqueKey",
+					"value": true
+				}]
 			},
 			{
 				"propertyName": "Unique key options",
@@ -3153,6 +3302,7 @@ making sure that you maintain a proper JSON format.
 			{
 				"propertyName": "Unique",
 				"propertyKeyword": "unique",
+				"cleanDependency": true,
 				"enableForReference": true,
 				"propertyType": "checkbox",
 				"dependency": {
@@ -3180,6 +3330,30 @@ making sure that you maintain a proper JSON format.
 						}
 					]
 				}
+			},
+			{
+				"propertyName": "Alternate Key",
+				"propertyKeyword": "alternateKey",
+				"defaultValue": false,
+				"enableForReference": true,
+				"propertyType": "checkbox",
+				"dependency": {
+					"type": "or",
+					"values": [
+						{
+							"key": "unique",
+							"value": true
+						},
+						{
+							"key": "compositeUniqueKey",
+							"value": true
+						}
+					]
+				},
+				"disabledOnCondition": [{
+					"key": "compositeUniqueKey",
+					"value": true
+				}]
 			},
 			{
 				"propertyName": "Unique key options",

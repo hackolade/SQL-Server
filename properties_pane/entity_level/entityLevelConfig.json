@@ -292,13 +292,25 @@ making sure that you maintain a proper JSON format.
 			}, {
 				"propertyName": "Key",
 				"propertyKeyword": "compositeUniqueKey",
-				"propertyType": "primaryKeySetter",
+				"propertyType": "compositeKeySetter",
+				"disabledItemStrategy": "default",
+				"setPrimaryKey": false,
+				"template": "collectiontree",
+				"isCompositeKey": true,
 				"abbr": " ",
 				"attributeList": [
 					"ascending",
 					"descending"
 				]
-			}, {
+			}, 
+			{
+				"propertyName": "Alternate key",
+				"propertyKeyword": "alternateKey",
+				"propertyTooltip": "",
+				"propertyType": "checkbox",
+				"setFieldPropertyBy": "compositeUniqueKey"
+			},
+			{
 				"propertyName": "Partition name",
 				"propertyKeyword": "partitionName",
 				"propertyType": "text"
