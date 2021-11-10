@@ -142,6 +142,16 @@
 					"key": "authMethod",
 					"value": ["Azure Active Directory (Username / Password)", "Azure Active Directory (MFA)"]
 				}
+			},
+			{
+				"inputLabel": "User Name",
+				"inputKeyword": "loginHint",
+				"inputType": "text",
+				"inputPlaceholder": "User Name",
+				"dependency": {
+					"key": "authMethod",
+					"value": ["Azure Active Directory (MFA)"]
+				}
 			}
 		]
 	}
