@@ -137,6 +137,16 @@
 				}
 			},
 			{
+				"inputLabel": "Encrypt connection",
+				"inputKeyword": "encryptConnection",
+				"inputType": "checkbox",
+				"dependency": {
+					"key": "authMethod",
+					"value": ["Username / Password"]
+				},
+				"defaultValue": true
+			},
+			{
 				"inputLabel": "Tenant ID",
 				"inputKeyword": "connectionTenantId",
 				"inputType": "text",

@@ -19,7 +19,7 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			port: +connectionInfo.port,
 			database: connectionInfo.databaseName,
 			options: {
-				encrypt: true,
+				encrypt: connectionInfo.encryptConnection === undefined ? true : Boolean(connectionInfo.encryptConnection),
 				enableArithAbort: true
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
