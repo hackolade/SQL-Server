@@ -6,10 +6,15 @@ defaultConstraintsInfo.reduce((jsonSchemaAcc, column) => ({
 				...jsonSchemaAcc.properties,
 				[column.columnName]: {
 					...jsonSchemaAcc.properties[column.columnName],
-					defaultConstraintName: column.name || '',
+					defaultConstraintName: getValidName(column.name),
 				},
 			}
 		}),
 	}), jsonSchema);
+
+const getValidName = (name = '') => {
+	const isDbGenerated  = name.startsWith('DF__');
+	return !isDbGenerated ? name : '';
+}
 
 module.exports = defineFieldsDefaultConstraintNames;
