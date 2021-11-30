@@ -129,8 +129,11 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "checkbox",
 				"defaultValue": false,
 				"dependency": {
-					"key": "temporal",
-					"value": false
+					"type": "not",
+					"values": {
+							"key": "temporal",
+							"value": true
+						}
 				}
 			},
 			{
@@ -140,8 +143,11 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "checkbox",
 				"defaultValue": false,
 				"dependency": {
-					"key": "memory_optimized",
-					"value": false
+					"type": "not",
+					"values": {
+							"key": "memory_optimized",
+							"value": true
+						}
 				}
 			},
 			{

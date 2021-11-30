@@ -427,9 +427,9 @@ const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName, logger
 			T.durability_desc,
 			OBJECT_NAME(T.history_table_id) AS history_table,
 			SCHEMA_NAME(O.schema_id) AS history_schema,
-			T.temporal_type_desc
+			T.temporal_type_desc,
+			T.is_memory_optimized
 		FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
-		WHERE T.is_memory_optimized=1
 	`);
 };
 

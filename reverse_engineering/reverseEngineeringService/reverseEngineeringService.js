@@ -230,11 +230,13 @@ const getMemoryOptimizedOptions = (options) => {
 	if (!options) {
 		return {};
 	}
-
+	const memory_optimized = options.is_memory_optimized;
+	const systemVersioning = options.temporal_type_desc === 'SYSTEM_VERSIONED_TEMPORAL_TABLE';
 	return {
-		memory_optimized: true,
+		memory_optimized,
+		systemVersioning,
+		temporal: !memory_optimized && systemVersioning,
 		durability: ['SCHEMA_ONLY', 'SCHEMA_AND_DATA'].includes(String(options.durability_desc).toUpperCase()) ? String(options.durability_desc).toUpperCase() : '',
-		systemVersioning: options.temporal_type_desc === 'SYSTEM_VERSIONED_TEMPORAL_TABLE',
 		historyTable: options.history_table ? `${options.history_schema}.${options.history_table}` : '',
 	};
 };
