@@ -44,6 +44,9 @@
 					}
 				}
 			]
+		},
+		"primaryKeyOptions": {
+			"clustered": true
 		}
 	},
 	"patternField": {

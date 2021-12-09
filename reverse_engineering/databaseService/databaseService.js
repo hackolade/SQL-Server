@@ -399,6 +399,8 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 		SELECT
 			st.name [Table],
 			sc.name [Column],
+			sc.is_hidden[IsHidden],
+			sc.generated_always_type_desc AS [GeneratedAlwaysType],
 			sep.value [Description]
 		FROM sys.tables st
 		INNER JOIN sys.columns sc ON st.object_id = sc.object_id
@@ -576,7 +578,7 @@ const getTableKeyConstraints = async (connectionClient, dbName, tableName, schem
 			AND TC.TABLE_NAME=${tableName} AND TC.TABLE_SCHEMA=${schemaName}
 		INNER JOIN sys.indexes ind ON ind.name = TC.CONSTRAINT_NAME
 		INNER JOIN sys.stats st ON st.name = TC.CONSTRAINT_NAME
-		INNER JOIN sys.data_spaces ds ON ds.data_space_id = ind.data_space_id
+		LEFT JOIN sys.data_spaces ds ON ds.data_space_id = ind.data_space_id
 		INNER JOIN sys.index_columns ic ON ic.object_id = OBJECT_ID(${objectId})
 			AND ind.index_id=ic.index_id
 			AND ic.column_id=COLUMNPROPERTY(OBJECT_ID(${objectId}), CC.column_name, 'ColumnId')

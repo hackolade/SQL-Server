@@ -7,6 +7,8 @@ const defineFieldsDescription = columnsInfo => jsonSchema =>
 				[column.Column]: {
 					...jsonSchemaAcc.properties[column.Column],
 					description: column.Description || '',
+					generatedAlwaysType: column.GeneratedAlwaysType || '',
+					isHidden: column.IsHidden || false
 				},
 			}
 		}),

@@ -37,6 +37,7 @@ const {
 	getUserDefinedTypes,
 	reorderTableRows,
 	containsJson,
+	getPeriodForSystemTime
 } = require('./helpers');
 const pipe = require('../helpers/pipe');
 
@@ -292,7 +293,7 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				]);
 				const tableType = tableInfo[0]['TABLE_TYPE'];
 				const isView = tableType && tableType.trim() === 'V';
-
+				debugger
 				const jsonSchema = pipe(
 					transformDatabaseTableInfoToJSON(tableInfo),
 					defineRequiredFields,
@@ -308,13 +309,14 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				const standardDoc = Array.isArray(reorderedTableRows) && reorderedTableRows.length
 					? reorderedTableRows
 					: reorderTableRows([getStandardDocumentByJsonSchema(jsonSchema)], reverseEngineeringOptions.isFieldOrderAlphabetic);
-
+				const periodForSystemTime = getPeriodForSystemTime(jsonSchema.properties);
 				let result = {
 					collectionName: tableName,
 					dbName: schemaName,
 					entityLevel: {
 						Indxs: reverseTableIndexes(tableIndexes),
 						chkConstr: reverseTableCheckConstraints(tableCheckConstraints),
+						periodForSystemTime,
 						...getMemoryOptimizedOptions(databaseMemoryOptimizedTables.find(item => item.name === tableName)),
 						...defineFieldsCompositeKeyConstraints(fieldsKeyConstraints),
 					},
