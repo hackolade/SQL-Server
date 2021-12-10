@@ -293,7 +293,6 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				]);
 				const tableType = tableInfo[0]['TABLE_TYPE'];
 				const isView = tableType && tableType.trim() === 'V';
-				debugger
 				const jsonSchema = pipe(
 					transformDatabaseTableInfoToJSON(tableInfo),
 					defineRequiredFields,
@@ -309,7 +308,7 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				const standardDoc = Array.isArray(reorderedTableRows) && reorderedTableRows.length
 					? reorderedTableRows
 					: reorderTableRows([getStandardDocumentByJsonSchema(jsonSchema)], reverseEngineeringOptions.isFieldOrderAlphabetic);
-				const periodForSystemTime = getPeriodForSystemTime(jsonSchema.properties);
+				const periodForSystemTime = await getPeriodForSystemTime(dbConnectionClient, dbName, tableName, schemaName, logger);
 				let result = {
 					collectionName: tableName,
 					dbName: schemaName,

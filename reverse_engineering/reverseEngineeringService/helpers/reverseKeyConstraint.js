@@ -11,7 +11,7 @@ const reverseKeyConstraint = keyConstraintInfo => ({
 	isPadded: Boolean(keyConstraintInfo.is_padded),
 	fillFactor: keyConstraintInfo.fill_factor,
 	order: keyConstraintInfo.isDescending ? 'DESC' : 'ASC',
-	partitionName: keyConstraintInfo.dataSpaceName,
+	partitionName: keyConstraintInfo.dataSpaceName ?? '',
 	statisticsIncremental: keyConstraintInfo.statisticsIncremental,
 	dataCompression: keyConstraintInfo.dataCompression,
 });

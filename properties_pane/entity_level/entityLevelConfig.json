@@ -482,8 +482,8 @@ making sure that you maintain a proper JSON format.
 						"propertyType": "checkbox"
 					},
 					{
-						"propertyName": "Nonclustered",
-						"propertyKeyword": "nonclustered",
+						"propertyName": "Clustered",
+						"propertyKeyword": "clustered",
 						"propertyType": "checkbox"
 					},
 					{

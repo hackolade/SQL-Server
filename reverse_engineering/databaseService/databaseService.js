@@ -163,6 +163,25 @@ const getTableInfo = async (connectionClient, dbName, tableName, tableSchema, lo
 	;`);
 };
 
+const getTableSystemTime = async (connectionClient, dbName, tableName, tableSchema, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'table information query',
+		objects: [
+			'sys.periods',
+		]
+	}, logger);
+	const objectId = `${tableSchema}.${tableName}`;
+	return mapResponse(await currentDbConnectionClient.query`
+		SELECT col_name(p.object_id, p.start_column_id)                                          as startColumn,
+		COLUMNPROPERTY(p.object_id, col_name(p.object_id, p.start_column_id), 'IsHidden') as startColumnIsHidden,
+		col_name(p.object_id, p.end_column_id)                                            as endColumn,
+		COLUMNPROPERTY(p.object_id, col_name(p.object_id, p.start_column_id), 'IsHidden') as endColumnIsHidden
+		FROM sys.periods p
+		WHERE p.object_id = OBJECT_ID(${objectId})
+		AND p.period_type = 1;
+	;`);
+};
+
 const getTableRow = async (connectionClient, dbName, tableName, tableSchema, reverseEngineeringOptions, logger) => {
 	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
 		action: 'getting data query',
@@ -399,8 +418,6 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 		SELECT
 			st.name [Table],
 			sc.name [Column],
-			sc.is_hidden[IsHidden],
-			sc.generated_always_type_desc AS [GeneratedAlwaysType],
 			sep.value [Description]
 		FROM sys.tables st
 		INNER JOIN sys.columns sc ON st.object_id = sc.object_id
@@ -802,4 +819,5 @@ module.exports = {
 	getSpatialIndexes,
 	getIndexesBucketCount,
 	getDatabaseCollationOption,
+	getTableSystemTime
 }

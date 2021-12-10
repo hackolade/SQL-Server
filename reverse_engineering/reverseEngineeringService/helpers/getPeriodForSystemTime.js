@@ -1,19 +1,23 @@
-const getPeriodForSystemTime = (tableRows) => {
-	const periodForSystemTime = Object.entries(tableRows).reduce((period, [colName, properties]) => {
-		if(properties.generatedAlwaysType === 'AS_ROW_START'){
-			return {...period, startTime: {name: colName, type: properties.isHidden ? 'hidden': ''}}
-		}
-		if(properties.generatedAlwaysType === 'AS_ROW_END'){
-			return {...period, endTime: {name: colName, type: properties.isHidden ? 'hidden': ''}}
-		}
-		return period;
-	 }, {})
-	if(!periodForSystemTime.startTime || !periodForSystemTime.endTime){
+const {
+	getTableSystemTime
+} = require('../../databaseService/databaseService');
+
+
+const getPeriodForSystemTime = async (dbConnectionClient, dbName, tableName, schemaName, logger) => {
+	const tableSystemTime = await getTableSystemTime(dbConnectionClient, dbName, tableName, schemaName, logger);
+	if(!tableSystemTime[0]){
 		return;
 	}
+	const periodForSystemTime = tableSystemTime[0];
 	return [{
-		startTime: [periodForSystemTime.startTime],
-		endTime: [periodForSystemTime.endTime],
+		startTime: [{
+			name: periodForSystemTime.startColumn,
+			type: periodForSystemTime.startColumnIsHidden === 1 ? 'hidden' : ''
+		}],
+		endTime: [{
+			name: periodForSystemTime.endColumn,
+			type: periodForSystemTime.endColumnIsHidden === 1 ? 'hidden' : ''
+		}],
 	}]
 };
 
