@@ -3,8 +3,47 @@ const sql = require('mssql');
 const https = require('https');
 const { getObjectsFromDatabase, getNewConnectionClientByDb } = require('./helpers');
 const msal = require('@azure/msal-node');
+const fs = require('fs');
 
 const QUERY_REQUEST_TIMEOUT = 60000;
+
+const getSslConfig = (connectionInfo) => {
+	const encrypt = connectionInfo.encryptConnection === undefined ? true : Boolean(connectionInfo.encryptConnection);
+
+	if (!encrypt) {
+		return {
+			encrypt,
+		};
+	}
+
+	if (connectionInfo.sslType === 'TRUST_ALL_CERTIFICATES') {
+		return {
+			encrypt,
+			trustServerCertificate: true,
+		};
+	}
+
+	if (connectionInfo.sslType === 'TRUST_CUSTOM_CA_SIGNED_CERTIFICATES') {
+		return {
+			encrypt,
+			cryptoCredentialsDetails: {
+				ca: fs.readFileSync(connectionInfo.certAuthority),
+			},
+		};
+	}
+
+	if (connectionInfo.sslType === 'TRUST_SERVER_CLIENT_CERTIFICATES') {
+		return {
+			encrypt,
+			cryptoCredentialsDetails: {
+				ca: fs.readFileSync(connectionInfo.certAuthority),
+				cert: connectionInfo.clientCert && fs.readFileSync(connectionInfo.clientCert),
+				key: connectionInfo.clientPrivateKey&& fs.readFileSync(connectionInfo.clientPrivateKey),
+				passphrase: connectionInfo.passphrase,
+			}
+		};
+	}
+};
 
 const getConnectionClient = async (connectionInfo, logger) => {
 	const hostName = getHostName(connectionInfo.host);
@@ -12,6 +51,7 @@ const getConnectionClient = async (connectionInfo, logger) => {
 	const tenantId = connectionInfo.connectionTenantId || connectionInfo.tenantId || 'common';
 
 	if (connectionInfo.authMethod === 'Username / Password') {
+		const sslOptions = getSslConfig(connectionInfo);
 		return await sql.connect({
 			user: userName,
 			password: connectionInfo.userPassword,
@@ -19,8 +59,8 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			port: +connectionInfo.port,
 			database: connectionInfo.databaseName,
 			options: {
-				encrypt: connectionInfo.encryptConnection === undefined ? true : Boolean(connectionInfo.encryptConnection),
-				enableArithAbort: true
+				enableArithAbort: true,
+				...sslOptions,
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
 			requestTimeout:  Number(connectionInfo.queryRequestTimeout) || 60000
