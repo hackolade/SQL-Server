@@ -179,6 +179,10 @@
 				"inputLabel": "SSL",
 				"inputKeyword": "sslType",
 				"inputType": "select",
+				"dependency": {
+					"key": "authMethod",
+					"value": "Username / Password"
+				},
 				"options": [{
 					"value": "SYSTEMCA", 
 					"label": "SYSTEMCA"
@@ -200,8 +204,14 @@
 				"inputPlaceholder": "Certificate Authority",
 				"extensions": ["pem", "crt", "key"],
 				"dependency": {
-					"key": "sslType",
-					"value": ["TRUST_CUSTOM_CA_SIGNED_CERTIFICATES", "TRUST_SERVER_CLIENT_CERTIFICATES"]
+					"type": "and",
+					"values": [{
+						"key": "sslType",
+						"value": ["TRUST_CUSTOM_CA_SIGNED_CERTIFICATES", "TRUST_SERVER_CLIENT_CERTIFICATES"]
+					}, {
+						"key": "authMethod",
+						"value": "Username / Password"
+					}]
 				}
 			},
 			{
@@ -211,8 +221,14 @@
 				"inputPlaceholder": "Client Certificate",
 				"extensions": ["pem", "crt", "key"],
 				"dependency": {
-					"key": "sslType",
-					"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
+					"type": "and",
+					"values": [{
+						"key": "sslType",
+						"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
+					}, {
+						"key": "authMethod",
+						"value": "Username / Password"
+					}]
 				}
 			},
 			{
@@ -222,8 +238,14 @@
 				"inputPlaceholder": "Client Private Key",
 				"extensions": ["pem", "crt", "key"],
 				"dependency": {
-					"key": "sslType",
-					"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
+					"type": "and",
+					"values": [{
+						"key": "sslType",
+						"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
+					}, {
+						"key": "authMethod",
+						"value": "Username / Password"
+					}]
 				}
 			},
 			{
@@ -233,8 +255,14 @@
 				"inputPlaceholder": "Passphrase",
 				"isHiddenKey": true,
 				"dependency": {
-					"key": "sslType",
-					"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
+					"type": "and",
+					"values": [{
+						"key": "sslType",
+						"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
+					}, {
+						"key": "authMethod",
+						"value": "Username / Password"
+					}]
 				}
 			}
 		]
