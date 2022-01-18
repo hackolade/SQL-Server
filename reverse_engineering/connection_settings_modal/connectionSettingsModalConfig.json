@@ -73,6 +73,29 @@
 	},
 	{
 		"tab": "Authentication",
+		"helpUrl": [
+			{
+				"value": "https://hackolade.com/help/SQLServerauthentication.html",
+				"dependency": {
+					"key": "authMethod",
+					"value": "Username / Password",
+				},
+			},
+			{
+				"value": "https://hackolade.com/help/Windowsauthentication.html",
+				"dependency": {
+					"key": "authMethod",
+					"value": "Username / Password (Windows)",
+				},
+			},
+			{
+				"value": "https://hackolade.com/help/AzureActiveDirectoryauthenticati.html",
+				"dependency": {
+					"key": "authMethod",
+					"value": ["Azure Active Directory (Username / Password)", "Azure Active Directory (MFA)"],
+				},
+			}
+		],
 		"structure": [
 			{
 				"inputLabel": "Authentication method",
@@ -170,6 +193,7 @@
 	},
 	{
 		"tab": "SSL",
+		"helpUrl": "https://hackolade.com/help/SSL5.html",
 		"disable": {
 			"key": "encryptConnection",
 			"value": false
@@ -269,6 +293,7 @@
 	},
 	{
 		"tab": "SSH",
+		"helpUrl": "https://hackolade.com/help/SSH6.html",
 		"structure": [
 			{
 				"inputLabel": "Use SSH Tunnel",
