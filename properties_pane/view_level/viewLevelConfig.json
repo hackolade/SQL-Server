@@ -125,6 +125,11 @@ making sure that you maintain a proper JSON format.
 				"template": "textarea"
 			},
 			{
+				"propertyName": "If not exist",
+				"propertyKeyword": "ifNotExist",
+				"propertyType": "checkbox"
+			},
+			{
 				"propertyName": "View Attribute",
 				"propertyKeyword": "viewAttrbute",
 				"propertyType": "select",
