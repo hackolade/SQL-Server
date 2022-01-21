@@ -78,22 +78,22 @@
 				"value": "https://hackolade.com/help/SQLServerauthentication.html",
 				"dependency": {
 					"key": "authMethod",
-					"value": "Username / Password",
-				},
+					"value": "Username / Password"
+				}
 			},
 			{
 				"value": "https://hackolade.com/help/Windowsauthentication.html",
 				"dependency": {
 					"key": "authMethod",
-					"value": "Username / Password (Windows)",
-				},
+					"value": "Username / Password (Windows)"
+				}
 			},
 			{
 				"value": "https://hackolade.com/help/AzureActiveDirectoryauthenticati.html",
 				"dependency": {
 					"key": "authMethod",
-					"value": ["Azure Active Directory (Username / Password)", "Azure Active Directory (MFA)"],
-				},
+					"value": ["Azure Active Directory (Username / Password)", "Azure Active Directory (MFA)"]
+				}
 			}
 		],
 		"structure": [
