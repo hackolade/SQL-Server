@@ -1,6 +1,6 @@
 {
 	"type": "ddl",
-	"ddlType": "mssql",
+	"ddlType": "plugin",
 	"namePrefix": "MS SQL Server",
 	"combinedContainers": true,
 	"level": {

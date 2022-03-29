@@ -1,0 +1,54 @@
+module.exports = {
+	createDatabase: 'CREATE DATABASE [${name}]${terminator}\nUSE [${name}]${terminator}',
+
+	createSchema: 'CREATE SCHEMA [${name}]${terminator}',
+
+	createTable:
+		'CREATE${external} TABLE ${name} (\n' +
+		'\t${column_definitions}${temporalTableTime}${keyConstraints}${checkConstraints}${foreignKeyConstraints}${memoryOptimizedIndexes}\n' +
+		')${options}${terminator}\n',
+
+	columnDefinition:
+		'[${name}] ${type}${primary_key}${temporalTableTime}${sparse}${maskedWithFunction}${identity}${default}${collation}${not_null}${encryptedWith}',
+
+	index:
+		'CREATE${unique}${clustered}${columnstore} INDEX ${name}\n' +
+		'\tON ${table} ( ${keys} )${include}${expression}${relational_index_option}${terminator}\n',
+
+	fullTextIndex:
+		'CREATE FULLTEXT INDEX ON ${table} (\n\t${keys}\n)\nKEY INDEX ${indexName}\n${catalog}${options}${terminator}\n',
+
+	spatialIndex: 'CREATE SPATIAL INDEX ${name} ON ${table} (${column})${using}\n${options}${terminator}\n',
+
+	checkConstraint: 'CONSTRAINT [${name}] CHECK${notForReplication} (${expression})',
+
+	createForeignKeyConstraint:
+		'CONSTRAINT [${name}] FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})',
+
+	createForeignKey:
+		'ALTER TABLE ${foreignTable} ADD CONSTRAINT [${name}] FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${terminator}',
+
+	createView:
+		'CREATE${materialized} VIEW ${name}\n${view_attribute}AS ${select_statement}${check_option}${options}${terminator}\n',
+
+	viewSelectStatement: 'SELECT ${keys}\n\tFROM ${tableName}\n',
+
+	createUdtFromBaseType: 'CREATE TYPE ${name} FROM ${base_type}${not_null}${terminator}\n',
+
+	createKeyConstraint: '${constraintName}${keyType}${clustered}${columns}${options}${partition}',
+
+	createDefaultConstraint:
+		'ALTER TABLE ${tableName} ADD CONSTRAINT [${constraintName}] DEFAULT (${default}) FOR [${columnName}]${terminator}\n',
+
+	ifNotExistSchema:
+		"IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'[${schemaName}]')\nbegin\n\tEXEC('${statement}')\nend${terminator}",
+
+	ifNotExistDatabase:
+		"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = N'[${databaseName}]')\nbegin\n${statement}\nend${terminator}",
+
+	ifNotExistTable:
+		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${tableName}') AND type in (N'U'))\nbegin\n${statement}\nend${terminator}",
+
+	ifNotExistView:
+		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${viewName}') AND type in (N'V'))\nbegin\n${statement}\nend${terminator}",
+};
