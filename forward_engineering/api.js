@@ -1,6 +1,5 @@
 const { commentDropStatements } = require('./helpers/commentDropStatements');
 const { DROP_STATEMENTS } = require('./helpers/constants');
-const { getScriptOptions } = require('./helpers/getScriptOptions');
 
 module.exports = {
 	generateScript(data, logger, callback, app) {
