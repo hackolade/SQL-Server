@@ -6,7 +6,7 @@ const commentIfDeactivated = require('./helpers/commentIfDeactivated');
 module.exports = (baseProvider, options, app) => {
 	const _ = app.require('lodash');
 	const { assignTemplates } = app.require('@hackolade/ddl-fe-utils');
-	const { tab, checkAllKeysDeactivated, divideIntoActivatedAndDeactivated } =
+	const { checkAllKeysDeactivated, divideIntoActivatedAndDeactivated, getEntityName } =
 		app.require('@hackolade/ddl-fe-utils').general;
 
 	const { decorateType, getIdentity, getEncryptedWith } = require('./helpers/columnDefinitionHelper')(app);
@@ -19,7 +19,6 @@ module.exports = (baseProvider, options, app) => {
 		createTableIndex,
 	} = require('./helpers/indexHelper')(app);
 	const {
-		getViewData,
 		getTableName,
 		getTableOptions,
 		hasType,
@@ -36,7 +35,7 @@ module.exports = (baseProvider, options, app) => {
 		require('./helpers/constraintsHelper')(app);
 	const { wrapIfNotExistSchema, wrapIfNotExistDatabase, wrapIfNotExistTable, wrapIfNotExistView } =
 		require('./helpers/ifNotExistStatementHelper')(app);
-	const { createViewSelectStatement, getPartitionedTables } = require('./helpers/viewHelper')(app);
+	const { createViewSelectStatement, getPartitionedTables, getCreateViewData } = require('./helpers/viewHelper')(app);
 
 	const terminator = getTerminator(options);
 
@@ -276,56 +275,38 @@ module.exports = (baseProvider, options, app) => {
 			dbData,
 			isActivated,
 		) {
-			const viewTerminator = ifNotExist ? ';' : terminator;
-			const viewData = getViewData(keys, schemaData);
+			const viewData = getCreateViewData({
+				name,
+				keys,
+				partitionedTables,
+				partitioned,
+				viewAttrbute,
+				withCheckOption,
+				selectStatement,
+				schemaData,
+				ifNotExist,
+				terminator,
+				isActivated,
+			});
 
-			if (partitioned) {
-				selectStatement = createViewSelectStatement({
-					tables: partitionedTables,
-					selectStatement,
-					keys,
-					terminator: viewTerminator,
-					isParentActivated: isActivated,
-				});
-			}
-
-			if ((_.isEmpty(viewData.tables) || _.isEmpty(viewData.columns)) && !selectStatement) {
+			if (!viewData) {
 				return '';
 			}
 
-			let columnsAsString = viewData.columns.map(column => column.statement).join(',\n\t\t');
-
-			if (isActivated) {
-				const dividedColumns = divideIntoActivatedAndDeactivated(viewData.columns, column => column.statement);
-				const deactivatedColumnsString = dividedColumns.deactivatedItems.length
-					? commentIfDeactivated(
-							dividedColumns.deactivatedItems.join(',\n\t\t'),
-							{ isActivated: false },
-							true,
-					  )
-					: '';
-				columnsAsString = dividedColumns.activatedItems.join(',\n\t\t') + deactivatedColumnsString;
-			}
-
-			const viewName = getTableName(name, schemaData.schemaName);
 			const viewStatement = assignTemplates(templates.createView, {
-				name: viewName,
-				view_attribute: viewAttrbute ? `WITH ${viewAttrbute}\n` : '',
-				check_option: withCheckOption ? `WITH CHECK OPTION` : '',
-				select_statement: _.trim(selectStatement)
-					? _.trim(tab(selectStatement)) + '\n'
-					: assignTemplates(templates.viewSelectStatement, {
-							tableName: viewData.tables.join(', '),
-							keys: columnsAsString,
-							terminator: viewTerminator,
-					  }),
-				terminator: viewTerminator,
+				name: viewData.viewName,
+				view_attribute: viewData.viewAttribute,
+				check_option: viewData.checkOption,
+				select_statement: viewData.selectStatement,
+				terminator: viewData.terminator,
 			});
 
-			return ifNotExist ? wrapIfNotExistView({ templates, viewStatement, viewName, terminator }) : viewStatement;
+			return ifNotExist
+				? wrapIfNotExistView({ templates, viewStatement, viewName: viewData.viewName, terminator })
+				: viewStatement;
 		},
 
-		createViewIndex(viewName, index, dbData, isParentActivated) {
+		createViewIndex(viewName, index, dbData, isParentActivated = true) {
 			const isActivated = checkIndexActivated(index);
 			return commentIfDeactivated(createIndex(terminator, viewName, index, isActivated && isParentActivated), {
 				isActivated: isParentActivated ? isActivated : true,
@@ -519,6 +500,195 @@ module.exports = (baseProvider, options, app) => {
 
 		commentIfDeactivated(statement, data, isPartOfLine) {
 			return commentIfDeactivated(statement, data, isPartOfLine);
+		},
+
+		// * DROP statements for alter script from delta model
+		dropSchema(name) {
+			return assignTemplates(templates.dropSchema, {
+				terminator,
+				name,
+			});
+		},
+
+		dropTable(fullTableName) {
+			return assignTemplates(templates.dropTable, {
+				name: fullTableName,
+				terminator,
+			});
+		},
+
+		dropIndex(tableName, index) {
+			const object = getTableName(tableName, index.schemaName);
+
+			return assignTemplates(templates.dropIndex, {
+				name: index.name,
+				object,
+				terminator,
+			});
+		},
+
+		dropConstraint(fullTableName, constraintName) {
+			return assignTemplates(templates.dropConstraint, {
+				tableName: fullTableName,
+				name: constraintName,
+				terminator,
+			});
+		},
+
+		alterTableOptions(jsonSchema, schemaData, idToNameHashTable) {
+			const tableName = getTableName(getEntityName(jsonSchema), schemaData.schemaName);
+
+			const compMod = jsonSchema.role?.compMod ?? {};
+			const isSystemVersioning = compMod.systemVersioning?.old !== compMod.systemVersioning?.new;
+			const isHistoryTable = compMod.historyTable?.old !== compMod.historyTable?.new;
+			const isDataConsistencyCheck = compMod.dataConsistencyCheck?.old !== compMod.dataConsistencyCheck?.new;
+			const isPeriodForSystemTime = !_.isEqual(
+				compMod.periodForSystemTime?.old,
+				compMod.periodForSystemTime?.new,
+			);
+
+			const isChangedProperties =
+				isSystemVersioning || isHistoryTable || isDataConsistencyCheck || isPeriodForSystemTime;
+
+			const temporalTableTimeStartColumnName =
+				idToNameHashTable[_.get(jsonSchema, 'periodForSystemTime[0].startTime[0].keyId', '')];
+			const temporalTableTimeEndColumnName =
+				idToNameHashTable[_.get(jsonSchema, 'periodForSystemTime[0].endTime[0].keyId', '')];
+
+			const options = {
+				memory_optimized: jsonSchema.memory_optimized,
+				durability: jsonSchema.durability ?? '',
+				systemVersioning: jsonSchema.systemVersioning ?? false,
+				historyTable: jsonSchema.historyTable ?? '',
+				dataConsistencyCheck: jsonSchema.dataConsistencyCheck ?? false,
+				temporal: jsonSchema.temporal ?? false,
+				ledger: jsonSchema.ledger ?? false,
+				ledger_view: jsonSchema.ledger_view,
+				transaction_id_column_name: jsonSchema.transaction_id_column_name,
+				sequence_number_column_name: jsonSchema.sequence_number_column_name,
+				operation_type_id_column_name: jsonSchema.operation_type_id_column_name,
+				operation_type_desc_column_name: jsonSchema.operation_type_desc_column_name,
+				append_only: jsonSchema.append_only ?? false,
+				temporalTableTimeStartColumnName,
+				temporalTableTimeEndColumnName,
+			};
+
+			if (!isChangedProperties) {
+				return '';
+			}
+
+			const optionsScript = _.trim(getTableOptions(options)?.replace('WITH', 'SET'));
+
+			return assignTemplates(templates.dropIndex, {
+				options: optionsScript,
+				tableName,
+				terminator,
+			});
+		},
+
+		alterTableAddCheckConstraint(fullTableName, checkConstraint) {
+			return assignTemplates(templates.alterTableAddConstraint, {
+				tableName: fullTableName,
+				constraint: this.createCheckConstraint(checkConstraint),
+				terminator,
+			});
+		},
+
+		dropColumn(fullTableName, columnName) {
+			const command = assignTemplates(templates.dropColumn, {
+				name: columnName,
+			});
+
+			return assignTemplates(templates.alterTable, {
+				tableName: fullTableName,
+				command,
+				terminator,
+			});
+		},
+
+		addColumn(fullTableName, script) {
+			const command = assignTemplates(templates.addColumn, {
+				script,
+			});
+
+			return assignTemplates(templates.alterTable, {
+				tableName: fullTableName,
+				command,
+				terminator,
+			});
+		},
+
+		renameColumn(fullTableName, oldColumnName, newColumnName) {
+			return assignTemplates(templates.renameColumn, {
+				terminator: terminator === ';' ? '' : terminator,
+				fullTableName: fullTableName,
+				oldColumnName,
+				newColumnName,
+			});
+		},
+
+		alterColumn(fullTableName, columnDefinition) {
+			const type = hasType(columnDefinition.type)
+				? _.toUpper(columnDefinition.type)
+				: getTableName(columnDefinition.type, columnDefinition.schemaName);
+			const notNull = columnDefinition.nullable ? ' NULL' : ' NOT NULL';
+
+			const command = assignTemplates(templates.alterColumn, {
+				name: columnDefinition.name,
+				type: decorateType(type, columnDefinition),
+				not_null: notNull,
+			});
+
+			return assignTemplates(templates.alterTable, {
+				tableName: fullTableName,
+				command,
+				terminator,
+			});
+		},
+
+		dropView(fullViewName) {
+			return assignTemplates(templates.dropView, {
+				name: fullViewName,
+				terminator,
+			});
+		},
+
+		alterView(
+			{ name, keys, partitionedTables, partitioned, viewAttrbute, withCheckOption, selectStatement, schemaData },
+			dbData,
+			isActivated,
+		) {
+			const viewData = getCreateViewData({
+				name,
+				keys,
+				partitionedTables,
+				partitioned,
+				viewAttrbute,
+				withCheckOption,
+				selectStatement,
+				schemaData,
+				terminator,
+				isActivated,
+			});
+
+			if (!viewData) {
+				return '';
+			}
+
+			return assignTemplates(templates.alterView, {
+				name: viewData.viewName,
+				viewAttribute: viewData.viewAttribute,
+				checkOption: viewData.checkOption,
+				selectStatement: viewData.selectStatement,
+				terminator,
+			});
+		},
+
+		dropUdt(name) {
+			return assignTemplates(templates.dropType, {
+				name,
+				terminator,
+			});
 		},
 	};
 };

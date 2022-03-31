@@ -2,6 +2,7 @@
 	"type": "ddl",
 	"ddlType": "plugin",
 	"namePrefix": "MS SQL Server",
+	"mode": "sqlserver",
 	"combinedContainers": true,
 	"level": {
 		"container": true,
@@ -13,10 +14,21 @@
 			"id": "useGoStatement",
 			"value": false,
 			"name": "Use GO statements"
+		},
+		{
+			"id": "applyDropStatements",
+			"value": false,
+			"forUpdate": true,
+			"name": "Apply Drop Statements",
+			"isDropInStatements": true
 		}
 	],
 	"feLevelSelector": {
 		"container": true,
 		"model": true
+	},
+	"compMode": {
+		"entity": true,
+		"container": true
 	}
 }
