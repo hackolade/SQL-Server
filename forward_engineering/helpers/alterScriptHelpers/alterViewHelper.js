@@ -80,8 +80,8 @@ module.exports = (app, options) => {
 			}
 
 			const entityName =
-				_.get(definition.collection, '[0].code', {}) ||
-				_.get(definition.collection, '[0].collectionName', {}) ||
+				_.get(definition.collection, '[0].code', '') ||
+				_.get(definition.collection, '[0].collectionName', '') ||
 				'';
 			const dbName = _.get(definition.bucket, '[0].code') || _.get(definition.bucket, '[0].name', '');
 			const name = definition.name;
