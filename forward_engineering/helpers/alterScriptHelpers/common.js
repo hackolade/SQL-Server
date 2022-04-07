@@ -19,8 +19,8 @@ module.exports = app => {
 	};
 
 	const getModifiedGroupItems = ({ new: newItems = [], old: oldItems = [] }, hydrate) => {
-		const oldHydrated = oldItems.map(hydrate);
-		const newHydrated = newItems.map(hydrate);
+		const oldHydrated = oldItems.map(hydrate).filter(Boolean);
+		const newHydrated = newItems.map(hydrate).filter(Boolean);
 
 		const { removed, added, modified } = oldHydrated.reduce(
 			(accumulator, oldItem) => {
