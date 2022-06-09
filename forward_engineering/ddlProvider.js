@@ -63,15 +63,19 @@ module.exports = (baseProvider, options, app) => {
 				}),
 			});
 
+			const useStatement = assignTemplates(templates.useDatabase, { name: databaseName, terminator: schemaTerminator });
+
 			if (ifNotExist) {
 				return (
 					databaseStatement +
+					'\n\n' +
+					useStatement +
 					'\n\n' +
 					wrapIfNotExistSchema({ templates, schemaStatement, schemaName, terminator })
 				);
 			}
 
-			return databaseStatement + '\n\n' + schemaStatement;
+			return databaseStatement + '\n\n' + useStatement + '\n\n' + schemaStatement;
 		},
 
 		createTable(
@@ -130,7 +134,7 @@ module.exports = (baseProvider, options, app) => {
 				? wrapIfNotExistTable({
 						tableStatement: fullTableStatement,
 						templates,
-						tableName,
+						tableName: getTableName(name, schemaData.schemaName, false),
 						terminator,
 				  })
 				: fullTableStatement;
@@ -302,7 +306,7 @@ module.exports = (baseProvider, options, app) => {
 			});
 
 			return ifNotExist
-				? wrapIfNotExistView({ templates, viewStatement, viewName: viewData.viewName, terminator })
+				? wrapIfNotExistView({ templates, viewStatement, viewName: viewData.viewNameIfNotExist, terminator })
 				: viewStatement;
 		},
 

@@ -7,11 +7,12 @@ module.exports = app => {
 	const { decorateDefault } = require('./columnDefinitionHelper')(app);
 	const { checkAllKeysDeactivated } = app.require('@hackolade/ddl-fe-utils').general;
 
-	const getTableName = (tableName, schemaName) => {
+	const getTableName = (tableName, schemaName, brackets = true) => {
+		const withBrackets = name => brackets ? `[${name}]` : name;
 		if (schemaName) {
-			return `[${schemaName}].[${tableName}]`;
+			return `${withBrackets(schemaName)}.${withBrackets(tableName)}`;
 		} else {
-			return `[${tableName}]`;
+			return withBrackets(tableName);
 		}
 	};
 

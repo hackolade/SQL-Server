@@ -109,9 +109,11 @@ module.exports = app => {
 		}
 
 		const viewName = getTableName(name, schemaData.schemaName);
+		const viewNameIfNotExist = getTableName(name, schemaData.schemaName, false);
 
 		return {
 			viewName,
+			viewNameIfNotExist,
 			viewAttribute: viewAttribute ? `WITH ${viewAttribute}\n` : '',
 			checkOption: withCheckOption ? `WITH CHECK OPTION` : '',
 			selectStatement: _.trim(selectStatement)
