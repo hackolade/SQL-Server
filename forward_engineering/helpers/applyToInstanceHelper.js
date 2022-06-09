@@ -20,7 +20,7 @@ const applyToInstance = async (connectionInfo, logger, app) => {
 
 			await client.query(query);
 		});
-		await client.close();
+		
 	} catch (error) {
 		logger.log('error', { message: error.message, stack: error.stack, error: error }, 'Error applying to instance');
 		throw prepareError(error);
