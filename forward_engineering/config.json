@@ -4,6 +4,7 @@
 	"namePrefix": "MS SQL Server",
 	"mode": "sqlserver",
 	"combinedContainers": true,
+	"applyScriptToInstance": true,
 	"level": {
 		"container": true,
 		"entity": true,
