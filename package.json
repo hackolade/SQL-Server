@@ -1,7 +1,7 @@
 {
     "name": "SQLServer",
-    "version": "0.1.44",
-    "versionDate": "2022-06-03",
+    "version": "0.1.45",
+    "versionDate": "2022-06-10",
     "author": "hackolade",
     "engines": {
         "hackolade": "6.1.2",
