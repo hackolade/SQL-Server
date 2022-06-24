@@ -50,9 +50,9 @@ const handleDefault = (typeObject, value) => {
 		numeric: Number(value.replace(/(^\(\()|(\)\)$)/g, '')),
 		char: value.replace(/(^\(\')|(\'\))$/g, ''),
 		xml: value.replace(/(^\(N\')|(\'\))$/g, ''),
-	}[typeObject.type] || value;
+	}[typeObject.type];
 
-	return { default: validValue };
+	return { default: validValue !== undefined ? validValue : value };
 };
 
 const handleMaxLengthDataTypes = (maxLength, typeObject) => {

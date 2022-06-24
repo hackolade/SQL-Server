@@ -37,6 +37,7 @@ const {
 	getUserDefinedTypes,
 	reorderTableRows,
 	containsJson,
+	getPeriodForSystemTime
 } = require('./helpers');
 const pipe = require('../helpers/pipe');
 
@@ -230,11 +231,13 @@ const getMemoryOptimizedOptions = (options) => {
 	if (!options) {
 		return {};
 	}
-
+	const memory_optimized = options.is_memory_optimized;
+	const systemVersioning = options.temporal_type_desc === 'SYSTEM_VERSIONED_TEMPORAL_TABLE';
 	return {
-		memory_optimized: true,
+		memory_optimized,
+		systemVersioning,
+		temporal: !memory_optimized && systemVersioning,
 		durability: ['SCHEMA_ONLY', 'SCHEMA_AND_DATA'].includes(String(options.durability_desc).toUpperCase()) ? String(options.durability_desc).toUpperCase() : '',
-		systemVersioning: options.temporal_type_desc === 'SYSTEM_VERSIONED_TEMPORAL_TABLE',
 		historyTable: options.history_table ? `${options.history_schema}.${options.history_table}` : '',
 	};
 };
@@ -290,7 +293,6 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				]);
 				const tableType = tableInfo[0]['TABLE_TYPE'];
 				const isView = tableType && tableType.trim() === 'V';
-
 				const jsonSchema = pipe(
 					transformDatabaseTableInfoToJSON(tableInfo),
 					defineRequiredFields,
@@ -306,13 +308,14 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				const standardDoc = Array.isArray(reorderedTableRows) && reorderedTableRows.length
 					? reorderedTableRows
 					: reorderTableRows([getStandardDocumentByJsonSchema(jsonSchema)], reverseEngineeringOptions.isFieldOrderAlphabetic);
-
+				const periodForSystemTime = await getPeriodForSystemTime(dbConnectionClient, dbName, tableName, schemaName, logger);
 				let result = {
 					collectionName: tableName,
 					dbName: schemaName,
 					entityLevel: {
 						Indxs: reverseTableIndexes(tableIndexes),
 						chkConstr: reverseTableCheckConstraints(tableCheckConstraints),
+						periodForSystemTime,
 						...getMemoryOptimizedOptions(databaseMemoryOptimizedTables.find(item => item.name === tableName)),
 						...defineFieldsCompositeKeyConstraints(fieldsKeyConstraints),
 					},
