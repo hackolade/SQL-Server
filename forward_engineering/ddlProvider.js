@@ -28,6 +28,7 @@ module.exports = (baseProvider, options, app) => {
 		getDefaultValue,
 		getTempTableTime,
 		foreignActiveKeysToString,
+		additionalPropertiesForForeignKey,
 	} = require('./helpers/general')(app);
 	const keyHelper = require('./helpers/keyHelper')(app);
 	const { getTerminator } = require('./helpers/optionsHelper');
@@ -215,6 +216,7 @@ module.exports = (baseProvider, options, app) => {
 				primaryTableActivated,
 				foreignTableActivated,
 				primarySchemaName,
+				customProperties
 			},
 			dbData,
 			schemaData,
@@ -227,12 +229,16 @@ module.exports = (baseProvider, options, app) => {
 				primaryTableActivated &&
 				foreignTableActivated;
 
+			const { foreignOnDelete, foreignOnUpdate } = additionalPropertiesForForeignKey(customProperties);
+
 			return {
 				statement: assignTemplates(templates.createForeignKeyConstraint, {
 					primaryTable: getTableName(primaryTable, primarySchemaName || schemaData.schemaName),
 					name,
 					foreignKey: isActivated ? foreignKeysToString(foreignKey) : foreignActiveKeysToString(foreignKey),
 					primaryKey: isActivated ? foreignKeysToString(primaryKey) : foreignActiveKeysToString(primaryKey),
+					onDelete: foreignOnDelete ? ` ON DELETE ${foreignOnDelete}` : '',
+					onUpdate: foreignOnUpdate ? ` ON UPDATE ${foreignOnUpdate}` : '',
 					terminator,
 				}),
 				isActivated,

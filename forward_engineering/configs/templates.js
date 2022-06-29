@@ -25,7 +25,7 @@ module.exports = {
 	checkConstraint: 'CONSTRAINT [${name}] CHECK${notForReplication} (${expression})',
 
 	createForeignKeyConstraint:
-		'CONSTRAINT [${name}] FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})',
+		'CONSTRAINT [${name}] FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${onDelete}${onUpdate}',
 
 	createForeignKey:
 		'ALTER TABLE ${foreignTable} ADD CONSTRAINT [${name}] FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${terminator}',
