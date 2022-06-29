@@ -246,12 +246,23 @@ module.exports = (baseProvider, options, app) => {
 		},
 
 		createForeignKey(
-			{ name, foreignTable, foreignKey, primaryTable, primaryKey, primaryTableActivated, foreignTableActivated },
+			{ 
+				name, 
+				foreignTable, 
+				foreignKey, 
+				primaryTable, 
+				primaryKey, 
+				primaryTableActivated, 
+				foreignTableActivated,
+				customProperties,
+			},
 			dbData,
 			schemaData,
 		) {
 			const isAllPrimaryKeysDeactivated = checkAllKeysDeactivated(primaryKey);
 			const isAllForeignKeysDeactivated = checkAllKeysDeactivated(foreignKey);
+
+			const { foreignOnDelete, foreignOnUpdate } = additionalPropertiesForForeignKey(customProperties);
 
 			return {
 				statement: assignTemplates(templates.createForeignKey, {
@@ -260,6 +271,8 @@ module.exports = (baseProvider, options, app) => {
 					name,
 					foreignKey: foreignKeysToString(foreignKey),
 					primaryKey: foreignKeysToString(primaryKey),
+					onDelete: foreignOnDelete ? ` ON DELETE ${foreignOnDelete}` : '',
+					onUpdate: foreignOnUpdate ? ` ON UPDATE ${foreignOnUpdate}` : '',
 					terminator,
 				}),
 				isActivated:
