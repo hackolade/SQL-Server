@@ -1,5 +1,5 @@
 const templates = require('../configs/templates');
-const commentIfDeactivated = require('./commentIfDeactivated');
+const { commentIfDeactivated } = require('./commentIfDeactivated');
 
 module.exports = app => {
 	const _ = app.require('lodash');
