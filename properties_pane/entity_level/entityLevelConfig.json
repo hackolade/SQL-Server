@@ -1441,6 +1441,7 @@ making sure that you maintain a proper JSON format.
 					{
 						"propertyName": "Key index",
 						"propertyKeyword": "indxFullTextKeyIndex",
+						"requiredProperty": true,
 						"propertyType": "text",
 						"dependency": {
 							"key": "indxType",

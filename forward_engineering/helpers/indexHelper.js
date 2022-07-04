@@ -167,6 +167,10 @@ module.exports = app => {
 
 	const getSpatialOptions = indexData => {
 		const general = getRelationOptionsIndex(indexData);
+		const createBoundingGrids = (keys, data = {}) => keys
+			.filter(key => Boolean(data[key]) || data[key] === 0)
+			.map(key => `${key} = ${data[key]}`)
+			.join(', ')
 
 		if (indexData.cellsPerObject) {
 			general.unshift(`CELLS_PER_OBJECT = ${indexData.cellsPerObject}`);
@@ -186,7 +190,7 @@ module.exports = app => {
 
 		if (!_.isEmpty(indexData.boundingBox)) {
 			general.unshift(
-				`BOUNDING_BOX = (\n\t\tXMIN=${indexData.boundingBox.XMIN},YMIN=${indexData.boundingBox.YMIN},XMAX=${indexData.boundingBox.XMAX},YMAX=${indexData.boundingBox.YMAX}\n\t)`,
+				`BOUNDING_BOX = (\n\t\t${createBoundingGrids(['XMIN', 'YMIN', 'XMAX', 'YMAX'], indexData.boundingBox)}\n\t)`,
 			);
 		}
 
@@ -404,7 +408,7 @@ module.exports = app => {
 			column: generalIndex.keys[0],
 			using: indexData.indxUsing,
 			boundingBox:
-				!_.isEmpty(indexData.indxBoundingBox) &&
+				!_.isEmpty(_.omit(indexData.indxBoundingBox, 'id')) &&
 				['GEOMETRY_AUTO_GRID', 'GEOMETRY_GRID'].includes(indexData.indxUsing)
 					? indexData.indxBoundingBox
 					: {},
