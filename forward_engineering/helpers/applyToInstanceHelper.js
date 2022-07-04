@@ -11,7 +11,7 @@ const applyToInstance = async (connectionInfo, logger, app) => {
 		if (!client.config.database) {
 			throw new Error('No database specified');
 		}
-		const queries = getQueries(connectionInfo.script);
+		const queries = getQueries(app, connectionInfo.script);
 		
 		await async.mapSeries(queries, async query => {
 			const message = `Query: ${query.split('\n').shift().substring(0, 150)}`;
@@ -27,14 +27,12 @@ const applyToInstance = async (connectionInfo, logger, app) => {
 	};
 };
 
-const getQueries = (script = '') => {
+const getQueries = (app, script = '') => {
+	const _ = app.require('lodash');
 	script = filterDeactivatedQuery(script);
 	return script
 		.split('\n\n')
-		.map(script => { 
-			script = script.trim();
-			return script.endsWith(GO_STATEMENT) ? script.slice(0, -3) : script;
-		})
+		.map(script => _.trim(_.trim(script.trim(), GO_STATEMENT), ';'))
 		.filter(query => Boolean(query) && !queryIsDeactivated(query));
 };
 
