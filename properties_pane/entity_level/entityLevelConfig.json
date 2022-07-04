@@ -1020,28 +1020,32 @@ making sure that you maintain a proper JSON format.
 								"propertyKeyword": "XMIN",
 								"propertyType": "numeric",
 								"valueType": "number",
-								"allowNegative": false
+								"allowNegative": false,
+								"requiredProperty": true
 							},
 							{
 								"propertyName": "YMIN",
 								"propertyKeyword": "YMIN",
 								"propertyType": "numeric",
 								"valueType": "number",
-								"allowNegative": false
+								"allowNegative": false,
+								"requiredProperty": true
 							},
 							{
 								"propertyName": "XMAX",
 								"propertyKeyword": "XMAX",
 								"propertyType": "numeric",
 								"valueType": "number",
-								"allowNegative": false
+								"allowNegative": false,
+								"requiredProperty": true
 							},
 							{
 								"propertyName": "YMAX",
 								"propertyKeyword": "YMAX",
 								"propertyType": "numeric",
 								"valueType": "number",
-								"allowNegative": false
+								"allowNegative": false,
+								"requiredProperty": true
 							}
 						]
 					},

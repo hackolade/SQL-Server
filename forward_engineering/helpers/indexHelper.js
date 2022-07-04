@@ -1,5 +1,6 @@
 const templates = require('../configs/templates');
 const commentIfDeactivated = require('./commentIfDeactivated');
+const BOUNDING_BOX_LABEL = ['XMIN', 'YMIN', 'XMAX', 'YMAX'];
 
 module.exports = app => {
 	const _ = app.require('lodash');
@@ -67,7 +68,7 @@ module.exports = app => {
 		const include =
 			Array.isArray(index.include) && !_.isEmpty(index.include)
 				? `\n\tINCLUDE (${_.concat(index.include, index.includedColumn).map(key =>
-						isParentActivated ? commentIfDeactivated(key.name, key, true) : key.name,
+						isParentActivated ? commentIfDeactivated(`[${key.name}]`, key, true) : `[${key.name}]`,
 				  )})`
 				: '';
 		const relationalIndexOption = getRelationOptionsIndex(index);
@@ -190,16 +191,13 @@ module.exports = app => {
 
 		if (!_.isEmpty(indexData.boundingBox)) {
 			general.unshift(
-				`BOUNDING_BOX = (\n\t\t${createBoundingGrids(['XMIN', 'YMIN', 'XMAX', 'YMAX'], indexData.boundingBox)}\n\t)`,
+				`BOUNDING_BOX = (\n\t\t${createBoundingGrids(BOUNDING_BOX_LABEL, indexData.boundingBox)}\n\t)`,
 			);
 		}
 
 		if (!_.isEmpty(indexData.grids)) {
 			general.unshift(
-				`GRIDS = (\n\t\t${['LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4']
-					.filter(key => indexData.grids[key])
-					.map((key, i) => `${key} = ${indexData.grids[key]}`)
-					.join(', ')}\n\t)`,
+				`GRIDS = (\n\t\t${createBoundingGrids(['LEVEL_1', 'LEVEL_2', 'LEVEL_3', 'LEVEL_4'], indexData.grids)}\n\t)`,
 			);
 		}
 
@@ -391,6 +389,8 @@ module.exports = app => {
 
 	const hydrateSpatialIndex = (indexData, schemaData) => {
 		const generalIndex = hydrateIndex(indexData, schemaData);
+		const isAllBoundingBoxValue = data => 
+			BOUNDING_BOX_LABEL.every(bounding => Boolean(data?.[bounding]) || data?.[bounding] === 0);
 
 		return {
 			..._.pick(generalIndex, [
@@ -408,7 +408,7 @@ module.exports = app => {
 			column: generalIndex.keys[0],
 			using: indexData.indxUsing,
 			boundingBox:
-				!_.isEmpty(_.omit(indexData.indxBoundingBox, 'id')) &&
+				isAllBoundingBoxValue(indexData.indxBoundingBox) &&
 				['GEOMETRY_AUTO_GRID', 'GEOMETRY_GRID'].includes(indexData.indxUsing)
 					? indexData.indxBoundingBox
 					: {},
