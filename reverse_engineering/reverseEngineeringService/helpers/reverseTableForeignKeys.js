@@ -1,7 +1,25 @@
+const prepareDeleteAndUpdate = value => {
+	switch (value) {
+		case 'NO_ACTION':
+			return 'NO ACTION';
+		case 'CASCADE':
+			return 'CASCADE';
+		case 'SET_NULL':
+			return 'SET NULL';
+		case 'SET_DEFAULT':
+			return 'SET DEFAULT';
+		default:
+			return '';
+	}
+};
+
+
 const reverseTableForeignKeys = tableForeignKeys => {
 	const tableForeignKeysObject = tableForeignKeys.reduce((data, foreignKey) => {
 		const foreignKeyName = foreignKey.FK_NAME;
 		const existedForeignKey = data[foreignKeyName];
+		const relationshipOnDelete = prepareDeleteAndUpdate(foreignKey.on_delete);
+		const relationshipOnUpdate = prepareDeleteAndUpdate(foreignKey.on_update);
 		const getForeignKey = existedForeignKey => {
 			if (existedForeignKey) {
 				return {
@@ -18,7 +36,11 @@ const reverseTableForeignKeys = tableForeignKeys => {
 					childDbName: foreignKey.schema_name,
 					childCollection: foreignKey.table,
 					childField: [foreignKey.column],
-					relationshipType: 'Foreign Key'
+					relationshipType: 'Foreign Key',
+					relationshipInfo: {
+						relationshipOnDelete,
+						relationshipOnUpdate,
+					}
 				}
 			}
 		};

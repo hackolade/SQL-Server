@@ -225,6 +225,12 @@ module.exports = app => {
 		return keys.map(key => key.name.trim()).join(', ');
 	};
 
+	const additionalPropertiesForForeignKey = relationship => {
+		const foreignOnDelete = _.get(relationship, 'relationshipOnDelete', '');
+		const foreignOnUpdate = _.get(relationship, 'relationshipOnUpdate', '');
+		return { foreignOnDelete, foreignOnUpdate };
+	};
+
 	const trimBraces = expression =>
 		/^\(([\s\S]+?)\)$/i.test(_.trim(expression))
 			? _.trim(expression).replace(/^\(([\s\S]+?)\)$/i, '$1')
@@ -261,6 +267,7 @@ module.exports = app => {
 		getViewData,
 		getDefaultConstraints,
 		foreignKeysToString,
+		additionalPropertiesForForeignKey,
 		trimBraces,
 		checkIndexActivated,
 		foreignActiveKeysToString,
