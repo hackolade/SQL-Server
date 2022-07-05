@@ -1,7 +1,7 @@
 const { connect } = require('../../reverse_engineering/api');
-const GO_STATEMENT = '\nGO';
-const GO_REG_EXP = /\nGO/;
-const IF_NOT_EXIST_REG = /IF\ NOT[\s\S]*?END/gi;
+const { filterDeactivatedQuery, queryIsDeactivated } = require('./commentIfDeactivated');
+
+const GO_STATEMENT = 'GO';
 
 const applyToInstance = async (connectionInfo, logger, app) => {
 	const async = app.require('async');
@@ -11,7 +11,7 @@ const applyToInstance = async (connectionInfo, logger, app) => {
 		if (!client.config.database) {
 			throw new Error('No database specified');
 		}
-		const queries = getQueries(connectionInfo.script);
+		const queries = getQueries(app, connectionInfo.script);
 		
 		await async.mapSeries(queries, async query => {
 			const message = `Query: ${query.split('\n').shift().substring(0, 150)}`;
@@ -27,25 +27,16 @@ const applyToInstance = async (connectionInfo, logger, app) => {
 	};
 };
 
-const getQueries = (script = '') => {
-	const terminator = GO_REG_EXP.test(script) ? GO_STATEMENT : ';';
-	const getQueriesWithoutTerminator = (script = '') => script
-		.split(terminator)
-		.map(script => script.trim())
-		.filter(Boolean);
-
-	const ifNotQueries = script.matchAll(IF_NOT_EXIST_REG);
-	let queries = [];
-	let index = 0;
-	for (let ifNotQuery of ifNotQueries) {
-		const ifNotScript = ifNotQuery[0] || '';
-		const withoutIfNotScript = script.slice(index, ifNotQuery.index);
-		queries = [...queries, ...getQueriesWithoutTerminator(withoutIfNotScript), ifNotScript];
-		index = ifNotQuery.index + ifNotScript.length;
-	}
-	script = script.slice(index);
-	queries = [...queries, ...getQueriesWithoutTerminator(script)];
-	return queries;
+const getQueries = (app, script = '') => {
+	const _ = app.require('lodash');
+	script = filterDeactivatedQuery(script);
+	return script
+		.split('\n\n')
+		.map((script = '') => {
+			script = script.trim().endsWith(GO_STATEMENT) ? script.slice(0, -2) : script
+			return _.trim(script, ';')
+		})
+		.filter(query => Boolean(query) && !queryIsDeactivated(query));
 };
 
 const prepareError = error => {

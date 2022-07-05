@@ -1,5 +1,5 @@
 const templates = require('../configs/templates');
-const commentIfDeactivated = require('./commentIfDeactivated');
+const { commentIfDeactivated } = require('./commentIfDeactivated');
 const BOUNDING_BOX_LABEL = ['XMIN', 'YMIN', 'XMAX', 'YMAX'];
 
 module.exports = app => {

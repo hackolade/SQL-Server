@@ -50,7 +50,7 @@
 			{
 				"inputLabel": "Host",
 				"inputKeyword": "host",
-				"description": "Specify host IP address or DNS name of Microsoft SQL server",
+				"description": "Specify host IP address or DNS name of instance. You may also use {server}\\{instance} to connect to named instance.",
 				"inputType": "text",
 				"dependency": {
 					"key": "authMethod",
@@ -61,7 +61,7 @@
 			{
 				"inputLabel": "Port",
 				"inputKeyword": "port",
-				"description": "Specify port number of Microsoft SQL server",
+				"description": "Specify port number of instance. Do NOT specify when connecting to named instance.",
 				"inputType": "numeric",
 				"defaultValue": 1433,
 				"dependency": {
