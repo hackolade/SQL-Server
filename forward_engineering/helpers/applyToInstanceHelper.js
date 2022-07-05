@@ -32,7 +32,10 @@ const getQueries = (app, script = '') => {
 	script = filterDeactivatedQuery(script);
 	return script
 		.split('\n\n')
-		.map(script => _.trim(_.trim(script.trim(), GO_STATEMENT), ';'))
+		.map((script = '') => {
+			script = script.trim().endsWith(GO_STATEMENT) ? script.slice(0, -2) : script
+			return _.trim(script, ';')
+		})
 		.filter(query => Boolean(query) && !queryIsDeactivated(query));
 };
 
