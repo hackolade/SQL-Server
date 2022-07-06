@@ -1,4 +1,4 @@
-const commentIfDeactivated = require('./commentIfDeactivated');
+const { commentIfDeactivated } = require('./commentIfDeactivated');
 const templates = require('../configs/templates');
 
 module.exports = app => {

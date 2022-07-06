@@ -49,7 +49,7 @@ module.exports = {
 		"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = N'${databaseName}')\nbegin\n${statement}\nend${terminator}",
 
 	ifNotExistTable:
-		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${tableName}') AND type in (N'U'))\nbegin\n${statement}\nend${terminator}",
+		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${tableName}') AND type in (N'U'))\nbegin\n${statement}\nend${terminator}\n",
 
 	ifNotExistView:
 		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${viewName}') AND type in (N'V'))\nbegin\nEXEC('\n${statement}')\nend${terminator}",
