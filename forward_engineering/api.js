@@ -7,12 +7,7 @@ const applyToInstanceHelper = require('./helpers/applyToInstanceHelper');
 module.exports = {
 	generateScript(data, logger, callback, app) {
 		try {
-			const {
-				getAlterContainersScripts,
-				getAlterCollectionsScripts,
-				getAlterViewScripts,
-				getAlterModelDefinitionsScripts,
-			} = require('./helpers/alterScriptFromDeltaHelper');
+			const { getAlterScript } = require('./helpers/alterScriptFromDeltaHelper');
 
 			const collection = JSON.parse(data.jsonSchema);
 			if (!collection) {
@@ -20,17 +15,7 @@ module.exports = {
 					'"comparisonModelCollection" is not found. Alter script can be generated only from Delta model',
 				);
 			}
-
-			const modelDefinitionsScripts = getAlterModelDefinitionsScripts(collection, app, data.options);
-			const containersScripts = getAlterContainersScripts(collection, app, data.options);
-			const collectionsScripts = getAlterCollectionsScripts(collection, app, data.options);
-			const viewScripts = getAlterViewScripts(collection, app, data.options);
-			const script = [
-				...modelDefinitionsScripts,
-				...containersScripts,
-				...collectionsScripts,
-				...viewScripts,
-			].join('\n\n');
+			const script = getAlterScript(collection, app, data.options);
 
 			const applyDropStatements = data.options?.additionalOptions?.some(
 				option => option.id === 'applyDropStatements' && option.value,
