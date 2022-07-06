@@ -80,5 +80,5 @@ module.exports = {
 
 	alterView: 'ALTER VIEW ${name}${viewAttribute} AS ${selectStatement}${checkOption}${terminator}',
 
-	dropType: 'DROP TYPE IF EXISTS [${name}]${terminator}',
+	dropType: 'DROP TYPE IF EXISTS ${name}${terminator}',
 };

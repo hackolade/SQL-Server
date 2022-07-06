@@ -122,14 +122,14 @@ const getAlterModelDefinitionsScripts = (collection, app, options) => {
 		.map(item => Object.values(item.properties)[0])
 		.map(item => ({ ...item, ...(app.require('lodash').omit(item.role, 'properties') || {}) }))
 		.filter(item => item.compMod?.created)
-		.map(getCreateUdtScript);
+		.flatMap(getCreateUdtScript);
 	const deleteUdtScripts = []
 		.concat(collection.properties?.modelDefinitions?.properties?.deleted?.items)
 		.filter(Boolean)
 		.map(item => Object.values(item.properties)[0])
 		.map(item => ({ ...item, ...(app.require('lodash').omit(item.role, 'properties') || {}) }))
 		.filter(collection => collection.compMod?.deleted)
-		.map(getDeleteUdtScript);
+		.flatMap(getDeleteUdtScript);
 
 	return { deleteUdtScripts, createUdtScripts };
 };
