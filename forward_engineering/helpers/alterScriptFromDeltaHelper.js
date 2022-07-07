@@ -145,17 +145,17 @@ const getAlterScript = (collection, app, options) => {
 		'addContainersScripts',
 		'deleteViewsScripts',
 		'deleteCollectionScripts',
+		'deleteColumnScripts',
 		'deleteUdtScripts',
 		'createUdtScripts',
 		'createCollectionsScripts',
 		'modifyCollectionScripts',
 		'addColumnScripts',
-		'deleteColumnScripts',
 		'modifyColumnScript',
 		'createViewsScripts',
 		'modifiedViewsScripts',
 		'deleteContainersScripts'
-	].flatMap(name => script[name] || []).map(script => script.trim()).join('\n\n');
+	].flatMap(name => script[name] || []).map(script => script.trim()).filter(Boolean).join('\n\n');
 };
 
 module.exports = {
