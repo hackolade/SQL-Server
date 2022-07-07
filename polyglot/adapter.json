@@ -93,7 +93,8 @@
 			{
 				"from": { "childType": "timestamp_ntz" },
 				"to": { "mode": "datetime2", "childType": "datetime" }
-			}
+			},
+			["convertLengthToHasMaxLength", 4000]
 		]
 	}
 }
