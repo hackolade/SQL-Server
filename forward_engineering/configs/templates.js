@@ -70,15 +70,15 @@ module.exports = {
 
 	dropColumn: 'DROP COLUMN [${name}]',
 
-	addColumn: 'ADD COLUMN ${script}',
+	addColumn: 'ADD ${script}',
 
 	alterColumn: 'ALTER COLUMN [${name}] ${type}${collation}${not_null}',
 
 	renameColumn: "EXEC sp_rename '${fullTableName}.${oldColumnName}', '${newColumnName}', 'COLUMN';${terminator}",
 
-	dropView: 'DROP VIEW IF EXISTS [${name}]${terminator}',
+	dropView: 'DROP VIEW IF EXISTS ${name}${terminator}',
 
 	alterView: 'ALTER VIEW ${name}${viewAttribute} AS ${selectStatement}${checkOption}${terminator}',
 
-	dropType: 'DROP TYPE IF EXISTS [${name}]${terminator}',
+	dropType: 'DROP TYPE IF EXISTS ${name}${terminator}',
 };

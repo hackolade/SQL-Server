@@ -707,9 +707,9 @@ module.exports = (baseProvider, options, app) => {
 			});
 		},
 
-		dropUdt(name) {
+		dropUdt(udt) {
 			return assignTemplates(templates.dropType, {
-				name,
+				name: getTableName(udt.name, udt.schemaName),
 				terminator,
 			});
 		},
