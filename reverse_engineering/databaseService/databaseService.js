@@ -246,6 +246,7 @@ const getTableForeignKeys = async (connectionClient, dbName, logger) => {
 		action: 'getting foreign keys query',
 		objects: [
 			'sys.foreign_key_columns',
+			'sys.foreign_keys',
 			'sys.objects',
 			'sys.tables',
 			'sys.schemas',
@@ -259,7 +260,9 @@ const getTableForeignKeys = async (connectionClient, dbName, logger) => {
 				tab1.name AS [table],
 				col1.name AS [column],
 				tab2.name AS [referenced_table],
-				col2.name AS [referenced_column]
+				col2.name AS [referenced_column],
+				fk.delete_referential_action_desc AS on_delete,
+				fk.update_referential_action_desc AS on_update
 		FROM sys.foreign_key_columns fkc
 		INNER JOIN sys.objects obj
 			ON obj.object_id = fkc.constraint_object_id
@@ -273,6 +276,8 @@ const getTableForeignKeys = async (connectionClient, dbName, logger) => {
 			ON tab2.object_id = fkc.referenced_object_id
 		INNER JOIN sys.columns col2
 			ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id
+		INNER JOIN sys.foreign_keys fk
+			ON fk.object_id = obj.object_id
 		`);
 };
 
