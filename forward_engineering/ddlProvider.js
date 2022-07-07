@@ -1,7 +1,7 @@
 const defaultTypes = require('./configs/defaultTypes');
 const types = require('./configs/types');
 const templates = require('./configs/templates');
-const commentIfDeactivated = require('./helpers/commentIfDeactivated');
+const { commentIfDeactivated } = require('./helpers/commentIfDeactivated');
 
 module.exports = (baseProvider, options, app) => {
 	const _ = app.require('lodash');
@@ -707,9 +707,9 @@ module.exports = (baseProvider, options, app) => {
 			});
 		},
 
-		dropUdt(name) {
+		dropUdt(udt) {
 			return assignTemplates(templates.dropType, {
-				name,
+				name: getTableName(udt.name, udt.schemaName),
 				terminator,
 			});
 		},
