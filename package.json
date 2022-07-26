@@ -38,7 +38,8 @@
                 "compositeRelationships": true
             },
             "FEScriptCommentsSupported": true,
-            "enableFetchSystemEntitiesCheckbox": true
+            "enableFetchSystemEntitiesCheckbox": true,
+            "discoverRelationships": true
         }
     },
     "description": "Hackolade plugin for Microsoft SQL Server and Azure SQL Database",
