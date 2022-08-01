@@ -7,6 +7,7 @@ const {
 	reverseCollectionsToJSON,
 	mergeCollectionsWithViews,
 	getCollectionsRelationships,
+	logDatabaseVersion,
 } = require('./reverseEngineeringService/reverseEngineeringService');
 const logInfo = require('./helpers/logInfo');
 const filterRelationships = require('./helpers/filterRelationships');
@@ -35,7 +36,8 @@ module.exports = {
 	async testConnection(connectionInfo, logger, callback, app) {
 		try {
 			logInfo('Test connection', connectionInfo, logger);
-			await this.connect(connectionInfo);
+			const client = await this.connect(connectionInfo);
+			await logDatabaseVersion(client, logger);
 			callback(null);
 		} catch(error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Test connection');
@@ -74,10 +76,12 @@ module.exports = {
 				throw new Error('No database specified');
 			}
 
+			await logDatabaseVersion(client, logger);
+			
 			const objects = await getObjectsFromDatabase(client);
 			const dbName = client.config.database;
             const collationData = (await getDatabaseCollationOption(client, dbName, logger)) || [];
-			logInfo('Database collation: ', collationData[0], logger);
+			logger.log('info', { collation: collationData[0] }, 'Database collation');
 			callback(null, objects);
 		} catch(error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Retrieving databases and tables information');

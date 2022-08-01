@@ -178,6 +178,30 @@ const getClient = async (connectionClient, dbName, meta, logger) => {
 	return _inst;
 };
 
+const getVersionInfo = async (connectionClient, dbName, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'getting version info',
+		objects: [
+			'VersionInfo',
+		]
+	}, logger);
+
+	try {
+		return mapResponse(await currentDbConnectionClient.query`SELECT @@VERSION VersionInfo;`);
+	} catch (e) {
+		logger.log('error', { message: e.message, stack: e.stack, error: e }, 'Perform: SELECT @@VERSION VersionInfo;');
+
+		try {
+			return mapResponse(await currentDbConnectionClient.query`EXEC xp_msver;`);
+		} catch (e) {
+			logger.log('error', { message: e.message, stack: e.stack, error: e }, 'Perform: EXEC xp_msver;');
+
+			return [];
+		}
+	}
+	
+};
+
 const getTableInfo = async (connectionClient, dbName, tableName, tableSchema, logger) => {
 	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
 		action: 'table information query',
@@ -208,7 +232,8 @@ const getTableSystemTime = async (connectionClient, dbName, tableName, tableSche
 		action: 'table information query',
 		objects: [
 			'sys.periods',
-		]
+		],
+		skip: true,
 	}, logger);
 	const objectId = `${tableSchema}.${tableName}`;
 	return mapResponse(await currentDbConnectionClient.query`
@@ -864,5 +889,6 @@ module.exports = {
 	getSpatialIndexes,
 	getIndexesBucketCount,
 	getDatabaseCollationOption,
-	getTableSystemTime
+	getTableSystemTime,
+	getVersionInfo,
 }
