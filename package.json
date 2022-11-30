@@ -35,7 +35,9 @@
                 "disablePipelines": true
             },
             "relationships": {
-                "compositeRelationships": true
+                "compositeRelationships": {
+                    "allowRelationshipsForNonPrimaryKey": true
+                }
             },
             "FEScriptCommentsSupported": true,
             "enableFetchSystemEntitiesCheckbox": true,
