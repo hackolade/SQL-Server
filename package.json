@@ -36,7 +36,12 @@
             },
             "relationships": {
                 "compositeRelationships": {
-                    "allowRelationshipsForNonPrimaryKey": true
+                    "allowRelationshipsByProperties": [
+                        "primaryKey",
+                        "unique",
+                        "compositeUniqueKey",
+                        "compositePrimaryKey"
+                    ]
                 }
             },
             "FEScriptCommentsSupported": true,
