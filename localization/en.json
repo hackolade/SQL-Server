@@ -145,5 +145,6 @@
 	"CONTEXT_MENU___CONVERT_PATTERN_TO_REGULAR_FIELD": "Convert to Regular Column",
 	"FE_LEVEL_SELECTOR_TITLE": "Schemas",
 	"FE_LEVEL_SELECTOR_CONTAINER": "Individual",
-	"FE_LEVEL_SELECTOR_MODEL": "Combined"
+	"FE_LEVEL_SELECTOR_MODEL": "Combined",
+	"MODAL_WINDOW___ANOTHER_ATTRIBUTE_HAS_PRIMARY_KEY_CONSTRAINT_MESSAGE": "This attribute must have a UNIQUE constraint to be the parent in a Foreign Key relationship"
 }
