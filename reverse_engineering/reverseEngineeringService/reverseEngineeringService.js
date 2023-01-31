@@ -18,6 +18,7 @@ const {
 	getFullTextIndexes,
 	getSpatialIndexes,
 	getIndexesBucketCount,
+	getVersionInfo,
 } = require('../databaseService/databaseService');
 const {
 	transformDatabaseTableInfoToJSON,
@@ -355,8 +356,15 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 	}, Promise.resolve([]));
 };
 
+const logDatabaseVersion = async (dbConnectionClient, logger) => {
+	const versionInfo = await getVersionInfo(dbConnectionClient, dbConnectionClient.config.database, logger);
+
+	logger.log('info', { dbVersion: versionInfo }, 'Database version');
+};
+
 module.exports = {
 	reverseCollectionsToJSON,
 	mergeCollectionsWithViews,
 	getCollectionsRelationships,
+	logDatabaseVersion,
 };

@@ -49,7 +49,7 @@ module.exports = {
 		"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = N'${databaseName}')\nbegin\n${statement}\nend${terminator}",
 
 	ifNotExistTable:
-		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${tableName}') AND type in (N'U'))\nbegin\n${statement}\nend${terminator}",
+		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${tableName}') AND type in (N'U'))\nbegin\n${statement}\nend${terminator}\n",
 
 	ifNotExistView:
 		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${viewName}') AND type in (N'V'))\nbegin\nEXEC('\n${statement}')\nend${terminator}",
@@ -70,15 +70,15 @@ module.exports = {
 
 	dropColumn: 'DROP COLUMN [${name}]',
 
-	addColumn: 'ADD COLUMN ${script}',
+	addColumn: 'ADD ${script}',
 
 	alterColumn: 'ALTER COLUMN [${name}] ${type}${collation}${not_null}',
 
 	renameColumn: "EXEC sp_rename '${fullTableName}.${oldColumnName}', '${newColumnName}', 'COLUMN';${terminator}",
 
-	dropView: 'DROP VIEW IF EXISTS [${name}]${terminator}',
+	dropView: 'DROP VIEW IF EXISTS ${name}${terminator}',
 
 	alterView: 'ALTER VIEW ${name}${viewAttribute} AS ${selectStatement}${checkOption}${terminator}',
 
-	dropType: 'DROP TYPE IF EXISTS [${name}]${terminator}',
+	dropType: 'DROP TYPE IF EXISTS ${name}${terminator}',
 };
