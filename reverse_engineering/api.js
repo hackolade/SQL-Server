@@ -21,7 +21,7 @@ module.exports = {
 	async connect(connectionInfo, logger, callback, app) {
 		const client = getClient();
 		if (!client) {
-			await setClient(connectionInfo);
+			await setClient(connectionInfo, 0, logger);
 			return getClient();
 		}
 
@@ -36,8 +36,12 @@ module.exports = {
 	async testConnection(connectionInfo, logger, callback, app) {
 		try {
 			logInfo('Test connection', connectionInfo, logger);
-			const client = await this.connect(connectionInfo);
-			await logDatabaseVersion(client, logger);
+			if (connectionInfo.authMethod === 'Azure Active Directory (MFA)') {
+				await this.getExternalBrowserUrl(connectionInfo, logger, callback, app);
+			} else {
+				const client = await this.connect(connectionInfo, logger);
+				await logDatabaseVersion(client, logger);
+			}
 			callback(null);
 		} catch(error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Test connection');

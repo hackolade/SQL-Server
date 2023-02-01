@@ -5,7 +5,7 @@ const stateInstance = {
 	_client: null,
 	_sshTunnel: null,
 	getClient: () => this._client,
-	setClient: async (connectionInfo, attempts = 0) => {
+	setClient: async (connectionInfo, attempts = 0, logger) => {
 		if (connectionInfo.ssh && !this._sshTunnel) {
 			const sshData = await sshHelper.connectViaSsh(connectionInfo);
 			connectionInfo = sshData.info;
@@ -13,7 +13,7 @@ const stateInstance = {
 		}
 
 		try {
-			this._client = await getConnectionClient(connectionInfo)
+			this._client = await getConnectionClient(connectionInfo, logger);
 		} catch (error) {
 			const encryptConnection = connectionInfo.encryptConnection === undefined || Boolean(connectionInfo.encryptConnection);
 			const isEncryptedConnectionToLocalInstance = error.message.includes('self signed certificate') && encryptConnection;
