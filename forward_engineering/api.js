@@ -1,7 +1,8 @@
 const { commentDropStatements } = require('./helpers/commentDropStatements');
 const { DROP_STATEMENTS } = require('./helpers/constants');
 const logInfo = require('../reverse_engineering/helpers/logInfo');
-const { connect } = require('../reverse_engineering/api');
+const { connect, getExternalBrowserUrl } = require('../reverse_engineering/api');
+const { logDatabaseVersion } = require('../reverse_engineering/reverseEngineeringService/reverseEngineeringService');
 const applyToInstanceHelper = require('./helpers/applyToInstanceHelper');
 
 module.exports = {
@@ -69,7 +70,12 @@ module.exports = {
 	async testConnection(connectionInfo, logger, callback, app) {
 		try {
 			logInfo('Test connection', connectionInfo, logger);
-			await connect(connectionInfo);
+			if (connectionInfo.authMethod === 'Azure Active Directory (MFA)') {
+				await getExternalBrowserUrl(connectionInfo, logger, callback, app);
+			} else {
+				const client = await connect(connectionInfo, logger);
+				await logDatabaseVersion(client, logger);
+			}
 			callback(null);
 		} catch(error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Test connection');
@@ -86,5 +92,9 @@ module.exports = {
 		} catch (error) {
 			callback(error);
 		}
+	},
+
+	async getExternalBrowserUrl(connectionInfo, logger, cb, app) {
+		return getExternalBrowserUrl(connectionInfo, logger, cb, app);
 	},
 };
