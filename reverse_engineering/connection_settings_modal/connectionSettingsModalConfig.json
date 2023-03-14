@@ -167,6 +167,16 @@
 				"defaultValue": true
 			},
 			{
+				"inputLabel": "Encrypt connection",
+				"inputKeyword": "encryptWindowsConnection",
+				"inputType": "checkbox",
+				"dependency": {
+					"key": "authMethod",
+					"value": ["Username / Password (Windows)"]
+				},
+				"defaultValue": false
+			},
+			{
 				"inputLabel": "Tenant ID",
 				"inputKeyword": "connectionTenantId",
 				"inputType": "text",
@@ -191,19 +201,11 @@
 	{
 		"tab": "SSL",
 		"helpUrl": "https://hackolade.com/help/SSL5.html",
-		"disable": {
-			"key": "encryptConnection",
-			"value": false
-		},
 		"structure": [
 			{
 				"inputLabel": "SSL",
 				"inputKeyword": "sslType",
 				"inputType": "select",
-				"dependency": {
-					"key": "authMethod",
-					"value": "Username / Password"
-				},
 				"options": [{
 					"value": "SYSTEMCA", 
 					"label": "SYSTEMCA"
@@ -229,9 +231,6 @@
 					"values": [{
 						"key": "sslType",
 						"value": ["TRUST_CUSTOM_CA_SIGNED_CERTIFICATES", "TRUST_SERVER_CLIENT_CERTIFICATES"]
-					}, {
-						"key": "authMethod",
-						"value": "Username / Password"
 					}]
 				}
 			},
@@ -246,9 +245,6 @@
 					"values": [{
 						"key": "sslType",
 						"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
-					}, {
-						"key": "authMethod",
-						"value": "Username / Password"
 					}]
 				}
 			},
@@ -263,9 +259,6 @@
 					"values": [{
 						"key": "sslType",
 						"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
-					}, {
-						"key": "authMethod",
-						"value": "Username / Password"
 					}]
 				}
 			},
@@ -280,9 +273,6 @@
 					"values": [{
 						"key": "sslType",
 						"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
-					}, {
-						"key": "authMethod",
-						"value": "Username / Password"
 					}]
 				}
 			}
