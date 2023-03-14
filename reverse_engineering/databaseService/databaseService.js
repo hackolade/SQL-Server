@@ -10,22 +10,18 @@ const QUERY_REQUEST_TIMEOUT = 60000;
 const getSslConfig = (connectionInfo) => {
 	const encrypt = connectionInfo.encryptConnection === undefined ? true : Boolean(connectionInfo.encryptConnection);
 
-	if (!encrypt) {
-		return {
-			encrypt,
-		};
+	if (connectionInfo.sslType === 'SYSTEMCA') {
+		return {};
 	}
 
 	if (connectionInfo.sslType === 'TRUST_ALL_CERTIFICATES') {
 		return {
-			encrypt,
 			trustServerCertificate: true,
 		};
 	}
 
 	if (connectionInfo.sslType === 'TRUST_CUSTOM_CA_SIGNED_CERTIFICATES') {
 		return {
-			encrypt,
 			cryptoCredentialsDetails: {
 				ca: fs.readFileSync(connectionInfo.certAuthority),
 			},
@@ -34,7 +30,6 @@ const getSslConfig = (connectionInfo) => {
 
 	if (connectionInfo.sslType === 'TRUST_SERVER_CLIENT_CERTIFICATES') {
 		return {
-			encrypt,
 			cryptoCredentialsDetails: {
 				ca: fs.readFileSync(connectionInfo.certAuthority),
 				cert: connectionInfo.clientCert && fs.readFileSync(connectionInfo.clientCert),
@@ -43,6 +38,8 @@ const getSslConfig = (connectionInfo) => {
 			}
 		};
 	}
+
+	return {};
 };
 
 const getConnectionClient = async (connectionInfo, logger) => {
@@ -60,6 +57,7 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			database: connectionInfo.databaseName,
 			options: {
 				enableArithAbort: true,
+				encrypt: connectionInfo.encryptConnection === undefined ? true : Boolean(connectionInfo.encryptConnection),
 				...sslOptions,
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
@@ -74,7 +72,7 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			database: connectionInfo.databaseName,
 			domain: connectionInfo.userDomain,
 			options: {
-				encrypt: false,
+				encrypt: connectionInfo.encryptWindowsConnection === undefined ? false : Boolean(connectionInfo.encryptWindowsConnection),
 				enableArithAbort: true
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
@@ -90,6 +88,7 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			port: +connectionInfo.port,
 			database: connectionInfo.databaseName,
 			options: {
+				...getSslConfig(connectionInfo),
 				encrypt: true,
 				enableArithAbort: true,
 			},
@@ -110,6 +109,7 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			port: +connectionInfo.port,
 			database: connectionInfo.databaseName,
 			options: {
+				...getSslConfig(connectionInfo),
 				encrypt: true,
 				enableArithAbort: true
 			},
