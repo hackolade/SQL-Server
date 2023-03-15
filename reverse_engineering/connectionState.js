@@ -22,7 +22,7 @@ const stateInstance = {
 				return stateInstance.setClient({
 					...connectionInfo,
 					encryptConnection: false,
-				});
+				}, attempts + 1, logger);
 			}
 			
 			throw error;
