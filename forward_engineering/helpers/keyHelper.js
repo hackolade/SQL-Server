@@ -7,29 +7,15 @@ module.exports = app => {
 	};
 
 	const isInlineUnique = column => {
-		if (column.compositeUniqueKey) {
-			return false;
-		} else if (!column.unique) {
-			return false;
-		} else if (!_.isEmpty(column.uniqueKeyOptions)) {
-			return false;
-		} else {
-			return true;
-		}
+		return (
+			column.unique &&
+			((column.uniqueKeyOptions?.length === 1 && !_.first(column.uniqueKeyOptions)?.constraintName) ||
+				_.isEmpty(column.uniqueKeyOptions))
+		);
 	};
 
 	const isInlinePrimaryKey = column => {
-		if (column.compositeUniqueKey) {
-			return false;
-		} else if (column.compositePrimaryKey) {
-			return false;
-		} else if (!column.primaryKey) {
-			return false;
-		} else if (!_.isEmpty(column.primaryKeyOptions)) {
-			return false;
-		} else {
-			return true;
-		}
+		return column.primaryKey && !column.primaryKeyOptions?.constraintName;
 	};
 
 	const isUnique = column => {
@@ -175,7 +161,7 @@ module.exports = app => {
 
 		const uniqueConstraints = _.flatten(
 			mapProperties(jsonSchema, ([name, columnSchema]) => {
-				if (!isUnique(columnSchema)) {
+				if (!isUnique(columnSchema) || isInlineUnique(columnSchema)) {
 					return [];
 				} else {
 					return columnSchema.uniqueKeyOptions.map(options =>
@@ -185,7 +171,7 @@ module.exports = app => {
 			}),
 		).filter(Boolean);
 		const primaryKeyConstraints = mapProperties(jsonSchema, ([name, columnSchema]) => {
-			if (!isPrimaryKey(columnSchema)) {
+			if (!isPrimaryKey(columnSchema) || isInlinePrimaryKey(columnSchema)) {
 				return;
 			} else {
 				return hydratePrimaryKeyOptions(columnSchema.primaryKeyOptions, name, columnSchema.isActivated);
@@ -204,5 +190,7 @@ module.exports = app => {
 		getTableKeyConstraints,
 		isInlineUnique,
 		isInlinePrimaryKey,
+		hydratePrimaryKeyOptions,
+		hydrateUniqueOptions,
 	};
 };

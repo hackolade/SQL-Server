@@ -11,18 +11,9 @@ module.exports = app => {
 	const createKeyConstraint = (templates, terminator, isParentActivated) => keyData => {
 		const indexOptions = getRelationOptionsIndex(keyData.indexOption);
 		const partition = keyData.partition ? ` ON [${keyData.partition}]` : '';
-		const columnMapToString = ({ name, order }) => `[${name}] ${order}`.trim();
 
-		const isAllColumnsDeactivated = checkAllKeysDeactivated(keyData.columns);
-		const dividedColumns = divideIntoActivatedAndDeactivated(keyData.columns, columnMapToString);
-		const deactivatedColumnsAsString = dividedColumns.deactivatedItems.length
-			? commentIfDeactivated(dividedColumns.deactivatedItems.join(', '), { isActivated: false }, true)
-			: '';
-
-		const columns =
-			!isAllColumnsDeactivated && isParentActivated
-				? ' (' + dividedColumns.activatedItems.join(', ') + deactivatedColumnsAsString + ')'
-				: ' (' + keyData.columns.map(columnMapToString).join(', ') + ')';
+		const isAllColumnsDeactivated = checkAllKeysDeactivated(keyData.columns || []);
+		const columns = getKeyColumns(isAllColumnsDeactivated, isParentActivated, keyData.columns);
 
 		return {
 			statement: assignTemplates(templates.createKeyConstraint, {
@@ -63,6 +54,25 @@ module.exports = app => {
 			: '';
 
 		return activatedConstraints + deactivatedConstraints;
+	};
+
+	const getKeyColumns = (isAllColumnsDeactivated, isParentActivated, columns) => {
+		if (!columns || columns.length === 0) {
+			return '';
+		}
+
+		const columnMapToString = ({ name, order }) => `[${name}] ${order}`.trim();
+		const dividedColumns = divideIntoActivatedAndDeactivated(columns, columnMapToString);
+		const deactivatedColumnsAsString = dividedColumns?.deactivatedItems?.length
+			? commentIfDeactivated(dividedColumns.deactivatedItems.join(', '), {
+					isActivated: false,
+					isPartOfLine: true,
+			  })
+			: '';
+
+		return !isAllColumnsDeactivated && isParentActivated
+			? ' (' + dividedColumns.activatedItems.join(', ') + deactivatedColumnsAsString + ')'
+			: ' (' + columns.map(columnMapToString).join(', ') + ')';
 	};
 
 	return {

@@ -64,7 +64,10 @@ module.exports = (baseProvider, options, app) => {
 				}),
 			});
 
-			const useStatement = assignTemplates(templates.useDatabase, { name: databaseName, terminator: schemaTerminator });
+			const useStatement = assignTemplates(templates.useDatabase, {
+				name: databaseName,
+				terminator: schemaTerminator,
+			});
 
 			if (ifNotExist) {
 				return (
@@ -146,7 +149,9 @@ module.exports = (baseProvider, options, app) => {
 				? _.toUpper(columnDefinition.type)
 				: getTableName(columnDefinition.type, columnDefinition.schemaName);
 			const notNull = columnDefinition.nullable ? '' : ' NOT NULL';
-			const primaryKey = columnDefinition.primaryKey ? ' PRIMARY KEY' : '';
+			const primaryKey = columnDefinition.primaryKey
+				? ' ' + createKeyConstraint(templates, terminator, true)(columnDefinition.primaryKeyOptions).statement
+				: '';
 			const defaultValue = getDefaultValue(
 				columnDefinition.default,
 				columnDefinition.defaultConstraint?.name,
@@ -160,7 +165,9 @@ module.exports = (baseProvider, options, app) => {
 			const encryptedWith = !_.isEmpty(columnDefinition.encryption)
 				? getEncryptedWith(columnDefinition.encryption[0])
 				: '';
-			const unique = columnDefinition.unique ? ' UNIQUE' : '';
+			const unique = columnDefinition.unique
+				? ' ' + createKeyConstraint(templates, terminator, true)(columnDefinition.uniqueKeyOptions).statement
+				: '';
 			const temporalTableTime = getTempTableTime(
 				columnDefinition.isTempTableStartTimeColumn,
 				columnDefinition.isTempTableEndTimeColumn,
@@ -216,7 +223,7 @@ module.exports = (baseProvider, options, app) => {
 				primaryTableActivated,
 				foreignTableActivated,
 				primarySchemaName,
-				customProperties
+				customProperties,
 			},
 			dbData,
 			schemaData,
@@ -246,13 +253,13 @@ module.exports = (baseProvider, options, app) => {
 		},
 
 		createForeignKey(
-			{ 
-				name, 
-				foreignTable, 
-				foreignKey, 
-				primaryTable, 
-				primaryKey, 
-				primaryTableActivated, 
+			{
+				name,
+				foreignTable,
+				foreignKey,
+				primaryTable,
+				primaryKey,
+				primaryTableActivated,
 				foreignTableActivated,
 				customProperties,
 			},
@@ -397,6 +404,10 @@ module.exports = (baseProvider, options, app) => {
 					value: columnDefinition.default,
 				},
 				primaryKey: keyHelper.isInlinePrimaryKey(jsonSchema),
+				primaryKeyOptions: _.omit(
+					keyHelper.hydratePrimaryKeyOptions(jsonSchema.primaryKeyOptions || {}),
+					'columns',
+				),
 				xmlConstraint: String(jsonSchema.XMLconstraint || ''),
 				xmlSchemaCollection: String(jsonSchema.xml_schema_collection || ''),
 				sparse: Boolean(jsonSchema.sparse),
@@ -407,6 +418,10 @@ module.exports = (baseProvider, options, app) => {
 				},
 				schemaName: schemaData.schemaName,
 				unique: keyHelper.isInlineUnique(jsonSchema),
+				uniqueKeyOptions: _.omit(
+					keyHelper.hydrateUniqueOptions(_.first(jsonSchema.uniqueKeyOptions) || {}),
+					'columns',
+				),
 				isTempTableStartTimeColumn,
 				isTempTableEndTimeColumn,
 				isHidden: isTempTableStartTimeColumn
