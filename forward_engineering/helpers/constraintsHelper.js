@@ -3,17 +3,32 @@ const { commentIfDeactivated } = require('./commentIfDeactivated');
 module.exports = app => {
 	const _ = app.require('lodash');
 	const { assignTemplates } = app.require('@hackolade/ddl-fe-utils');
-	const { checkAllKeysDeactivated, divideIntoActivatedAndDeactivated } =
+	const { checkAllKeysDeactivated, divideIntoActivatedAndDeactivated, clean } =
 		app.require('@hackolade/ddl-fe-utils').general;
 	const { getRelationOptionsIndex } = require('./indexHelper')(app);
 	const { trimBraces } = require('./general')(app);
 
 	const createKeyConstraint = (templates, terminator, isParentActivated) => keyData => {
-		const indexOptions = getRelationOptionsIndex(keyData.indexOption);
-		const partition = keyData.partition ? ` ON [${keyData.partition}]` : '';
-
 		const isAllColumnsDeactivated = checkAllKeysDeactivated(keyData.columns || []);
 		const columns = getKeyColumns(isAllColumnsDeactivated, isParentActivated, keyData.columns);
+
+		if (!keyDataHasOptions(keyData)) {
+			return {
+				statement: assignTemplates(templates.createKeyConstraint, {
+					constraintName: keyData.name ? `CONSTRAINT [${keyData.name}] ` : '',
+					keyType: keyData.keyType,
+					clustered: '',
+					columns: '',
+					options: '',
+					partition: '',
+					terminator: '',
+				}),
+				isActivated: !isAllColumnsDeactivated,
+			};
+		}
+
+		const indexOptions = getRelationOptionsIndex(adaptIndexOptions(keyData.indexOption));
+		const partition = keyData.partition ? ` ON [${keyData.partition}]` : '';
 
 		return {
 			statement: assignTemplates(templates.createKeyConstraint, {
@@ -26,6 +41,26 @@ module.exports = app => {
 				terminator,
 			}),
 			isActivated: !isAllColumnsDeactivated,
+		};
+	};
+
+	const keyDataHasOptions = keyData => {
+		const indexOption = clean(keyData.indexOption);
+
+		if (!_.isEmpty(indexOption)) {
+			return true;
+		}
+
+		const cleaned = clean(_.omit(keyData, 'keyType', 'indexOption', 'columns'));
+
+		return !_.isEmpty(cleaned) || keyData.columns?.length > 1;
+	};
+
+	const adaptIndexOptions = indexOption => {
+		return {
+			...indexOption,
+			allowRowLocks: Boolean(indexOption.allowRowLocks),
+			allowPageLocks: Boolean(indexOption.allowPageLocks),
 		};
 	};
 

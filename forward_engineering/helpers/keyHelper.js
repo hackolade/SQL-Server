@@ -8,22 +8,20 @@ module.exports = app => {
 
 	const isInlineUnique = column => {
 		return (
-			column.unique &&
+			isUnique(column) &&
 			((column.uniqueKeyOptions?.length === 1 && !_.first(column.uniqueKeyOptions)?.constraintName) ||
 				_.isEmpty(column.uniqueKeyOptions))
 		);
 	};
 
 	const isInlinePrimaryKey = column => {
-		return column.primaryKey && !column.primaryKeyOptions?.constraintName;
+		return isPrimaryKey(column) && !column.primaryKeyOptions?.constraintName;
 	};
 
 	const isUnique = column => {
 		if (column.compositeUniqueKey) {
 			return false;
 		} else if (!column.unique) {
-			return false;
-		} else if (_.isEmpty(column.uniqueKeyOptions)) {
 			return false;
 		} else {
 			return true;
@@ -36,8 +34,6 @@ module.exports = app => {
 		} else if (column.compositePrimaryKey) {
 			return false;
 		} else if (!column.primaryKey) {
-			return false;
-		} else if (_.isEmpty(column.primaryKeyOptions)) {
 			return false;
 		} else {
 			return true;
@@ -72,8 +68,8 @@ module.exports = app => {
 				statisticsIncremental: options['statisticsIncremental'],
 				ignoreDuplicateKey: options['ignoreDuplicate'],
 				fillFactor: options['fillFactor'],
-				allowRowLocks: Boolean(options['allowRowLocks']),
-				allowPageLocks: Boolean(options['allowPageLocks']),
+				allowRowLocks: options['allowRowLocks'],
+				allowPageLocks: options['allowPageLocks'],
 				optimizeForSequentialKey: options['isOptimizedForSequentialKey'],
 				padIndex: options['isPadded'],
 				dataCompression: options['dataCompression'],
@@ -98,8 +94,8 @@ module.exports = app => {
 				statisticsIncremental: options['statisticsIncremental'],
 				ignoreDuplicateKey: options['ignoreDuplicate'],
 				fillFactor: options['fillFactor'],
-				allowRowLocks: Boolean(options['allowRowLocks']),
-				allowPageLocks: Boolean(options['allowPageLocks']),
+				allowRowLocks: options['allowRowLocks'],
+				allowPageLocks: options['allowPageLocks'],
 				optimizeForSequentialKey: options['isOptimizedForSequentialKey'],
 				padIndex: options['isPadded'],
 				dataCompression: options['dataCompression'],
