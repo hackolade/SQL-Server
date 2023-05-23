@@ -107,11 +107,31 @@ module.exports = app => {
 		);
 	};
 
+	const getColumnsComments = (tableName, terminator, columnDefinitions) => {
+		return columnDefinitions
+		.filter(({comment}) => Boolean(comment))
+		.map(({comment, schemaName, name}) => {
+			const schemaNameTemplate = `[${schemaName}]`
+			const tableNameTemplate = `[${tableName}]`
+			const commentStatement = app.assignTemplates(app.templates.createColumnComment, {
+				value: comment,
+				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
+				tableName: `${tableName ? tableNameTemplate : 'NULL'}`,
+				columnName: `[${name}]`,
+				terminator
+			});
+
+			return commentStatement;
+		})
+		.join('\n')
+	};
+
 	return {
 		decorateType,
 		decorateDefault,
 		getIdentity,
 		getEncryptedWith,
 		addClustered,
+		getColumnsComments
 	};
 };

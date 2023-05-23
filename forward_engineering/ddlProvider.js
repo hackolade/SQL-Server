@@ -9,7 +9,7 @@ module.exports = (baseProvider, options, app) => {
 	const { checkAllKeysDeactivated, divideIntoActivatedAndDeactivated, getEntityName } =
 		app.require('@hackolade/ddl-fe-utils').general;
 
-	const { decorateType, getIdentity, getEncryptedWith } = require('./helpers/columnDefinitionHelper')(app);
+	const { decorateType, getIdentity, getEncryptedWith, getColumnsComments } = require('./helpers/columnDefinitionHelper')({...app, templates, assignTemplates});
 	const {
 		createIndex,
 		hydrateIndex,
@@ -36,16 +36,24 @@ module.exports = (baseProvider, options, app) => {
 		require('./helpers/constraintsHelper')(app);
 	const { wrapIfNotExistSchema, wrapIfNotExistDatabase, wrapIfNotExistTable, wrapIfNotExistView } =
 		require('./helpers/ifNotExistStatementHelper')(app);
-	const { createViewSelectStatement, getPartitionedTables, getCreateViewData } = require('./helpers/viewHelper')(app);
+	const { getPartitionedTables, getCreateViewData } = require('./helpers/viewHelper')(app);
 
 	const terminator = getTerminator(options);
 
 	return {
-		createSchema({ schemaName, databaseName, ifNotExist }) {
+		createSchema({ schemaName, databaseName, ifNotExist, comment }) {
 			const schemaTerminator = ifNotExist ? ';' : terminator;
+
+			const schemaComment = comment ? assignTemplates(templates.createSchemaComment, {
+				value: comment,
+				schemaName,
+				terminator: schemaTerminator
+			}) : ''
+
 			let schemaStatement = assignTemplates(templates.createSchema, {
-				name: schemaName,
+				name: `[${schemaName}]`,
 				terminator: schemaTerminator,
+				comment: schemaComment ? `\n${schemaComment}` : ''
 			});
 
 			if (!databaseName) {
@@ -95,11 +103,21 @@ module.exports = (baseProvider, options, app) => {
 				memoryOptimizedIndexes,
 				temporalTableTime,
 				ifNotExist,
+				comment,
+				columnDefinitions,
 			},
 			isActivated,
 		) {
 			const tableTerminator = ifNotExist ? ';' : terminator;
 			const tableName = getTableName(name, schemaData.schemaName);
+			const schemaNameTemplate = `[${schemaData.schemaName}]`
+			const tableComment = comment ? assignTemplates(templates.createTableComment, {
+				value: comment,
+				schemaName: `${schemaData.schemaName ? schemaNameTemplate : 'NULL'}`,
+				tableName: `[${name}]`,
+				terminator: tableTerminator
+			}) : ''
+			const columnComments = getColumnsComments(tableName, tableTerminator, columnDefinitions)
 			const dividedKeysConstraints = divideIntoActivatedAndDeactivated(
 				keyConstraints.map(createKeyConstraint(templates, tableTerminator, isActivated)),
 				key => key.statement,
@@ -111,6 +129,7 @@ module.exports = (baseProvider, options, app) => {
 					: '';
 			const dividedForeignKeys = divideIntoActivatedAndDeactivated(foreignKeyConstraints, key => key.statement);
 			const foreignKeyConstraintsString = generateConstraintsString(dividedForeignKeys, isActivated);
+			const tableAndColumnCommentsSeparator = tableComment ? '\n' : ''
 			const tableStatement = assignTemplates(templates.createTable, {
 				name: tableName,
 				column_definitions: columns.join(',\n\t'),
@@ -127,6 +146,8 @@ module.exports = (baseProvider, options, app) => {
 							.join(',\n\t')
 					: '',
 				terminator: tableTerminator,
+				comment: tableComment ? `\n${tableComment}` : '',
+				columnComments: columnComments ? `${tableAndColumnCommentsSeparator}${columnComments}\n` : ''
 			});
 			const defaultConstraintsStatements = defaultConstraints
 				.map(data => createDefaultConstraint(templates, tableTerminator)(data, tableName))
@@ -301,6 +322,7 @@ module.exports = (baseProvider, options, app) => {
 				selectStatement,
 				schemaData,
 				ifNotExist,
+				comment
 			},
 			dbData,
 			isActivated,
@@ -323,12 +345,21 @@ module.exports = (baseProvider, options, app) => {
 				return '';
 			}
 
+			const schemaNameTemplate = `[${schemaData.schemaName}]`
+			const viewComment = comment ? assignTemplates(templates.createViewComment, {
+				value: comment,
+				schemaName: `${schemaData.schemaName ? schemaNameTemplate : 'NULL'}`,
+				viewName: `[${name}]`,
+				terminator
+			}) : ''
+
 			const viewStatement = assignTemplates(templates.createView, {
 				name: viewData.viewName,
 				view_attribute: viewData.viewAttribute,
 				check_option: viewData.checkOption,
 				select_statement: viewData.selectStatement,
 				terminator: viewData.terminator,
+				comment: viewComment ? `\n${viewComment}` : ''
 			});
 
 			return ifNotExist
@@ -429,6 +460,7 @@ module.exports = (baseProvider, options, app) => {
 					: isTempTableEndTimeColumnHidden,
 				encryption,
 				hasMaxLength: columnDefinition.hasMaxLength || jsonSchema.type === 'jsonObject',
+				comment: jsonSchema.description
 			});
 		},
 
@@ -461,6 +493,7 @@ module.exports = (baseProvider, options, app) => {
 				schemaName: containerData.name,
 				databaseName: containerData.databaseName,
 				ifNotExist: containerData.ifNotExist,
+				comment: containerData.description
 			};
 		},
 
@@ -475,6 +508,8 @@ module.exports = (baseProvider, options, app) => {
 				keyConstraints: keyHelper.getTableKeyConstraints({ jsonSchema }),
 				defaultConstraints: getDefaultConstraints(tableData.columnDefinitions),
 				ifNotExist: jsonSchema.ifNotExist,
+				comment: jsonSchema.description,
+				columnDefinitions: tableData.columnDefinitions,
 				options: {
 					memory_optimized: isMemoryOptimized,
 					durability: _.get(entityData, '[0].durability', ''),
@@ -517,7 +552,7 @@ module.exports = (baseProvider, options, app) => {
 			const firstTab = _.get(entityData, '[0]', {});
 			const isPartitioned = _.get(entityData, '[0].partitioned');
 			const ifNotExist = _.get(entityData, '[0].ifNotExist');
-
+			const comment = _.get(entityData, '[0].description')
 			return {
 				...viewData,
 				selectStatement: firstTab.selectStatement || '',
@@ -526,6 +561,7 @@ module.exports = (baseProvider, options, app) => {
 				withCheckOption: Boolean(firstTab.withCheckOption),
 				partitioned: isPartitioned,
 				ifNotExist,
+				comment,
 				partitionedTables: isPartitioned
 					? getPartitionedTables(
 							_.get(entityData, '[0].partitionedTables', []),
