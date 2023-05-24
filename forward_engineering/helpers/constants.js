@@ -6,6 +6,7 @@ const DROP_STATEMENTS = [
 	'DROP COLUMN',
 	'DROP VIEW',
 	'DROP TYPE',
+	'EXEC sp_dropextendedproperty'
 ];
 
 module.exports = {

@@ -89,4 +89,20 @@ module.exports = {
 	createColumnComment: 'EXEC sp_addextendedproperty \'MS_Description\', \'${value}\', \'schema\', ${schemaName}, \'table\', ${tableName}, \'column\', ${columnName}${terminator}',
 
 	createViewComment: 'EXEC sp_addextendedproperty \'MS_Description\', \'${value}\', \'schema\', ${schemaName}, \'view\', ${viewName}${terminator}',
+
+	dropSchemaComment: 'EXEC sp_dropextendedproperty \'MS_Description\', \'schema\', ${schemaName}${terminator}',
+
+	dropTableComment: 'EXEC sp_dropextendedproperty \'MS_Description\', \'schema\', ${schemaName}, \'table\', ${tableName}${terminator}',
+
+	dropColumnComment: 'EXEC sp_dropextendedproperty \'MS_Description\', \'schema\', ${schemaName}, \'table\', ${tableName}, \'column\', ${columnName}${terminator}',
+
+	dropViewComment: 'EXEC sp_dropextendedproperty \'MS_Description\', \'schema\', ${schemaName}, \'view\', ${viewName}${terminator}',
+
+	updateSchemaComment: 'EXEC sp_updateextendedproperty \'MS_Description\', \'${value}\', \'schema\', ${schemaName}${terminator}',
+
+	updateTableComment: 'EXEC sp_updateextendedproperty \'MS_Description\', \'${value}\', \'schema\', ${schemaName}, \'table\', ${tableName}${terminator}',
+
+	updateColumnComment: 'EXEC sp_updateextendedproperty \'MS_Description\', \'${value}\', \'schema\', ${schemaName}, \'table\', ${tableName}, \'column\', ${columnName}${terminator}',
+
+	updateViewComment: 'EXEC sp_updateextendedproperty \'MS_Description\', \'${value}\', \'schema\', ${schemaName}, \'view\', ${viewName}${terminator}'
 };
