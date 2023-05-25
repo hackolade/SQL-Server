@@ -185,6 +185,9 @@ module.exports = (app, options) => {
 
 		const getTablesDropCommentAlterScripts = (tables) => {
 			return Object.keys(tables).map(tableName => {
+				if (!tables[tableName]?.compMod?.deleted) {
+					return ''
+				}
 				const schemaName = tables[tableName].role?.compMod.keyspaceName
 				return getTableDropCommentScript({schemaName, tableName})
 			})
@@ -196,15 +199,15 @@ module.exports = (app, options) => {
 				const tableComparison = tables[tableName].role?.compMod
 				const schemaName = tableComparison.keyspaceName
 	
-				const newComment = tableComparison.description.new
-				const oldComment = tableComparison.description.old
+				const newComment = tableComparison?.description?.new
+				const oldComment = tableComparison?.description?.old
 	
 				const isCommentRemoved = oldComment && !newComment
 				if (isCommentRemoved) {
 					return getTableDropCommentScript({schemaName, tableName})
 				}
-	
-				return getTableUpdateCommentScript({schemaName, tableName, comment: newComment})
+
+				return newComment ? getTableUpdateCommentScript({schemaName, tableName, comment: newComment}) : ''
 				
 			})
 		}
@@ -222,7 +225,8 @@ module.exports = (app, options) => {
 				const schemaName = tables[tableName].role?.compMod.keyspaceName
 				return Object.keys(columns).map(columnName => {
 					const comment = columns[columnName].description
-					if (!comment) {
+					const oldComment = tables[tableName].role?.properties[columnName]?.description
+					if (!comment || oldComment) {
 						return ''
 					}
 					return getColumnCreateCommentScript({schemaName, tableName, columnName, comment})
@@ -249,20 +253,15 @@ module.exports = (app, options) => {
 				}
 				const schemaName = tables[tableName].role?.compMod.keyspaceName
 				return Object.keys(columns).map(columnName => {
-					const columnComparison = columns[columnName].compMod
-					const newComment = columnComparison.newField.description
-					const oldComment = columnComparison.oldField.description
-		
-					if (!oldComment && !newComment) {
-						return ''
-					}
+					const newComment = columns[columnName]?.description
+					const oldComment = tables[tableName].role?.properties[columnName]?.description
 
 					const isCommentRemoved = oldComment && !newComment
 					if (isCommentRemoved) {
-						return getColumnDropCommentScript({schemaName, tableName})
+						return getColumnDropCommentScript({schemaName, tableName, columnName})
 					}
-		
-					return getColumnUpdateCommentScript({schemaName, tableName, comment: newComment})
+					
+					return newComment ? getColumnUpdateCommentScript({schemaName, tableName, columnName, comment: newComment}) : ''
 				})
 			}).flatMap(script => script)
 		}

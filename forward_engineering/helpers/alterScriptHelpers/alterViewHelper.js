@@ -124,25 +124,25 @@ module.exports = (app, options) => {
 
 		const getViewsDropCommentAlterScripts = (views) => {	
 			return Object.keys(views).map(viewName => {
-				const schemaName = views[viewName].role?.compMod.keyspaceName
-				return getViewDropCommentScript({schemaName, tableName: viewName})
+				const schemaName = views[viewName].role?.compMod?.bucketProperties?.name
+				return getViewDropCommentScript({schemaName, viewName})
 			})
 		}
 	
 		const getViewsModifyCommentsAlterScripts = (views) => {
 			return Object.keys(views).map(viewName => {
-				const tableComparison = views[viewName].role?.compMod
-				const schemaName = tableComparison.keyspaceName
+				const viewComparison = views[viewName].role?.compMod
+				const schemaName = viewComparison.keyspaceName
 	
-				const newComment = tableComparison.description.new
-				const oldComment = tableComparison.description.old
+				const newComment = viewComparison?.description?.new
+				const oldComment = viewComparison?.description?.old
 	
 				const isCommentRemoved = oldComment && !newComment
 				if (isCommentRemoved) {
-					return getViewDropCommentScript({schemaName, tableName: viewName})
+					return getViewDropCommentScript({schemaName, viewName})
 				}
 	
-				return getViewUpdateCommentScript({schemaName, tableName: viewName, comment: newComment})
+				return newComment ? getViewUpdateCommentScript({schemaName, viewName, comment: newComment}) : ''
 				
 			})
 		}

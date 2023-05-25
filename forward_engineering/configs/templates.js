@@ -3,12 +3,12 @@ module.exports = {
 
 	useDatabase: 'USE [${name}]${terminator}',
 
-	createSchema: 'CREATE SCHEMA [${name}]${terminator}\n${comment}',
+	createSchema: 'CREATE SCHEMA [${name}]${terminator}${comment}',
 
 	createTable:
 		'CREATE${external} TABLE ${name} (\n' +
 		'\t${column_definitions}${temporalTableTime}${keyConstraints}${checkConstraints}${foreignKeyConstraints}${memoryOptimizedIndexes}\n' +
-		')${options}${terminator}\n${comment}\n${columnComments}',
+		')${options}${terminator}\n${comment}${columnComments}',
 
 	columnDefinition:
 		'[${name}] ${type}${primary_key}${temporalTableTime}${sparse}${maskedWithFunction}${identity}${default}${collation}${not_null}${encryptedWith}',

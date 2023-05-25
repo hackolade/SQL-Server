@@ -49,7 +49,7 @@ module.exports = (baseProvider, options, app) => {
 			let schemaStatement = assignTemplates(templates.createSchema, {
 				name: schemaName,
 				terminator: schemaTerminator,
-				comment: schemaComment ? `\n${schemaComment}` : ''
+				comment: schemaComment ? `\n\n${schemaComment}` : ''
 			});
 
 			if (!databaseName) {
@@ -119,7 +119,7 @@ module.exports = (baseProvider, options, app) => {
 					: '';
 			const dividedForeignKeys = divideIntoActivatedAndDeactivated(foreignKeyConstraints, key => key.statement);
 			const foreignKeyConstraintsString = generateConstraintsString(dividedForeignKeys, isActivated);
-			const tableAndColumnCommentsSeparator = tableComment ? '\n' : ''
+			const tableAndColumnCommentsSeparator = tableComment ? '\n\n' : ''
 			const tableStatement = assignTemplates(templates.createTable, {
 				name: tableName,
 				column_definitions: columns.join(',\n\t'),
@@ -477,7 +477,7 @@ module.exports = (baseProvider, options, app) => {
 				schemaName: containerData.name,
 				databaseName: containerData.databaseName,
 				ifNotExist: containerData.ifNotExist,
-				comment: containerData.description
+				comment: containerData.role?.description
 			};
 		},
 
@@ -817,7 +817,8 @@ module.exports = (baseProvider, options, app) => {
 		},
 
 		dropViewComment({schemaName, viewName, customTerminator}) {
-			return assignTemplates(templates.createViewComment, {
+			const schemaNameTemplate = `[${schemaName}]`
+			return assignTemplates(templates.dropViewComment, {
 				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
 				viewName: `[${viewName}]`,
 				terminator: customTerminator ?? terminator
@@ -854,8 +855,10 @@ module.exports = (baseProvider, options, app) => {
 			});
 		},
 
-		updateViewComment({schemaName, viewName, customTerminator}) {
+		updateViewComment({schemaName, viewName, comment, customTerminator}) {
+			const schemaNameTemplate = `[${schemaName}]`
 			return assignTemplates(templates.updateViewComment, {
+				value: comment,
 				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
 				viewName: `[${viewName}]`,
 				terminator: customTerminator ?? terminator
