@@ -477,7 +477,7 @@ module.exports = (baseProvider, options, app) => {
 				schemaName: containerData.name,
 				databaseName: containerData.databaseName,
 				ifNotExist: containerData.ifNotExist,
-				comment: containerData.role?.description
+				comment: containerData.role?.description ?? containerData.description
 			};
 		},
 
