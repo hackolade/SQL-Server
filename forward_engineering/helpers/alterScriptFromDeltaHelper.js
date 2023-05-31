@@ -249,8 +249,11 @@ const getAlterScript = (collection, app, options) => {
 	}
 	return [
 		'addContainersScripts',
+		'addViewsDropCommentsScripts',
 		'deleteViewsScripts',
+		'addTablesDropCommentsScripts',
 		'deleteCollectionScripts',
+		'addColumnDropCommentsScripts',
 		'deleteColumnScripts',
 		'deleteUdtScripts',
 		'createUdtScripts',
@@ -260,16 +263,13 @@ const getAlterScript = (collection, app, options) => {
 		'modifyColumnScript',
 		'createViewsScripts',
 		'modifiedViewsScripts',
-		'deleteContainersScripts',
-		'addSchemasModifyCommentsScripts',
 		'addSchemasDropCommentsScripts',
-		'addTablesModifyCommentsScripts',
-		'addTablesDropCommentsScripts',
-		'addColumnDropCommentsScripts',
+		'deleteContainersScripts',
 		'addColumnCreateCommentsScrips',
 		'addColumnModifyCommentsScripts',
+		'addSchemasModifyCommentsScripts',
+		'addTablesModifyCommentsScripts',
 		'addViewsModifyCommentsScripts',
-		'addViewsDropCommentsScripts'
 	].flatMap(name => script[name] || []).map(script => script.trim()).filter(Boolean).join('\n\n');
 };
 

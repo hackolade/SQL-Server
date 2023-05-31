@@ -111,12 +111,13 @@ module.exports = app => {
 		return columnDefinitions
 		.filter(({comment}) => Boolean(comment))
 		.map(({comment, schemaName, name}) => {
-			const schemaNameTemplate = `[${schemaName}]`
-			const tableNameTemplate = `[${tableName}]`
+			if (!schemaName || !tableName) {
+				return ''
+			}
 			const commentStatement = app.assignTemplates(app.templates.createColumnComment, {
 				value: comment,
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
-				tableName: `${tableName ? tableNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
+				tableName: `[${tableName}]`,
 				columnName: `[${name}]`,
 				terminator
 			});

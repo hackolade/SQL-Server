@@ -106,8 +106,8 @@ module.exports = (baseProvider, options, app) => {
 		) {
 			const tableTerminator = ifNotExist ? ';' : terminator;
 			const tableName = getTableName(name, schemaData.schemaName);
-			const tableComment = comment ? this.createTableComment({schemaName: schemaData.schemaName, tableName, customTerminator: tableTerminator, comment}) : ''
-			const columnComments = getColumnsComments(tableName, tableTerminator, columnDefinitions)
+			const tableComment = comment ? this.createTableComment({schemaName: schemaData.schemaName, tableName: name, customTerminator: tableTerminator, comment}) : ''
+			const columnComments = getColumnsComments(name, tableTerminator, columnDefinitions)
 			const dividedKeysConstraints = divideIntoActivatedAndDeactivated(
 				keyConstraints.map(createKeyConstraint(templates, tableTerminator, isActivated)),
 				key => key.statement,
@@ -758,32 +758,37 @@ module.exports = (baseProvider, options, app) => {
 		},
 
 		createTableComment({schemaName, tableName, comment, customTerminator}) {
-			const schemaNameTemplate = `[${schemaName}]`
+			if (!schemaName) {
+				return ''
+			}
 			return assignTemplates(templates.createTableComment, {
 				value: comment,
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
 				tableName: `[${tableName}]`,
 				terminator: customTerminator ?? terminator
 			})
 		},
 
 		createColumnComment({schemaName, tableName, columnName, comment, customTerminator}) {
-			const schemaNameTemplate = `[${schemaName}]`
-			const tableNameTemplate = `[${tableName}]`
+			if (!tableName || !columnName) {
+				return ''
+			}
 			return assignTemplates(templates.createColumnComment, {
 				value: comment,
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
-				tableName: `${tableName ? tableNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
+				tableName: `[${tableName}]`,
 				columnName: `[${columnName}]`,
 				terminator: customTerminator ?? terminator
 			});
 		},
 
 		createViewComment({schemaName, viewName, comment, customTerminator}) {
-			const schemaNameTemplate = `[${schemaName}]`
+			if (!schemaName) {
+				return ''
+			}
 			return assignTemplates(templates.createViewComment, {
 				value: comment,
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
 				viewName: `[${viewName}]`,
 				terminator: customTerminator ?? terminator
 			})
@@ -797,29 +802,34 @@ module.exports = (baseProvider, options, app) => {
 		},
 
 		dropTableComment({schemaName, tableName, customTerminator}) {
-			const schemaNameTemplate = `[${schemaName}]`
+			if (!schemaName) {
+				return ''
+			}
 			return assignTemplates(templates.dropTableComment, {
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
 				tableName: `[${tableName}]`,
 				terminator: customTerminator ?? terminator
 			})
 		},
 
 		dropColumnComment({schemaName, tableName, columnName, customTerminator}) {
-			const schemaNameTemplate = `[${schemaName}]`
-			const tableNameTemplate = `[${tableName}]`
+			if (!schemaName || !tableName) {
+				return ''
+			}
 			return assignTemplates(templates.dropColumnComment, {
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
-				tableName: `${tableName ? tableNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
+				tableName: `[${tableName}]`,
 				columnName: `[${columnName}]`,
 				terminator: customTerminator ?? terminator
 			});
 		},
 
 		dropViewComment({schemaName, viewName, customTerminator}) {
-			const schemaNameTemplate = `[${schemaName}]`
+			if (!schemaName) {
+				return ''
+			}
 			return assignTemplates(templates.dropViewComment, {
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
 				viewName: `[${viewName}]`,
 				terminator: customTerminator ?? terminator
 			})
@@ -834,32 +844,37 @@ module.exports = (baseProvider, options, app) => {
 		},
 
 		updateTableComment({schemaName, tableName, comment, customTerminator}) {
-			const schemaNameTemplate = `[${schemaName}]`
+			if (!schemaName) {
+				return ''
+			}
 			return assignTemplates(templates.updateTableComment, {
 				value: comment,
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
 				tableName: `[${tableName}]`,
 				terminator: customTerminator ?? terminator
 			})
 		},
 
 		updateColumnComment({schemaName, tableName, columnName, comment, customTerminator}) {
-			const schemaNameTemplate = `[${schemaName}]`
-			const tableNameTemplate = `[${tableName}]`
+			if (!schemaName || !tableName) {
+				return ''
+			}
 			return assignTemplates(templates.updateColumnComment, {
 				value: comment,
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
-				tableName: `${tableName ? tableNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
+				tableName: `[${tableName}]`,
 				columnName: `[${columnName}]`,
 				terminator: customTerminator ?? terminator
 			});
 		},
 
 		updateViewComment({schemaName, viewName, comment, customTerminator}) {
-			const schemaNameTemplate = `[${schemaName}]`
+			if (!schemaName) {
+				return ''
+			}
 			return assignTemplates(templates.updateViewComment, {
 				value: comment,
-				schemaName: `${schemaName ? schemaNameTemplate : 'NULL'}`,
+				schemaName: `[${schemaName}]`,
 				viewName: `[${viewName}]`,
 				terminator: customTerminator ?? terminator
 			})

@@ -2,7 +2,7 @@
 
 const connectionStringParser = require('mssql/lib/connectionstring');
 const { getClient, setClient, clearClient } = require('./connectionState');
-const { getObjectsFromDatabase, getDatabaseCollationOption } = require('./databaseService/databaseService');
+const { getObjectsFromDatabase, getDatabaseCollationOption, getDescriptionComments } = require('./databaseService/databaseService');
 const {
 	reverseCollectionsToJSON,
 	mergeCollectionsWithViews,
@@ -99,7 +99,8 @@ module.exports = {
 			logger.progress({ message: 'Start reverse-engineering process', containerName: '', entityName: '' });
 			const { collections } = collectionsInfo.collectionData;
 			const client = getClient();
-			if (!client.config.database) {
+			const dbName = client.config.database
+			if (!dbName) {
 				throw new Error('No database specified');
 			}
 
@@ -108,8 +109,83 @@ module.exports = {
 				await reverseCollectionsToJSON(logger)(client, collections, reverseEngineeringOptions),
 				await getCollectionsRelationships(logger)(client, collections),
 			]);
-			callback(null, mergeCollectionsWithViews(jsonSchemas), null, filterRelationships(relationships, jsonSchemas));
+
+			// Getting unique schemas names
+			const schemas = [...new Set(jsonSchemas.map(({dbName}) => dbName))].map(dbName => ({schema: dbName}))
+			let schemasWithTables = schemas.map(({schema}) => ({schema, tablesCount: 0}));
+			let viewsWithSchemas = schemas.map(({schema}) => ({schema, viewsCount: 0}));
+			const entities = jsonSchemas.map(({collectionName: name, dbName, data}) => {
+				const type = data && Object.keys(data).includes('viewAttrbute') ? 'view' : 'table'
+				if (type === 'view') {
+					viewsWithSchemas = viewsWithSchemas.map((schema) => schema.schema === dbName ? ({schema: schema.schema, viewsCount: schema.viewsCount + 1}) : schema)
+				}
+				if (type === 'table') {
+					schemasWithTables = schemasWithTables.map((schema) => schema.schema === dbName ? ({schema: schema.schema, tablesCount: schema.tablesCount + 1}) : schema)
+				}
+				return {
+					schema: dbName, 
+					entity: {type, name}
+				}
+			})
+
+			viewsWithSchemas = viewsWithSchemas.filter(schema => schema.viewsCount > 0).map(({schema}) => ({schema, entity: {type: 'view'}}))
+			schemasWithTables = schemasWithTables.filter(schema => schema.tablesCount > 0).map(({schema}) => ({schema, entity: {type: 'table'}}))
+
+			const descriptionComments = (await Promise
+				.all([...schemas, ...viewsWithSchemas, ...schemasWithTables, ...entities]
+				.map(commentParams => getDescriptionComments(client, dbName, commentParams, logger)))).flat();
+
+			let jsonSchemasWithDescriptionComments = [...jsonSchemas]
+			descriptionComments.forEach(({objtype, objname, value}) => {
+				if (objtype === 'SCHEMA') {
+					jsonSchemasWithDescriptionComments = jsonSchemasWithDescriptionComments
+					.map(collection => collection.dbName === objname ? 
+						{
+							...collection, 
+							bucketInfo: {
+								...collection.bucketInfo, 
+								description: value
+							}
+						} : collection )
+
+				} else if (objtype === 'TABLE' || objtype === 'VIEW') {
+					jsonSchemasWithDescriptionComments = jsonSchemasWithDescriptionComments
+					.map(collection => collection.collectionName === objname ? 
+						{
+							...collection, 
+							entityLevel: {
+								...collection.entityLevel, 
+								description: value
+							}
+						} : collection )
+
+				} else if (objtype === 'COLUMN') {
+					jsonSchemasWithDescriptionComments = jsonSchemasWithDescriptionComments
+					.map(collection => 
+						!collection?.data 
+						&& collection?.validation?.jsonSchema?.properties
+						&& Object.keys(collection?.validation?.jsonSchema?.properties).includes(objname) ? 
+					{
+						...collection, 
+						validation: {
+							...collection.validation, 
+							jsonSchema: {
+								...collection.validation.jsonSchema,
+								properties: {
+									...collection.validation.jsonSchema.properties,
+									[objname]: {
+										...collection.validation.jsonSchema.properties[objname],
+										description: value
+									}
+								}
+							}
+						}
+					} : collection )
+				}
+			})
+			callback(null, mergeCollectionsWithViews(jsonSchemasWithDescriptionComments), null, filterRelationships(relationships, jsonSchemasWithDescriptionComments));
 		} catch (error) {
+			console.log(error);
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering process failed');
 			callback({ message: error.message, stack: error.stack })
 		}
