@@ -231,7 +231,7 @@ module.exports = (app, options) => {
 					}
 					return getColumnCreateCommentScript({schemaName, tableName, columnName, comment})
 				})
-			}).flatMap(script => script)
+			}).flat()
 		}
 
 		const getColumnsDropCommentAlterScripts = (tables) => {
@@ -242,7 +242,7 @@ module.exports = (app, options) => {
 				}
 				const schemaName = tables[tableName].role?.compMod.keyspaceName
 				return Object.keys(columns).map(columnName => getColumnDropCommentScript({schemaName, tableName, columnName}))
-			}).flatMap(script => script)
+			}).flat()
 		}
 
 		const getColumnsModifyCommentAlterScripts = (tables) => {
@@ -263,7 +263,7 @@ module.exports = (app, options) => {
 					
 					return newComment ? getColumnUpdateCommentScript({schemaName, tableName, columnName, comment: newComment}) : ''
 				})
-			}).flatMap(script => script)
+			}).flat()
 		}
 
 	return {

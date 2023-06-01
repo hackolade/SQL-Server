@@ -185,7 +185,6 @@ module.exports = {
 			})
 			callback(null, mergeCollectionsWithViews(jsonSchemasWithDescriptionComments), null, filterRelationships(relationships, jsonSchemasWithDescriptionComments));
 		} catch (error) {
-			console.log(error);
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering process failed');
 			callback({ message: error.message, stack: error.stack })
 		}

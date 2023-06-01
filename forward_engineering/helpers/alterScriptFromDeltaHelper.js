@@ -150,11 +150,11 @@ const getContainersCommentsAlterScripts = (collection, app, options) => {
 	let addSchemasDropCommentsScripts = []
 
 	if (modifiedSchemas) {
-		addSchemasModifyCommentsScripts = Array.isArray(modifiedSchemas) ? modifiedSchemas.map(schema => getSchemasModifyCommentsAlterScripts(schema?.properties)).flatMap(schema => schema) : getSchemasModifyCommentsAlterScripts(modifiedSchemas?.properties)
+		addSchemasModifyCommentsScripts = Array.isArray(modifiedSchemas) ? modifiedSchemas.map(schema => getSchemasModifyCommentsAlterScripts(schema?.properties)).flat() : getSchemasModifyCommentsAlterScripts(modifiedSchemas?.properties)
 	}
 
 	if (deletedSchemas) {
-		addSchemasDropCommentsScripts = Array.isArray(deletedSchemas) ? deletedSchemas.map(schema => getSchemasDropCommentsAlterScripts(schema?.properties)).flatMap(schema => schema) : getSchemasDropCommentsAlterScripts(deletedSchemas?.properties)
+		addSchemasDropCommentsScripts = Array.isArray(deletedSchemas) ? deletedSchemas.map(schema => getSchemasDropCommentsAlterScripts(schema?.properties)).flat() : getSchemasDropCommentsAlterScripts(deletedSchemas?.properties)
 	}
 	
 
@@ -188,14 +188,14 @@ const getCollectionsCommentsAlterScripts = (collection, app, options) => {
 	let addColumnDropCommentsScripts = []
 
 	if (modifiedTables) {
-		addColumnCreateCommentsScrips = Array.isArray(modifiedTables) ? modifiedTables.map(schema => getColumnsCreateCommentAlterScripts(schema?.properties)).flatMap(schema => schema) : getColumnsCreateCommentAlterScripts(modifiedTables?.properties)
-		addTablesModifyCommentsScripts = Array.isArray(modifiedTables) ? modifiedTables.map(schema => getTablesModifyCommentsAlterScripts(schema?.properties)).flatMap(schema => schema) : getTablesModifyCommentsAlterScripts(modifiedTables?.properties)
-		addColumnModifyCommentsScripts = Array.isArray(modifiedTables) ? modifiedTables.map(schema => getColumnsModifyCommentAlterScripts(schema?.properties)).flatMap(schema => schema) : getColumnsModifyCommentAlterScripts(modifiedTables?.properties)
+		addColumnCreateCommentsScrips = Array.isArray(modifiedTables) ? modifiedTables.map(schema => getColumnsCreateCommentAlterScripts(schema?.properties)).flat() : getColumnsCreateCommentAlterScripts(modifiedTables?.properties)
+		addTablesModifyCommentsScripts = Array.isArray(modifiedTables) ? modifiedTables.map(schema => getTablesModifyCommentsAlterScripts(schema?.properties)).flat() : getTablesModifyCommentsAlterScripts(modifiedTables?.properties)
+		addColumnModifyCommentsScripts = Array.isArray(modifiedTables) ? modifiedTables.map(schema => getColumnsModifyCommentAlterScripts(schema?.properties)).flat() : getColumnsModifyCommentAlterScripts(modifiedTables?.properties)
 	}
 
 	if (deletedTables) {
-		addTablesDropCommentsScripts = Array.isArray(deletedTables) ? deletedTables.map(schema => getTablesDropCommentAlterScripts(schema?.properties)).flatMap(schema => schema) : getTablesDropCommentAlterScripts(deletedTables?.properties)
-		addColumnDropCommentsScripts = Array.isArray(deletedTables) ? deletedTables.map(schema => getColumnsDropCommentAlterScripts(schema?.properties)).flatMap(schema => schema) : getColumnsDropCommentAlterScripts(deletedTables?.properties)
+		addTablesDropCommentsScripts = Array.isArray(deletedTables) ? deletedTables.map(schema => getTablesDropCommentAlterScripts(schema?.properties)).flat() : getTablesDropCommentAlterScripts(deletedTables?.properties)
+		addColumnDropCommentsScripts = Array.isArray(deletedTables) ? deletedTables.map(schema => getColumnsDropCommentAlterScripts(schema?.properties)).flat() : getColumnsDropCommentAlterScripts(deletedTables?.properties)
 	}
 
 	return { 
@@ -224,11 +224,11 @@ const getViewsCommentsAlterScripts = (collection, app, options) => {
 	let addViewsDropCommentsScripts = []
 
 	if (modifiedViews) {
-		addViewsModifyCommentsScripts = Array.isArray(modifiedViews) ? modifiedViews.map(schema => getViewsModifyCommentsAlterScripts(schema?.properties)).flatMap(schema => schema) : getViewsModifyCommentsAlterScripts(modifiedViews?.properties)
+		addViewsModifyCommentsScripts = Array.isArray(modifiedViews) ? modifiedViews.map(schema => getViewsModifyCommentsAlterScripts(schema?.properties)).flat() : getViewsModifyCommentsAlterScripts(modifiedViews?.properties)
 	}
 
 	if (deletedViews) {
-		addViewsDropCommentsScripts = Array.isArray(deletedViews) ? deletedViews.map(schema => getViewsDropCommentAlterScripts(schema?.properties)).flatMap(schema => schema) : getViewsDropCommentAlterScripts(deletedViews?.properties)
+		addViewsDropCommentsScripts = Array.isArray(deletedViews) ? deletedViews.map(schema => getViewsDropCommentAlterScripts(schema?.properties)).flat() : getViewsDropCommentAlterScripts(deletedViews?.properties)
 	}
 
 	return { 

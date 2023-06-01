@@ -106,7 +106,7 @@ module.exports = (baseProvider, options, app) => {
 		) {
 			const tableTerminator = ifNotExist ? ';' : terminator;
 			const tableName = getTableName(name, schemaData.schemaName);
-			const tableComment = comment ? this.createTableComment({schemaName: schemaData.schemaName, tableName: name, customTerminator: tableTerminator, comment}) : ''
+			const tableComment = comment && !options.memory_optimized ? this.createTableComment({schemaName: schemaData.schemaName, tableName: name, customTerminator: tableTerminator, comment}) : ''
 			const columnComments = getColumnsComments(name, tableTerminator, columnDefinitions)
 			const dividedKeysConstraints = divideIntoActivatedAndDeactivated(
 				keyConstraints.map(createKeyConstraint(templates, tableTerminator, isActivated)),
