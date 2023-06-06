@@ -871,7 +871,7 @@ const getDescriptionComments = async (connectionClient, dbName, {schema, entity}
 		action: 'MS_Description query',
 		objects: []
 	}, logger);
-	return mapResponse(await currentDbConnectionClient.query(buildDescriptionCommentsRetrieveQuery({schema, entity})))
+	return {...mapResponse(await currentDbConnectionClient.query(buildDescriptionCommentsRetrieveQuery({schema, entity}))), schema, entityName: entity?.name}
 }
 
 const buildDescriptionCommentsRetrieveQuery = ({schema, entity}) => {
