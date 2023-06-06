@@ -9,7 +9,7 @@ module.exports = (baseProvider, options, app) => {
 	const { checkAllKeysDeactivated, divideIntoActivatedAndDeactivated, getEntityName } =
 		app.require('@hackolade/ddl-fe-utils').general;
 
-	const { decorateType, getIdentity, getEncryptedWith, getColumnsComments } = require('./helpers/columnDefinitionHelper')({...app, templates, assignTemplates});
+	const { decorateType, getIdentity, getEncryptedWith, getColumnsComments } = require('./helpers/columnDefinitionHelper')(app);
 	const {
 		createIndex,
 		hydrateIndex,

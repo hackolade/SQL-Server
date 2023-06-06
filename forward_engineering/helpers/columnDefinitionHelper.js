@@ -1,3 +1,5 @@
+const templates = require('../configs/templates')
+
 module.exports = app => {
 	const _ = app.require('lodash');
 
@@ -114,7 +116,7 @@ module.exports = app => {
 			if (!schemaName || !tableName) {
 				return ''
 			}
-			const commentStatement = app.assignTemplates(app.templates.createColumnComment, {
+			const commentStatement = app.assignTemplates(templates.createColumnComment, {
 				value: comment,
 				schemaName: `[${schemaName}]`,
 				tableName: `[${tableName}]`,
