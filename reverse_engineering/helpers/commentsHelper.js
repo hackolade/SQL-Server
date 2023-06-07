@@ -15,7 +15,7 @@ const objtypesToDescriptionCommentsInjectors = {
     })
 }
 
-const getJsonSchemasWithInjectedDescriptionComments = async (jsonSchemas) => {
+const getJsonSchemasWithInjectedDescriptionComments = async ({client, dbName, jsonSchemas, logger}) => {
     // Getting unique schemas names
     const schemas = [...new Set(jsonSchemas.map(({dbName}) => dbName))].map(dbName => ({schema: dbName}))
     let schemasWithTables = schemas.map(({schema}) => ({schema, tablesCount: 0}));

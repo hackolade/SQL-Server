@@ -111,7 +111,7 @@ module.exports = {
 				await getCollectionsRelationships(logger)(client, collections),
 			]);
 
-			const jsonSchemasWithDescriptionComments = await getJsonSchemasWithInjectedDescriptionComments(jsonSchemas)
+			const jsonSchemasWithDescriptionComments = await getJsonSchemasWithInjectedDescriptionComments({client, dbName, jsonSchemas, logger})
 			callback(null, mergeCollectionsWithViews(jsonSchemasWithDescriptionComments), null, filterRelationships(relationships, jsonSchemasWithDescriptionComments));
 		} catch (error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering process failed');

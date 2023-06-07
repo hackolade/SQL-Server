@@ -1,6 +1,7 @@
 const templates = require('../configs/templates')
 
 module.exports = app => {
+	const { assignTemplates } = app.require('@hackolade/ddl-fe-utils');
 	const _ = app.require('lodash');
 
 	const addLength = (type, length) => {
@@ -116,7 +117,7 @@ module.exports = app => {
 			if (!schemaName || !tableName) {
 				return ''
 			}
-			const commentStatement = app.assignTemplates(templates.createColumnComment, {
+			const commentStatement = assignTemplates(templates.createColumnComment, {
 				value: comment,
 				schemaName: `[${schemaName}]`,
 				tableName: `[${tableName}]`,
