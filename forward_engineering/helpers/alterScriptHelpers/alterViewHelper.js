@@ -119,9 +119,39 @@ module.exports = (app, options) => {
 			return ddlProvider.hydrateViewIndex(index, schemaData);
 		};
 
+		const getViewUpdateCommentScript = ({schemaName, viewName, comment}) => ddlProvider.updateViewComment({schemaName, viewName, comment})
+		const getViewDropCommentScript = ({schemaName, viewName}) => ddlProvider.dropViewComment({schemaName, viewName})
+
+		const getViewsDropCommentAlterScripts = (views) => {	
+			return Object.keys(views).map(viewName => {
+				const schemaName = views[viewName].role?.compMod?.bucketProperties?.name
+				return getViewDropCommentScript({schemaName, viewName})
+			})
+		}
+	
+		const getViewsModifyCommentsAlterScripts = (views) => {
+			return Object.keys(views).map(viewName => {
+				const viewComparison = views[viewName].role?.compMod
+				const schemaName = viewComparison.keyspaceName
+	
+				const newComment = viewComparison?.description?.new
+				const oldComment = viewComparison?.description?.old
+	
+				const isCommentRemoved = oldComment && !newComment
+				if (isCommentRemoved) {
+					return getViewDropCommentScript({schemaName, viewName})
+				}
+	
+				return newComment ? getViewUpdateCommentScript({schemaName, viewName, comment: newComment}) : ''
+				
+			})
+		}
+
 	return {
 		getAddViewScript,
 		getDeleteViewScript,
 		getModifiedViewScript,
+		getViewsDropCommentAlterScripts,
+		getViewsModifyCommentsAlterScripts
 	};
 };

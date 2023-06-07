@@ -2,7 +2,7 @@
 
 const connectionStringParser = require('mssql/lib/connectionstring');
 const { getClient, setClient, clearClient } = require('./connectionState');
-const { getObjectsFromDatabase, getDatabaseCollationOption } = require('./databaseService/databaseService');
+const { getObjectsFromDatabase, getDatabaseCollationOption} = require('./databaseService/databaseService');
 const {
 	reverseCollectionsToJSON,
 	mergeCollectionsWithViews,
@@ -10,6 +10,7 @@ const {
 	logDatabaseVersion,
 } = require('./reverseEngineeringService/reverseEngineeringService');
 const logInfo = require('./helpers/logInfo');
+const {getJsonSchemasWithInjectedDescriptionComments} = require('./helpers/commentsHelper')
 const filterRelationships = require('./helpers/filterRelationships');
 const getOptionsFromConnectionInfo = require('./helpers/getOptionsFromConnectionInfo');
 const { adaptJsonSchema } = require('./helpers/adaptJsonSchema');
@@ -99,7 +100,8 @@ module.exports = {
 			logger.progress({ message: 'Start reverse-engineering process', containerName: '', entityName: '' });
 			const { collections } = collectionsInfo.collectionData;
 			const client = getClient();
-			if (!client.config.database) {
+			const dbName = client.config.database
+			if (!dbName) {
 				throw new Error('No database specified');
 			}
 
@@ -108,7 +110,9 @@ module.exports = {
 				await reverseCollectionsToJSON(logger)(client, collections, reverseEngineeringOptions),
 				await getCollectionsRelationships(logger)(client, collections),
 			]);
-			callback(null, mergeCollectionsWithViews(jsonSchemas), null, filterRelationships(relationships, jsonSchemas));
+
+			const jsonSchemasWithDescriptionComments = await getJsonSchemasWithInjectedDescriptionComments(jsonSchemas)
+			callback(null, mergeCollectionsWithViews(jsonSchemasWithDescriptionComments), null, filterRelationships(relationships, jsonSchemasWithDescriptionComments));
 		} catch (error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Reverse-engineering process failed');
 			callback({ message: error.message, stack: error.stack })

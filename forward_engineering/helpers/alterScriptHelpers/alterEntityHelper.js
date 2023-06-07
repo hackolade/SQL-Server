@@ -180,6 +180,92 @@ module.exports = (app, options) => {
 			return ddlProvider.hydrateIndex(index, tableData, schemaData);
 		};
 
+		const getTableUpdateCommentScript = ({schemaName, tableName, comment}) => ddlProvider.updateTableComment({schemaName, tableName, comment})
+		const getTableDropCommentScript = ({schemaName, tableName}) => ddlProvider.dropTableComment({schemaName, tableName})
+
+		const getTablesDropCommentAlterScripts = (tables) => {
+			return Object.keys(tables).map(tableName => {
+				if (!tables[tableName]?.compMod?.deleted) {
+					return ''
+				}
+				const schemaName = tables[tableName].role?.compMod.keyspaceName
+				return getTableDropCommentScript({schemaName, tableName})
+			})
+		}
+	
+		const getTablesModifyCommentsAlterScripts = (tables) => {
+			return Object.keys(tables).map(tableName => {
+
+				const tableComparison = tables[tableName].role?.compMod
+				const schemaName = tableComparison.keyspaceName
+	
+				const newComment = tableComparison?.description?.new
+				const oldComment = tableComparison?.description?.old
+	
+				const isCommentRemoved = oldComment && !newComment
+				if (isCommentRemoved) {
+					return getTableDropCommentScript({schemaName, tableName})
+				}
+
+				return newComment ? getTableUpdateCommentScript({schemaName, tableName, comment: newComment}) : ''
+				
+			})
+		}
+
+		const getColumnCreateCommentScript = ({schemaName, tableName, columnName, comment}) => ddlProvider.createColumnComment({schemaName, tableName, columnName, comment})
+		const getColumnUpdateCommentScript = ({schemaName, tableName, columnName, comment}) => ddlProvider.updateColumnComment({schemaName, tableName, columnName, comment})
+		const getColumnDropCommentScript = ({schemaName, tableName, columnName}) => ddlProvider.dropColumnComment({schemaName, tableName, columnName})
+
+		const getColumnsCreateCommentAlterScripts = (tables) => {
+			return Object.keys(tables).map(tableName => {
+				const columns = tables[tableName].properties
+				if (!columns) {
+					return []
+				}
+				const schemaName = tables[tableName].role?.compMod.keyspaceName
+				return Object.keys(columns).map(columnName => {
+					const comment = columns[columnName].description
+					const oldComment = tables[tableName].role?.properties[columnName]?.description
+					if (!comment || oldComment) {
+						return ''
+					}
+					return getColumnCreateCommentScript({schemaName, tableName, columnName, comment})
+				})
+			}).flat()
+		}
+
+		const getColumnsDropCommentAlterScripts = (tables) => {
+			return Object.keys(tables).map(tableName => {
+				const columns = tables[tableName].properties
+				if (!columns) {
+					return []
+				}
+				const schemaName = tables[tableName].role?.compMod.keyspaceName
+				return Object.keys(columns).map(columnName => getColumnDropCommentScript({schemaName, tableName, columnName}))
+			}).flat()
+		}
+
+		const getColumnsModifyCommentAlterScripts = (tables) => {
+			return Object.keys(tables).map(tableName => {
+				const columns = tables[tableName].properties
+				if (!columns) {
+					return []
+				}
+				const schemaName = tables[tableName].role?.compMod.keyspaceName
+				return Object.keys(columns).map(columnName => {
+					const newComment = columns[columnName]?.description
+					const oldComment = tables[tableName].role?.properties[columnName]?.description
+
+					const isCommentRemoved = oldComment && !newComment
+					if (isCommentRemoved) {
+						return getColumnDropCommentScript({schemaName, tableName, columnName})
+					}
+					
+					return newComment ? getColumnUpdateCommentScript({schemaName, tableName, columnName, comment: newComment}) : ''
+				})
+			}).flat()
+		}
+
 	return {
 		getAddCollectionScript,
 		getDeleteCollectionScript,
@@ -187,5 +273,10 @@ module.exports = (app, options) => {
 		getAddColumnScript,
 		getDeleteColumnScript,
 		getModifyColumnScript,
+		getTablesDropCommentAlterScripts,
+		getTablesModifyCommentsAlterScripts,
+		getColumnsCreateCommentAlterScripts,
+		getColumnsDropCommentAlterScripts,
+		getColumnsModifyCommentAlterScripts,
 	};
 };

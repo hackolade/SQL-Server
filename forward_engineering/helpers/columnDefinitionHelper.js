@@ -1,3 +1,5 @@
+const templates = require('../configs/templates')
+
 module.exports = app => {
 	const _ = app.require('lodash');
 
@@ -107,11 +109,32 @@ module.exports = app => {
 		);
 	};
 
+	const getColumnsComments = (tableName, terminator, columnDefinitions) => {
+		return columnDefinitions
+		.filter(({comment}) => Boolean(comment))
+		.map(({comment, schemaName, name}) => {
+			if (!schemaName || !tableName) {
+				return ''
+			}
+			const commentStatement = app.assignTemplates(templates.createColumnComment, {
+				value: comment,
+				schemaName: `[${schemaName}]`,
+				tableName: `[${tableName}]`,
+				columnName: `[${name}]`,
+				terminator
+			});
+
+			return commentStatement;
+		})
+		.join('\n')
+	};
+
 	return {
 		decorateType,
 		decorateDefault,
 		getIdentity,
 		getEncryptedWith,
 		addClustered,
+		getColumnsComments
 	};
 };

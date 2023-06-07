@@ -866,6 +866,25 @@ const getAuthConfig = (clientId, tenantId, logger) => ({
 	}
 });
 
+const getDescriptionComments = async (connectionClient, dbName, {schema, entity}, logger) => {
+	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
+		action: 'MS_Description query',
+		objects: []
+	}, logger);
+	return {...mapResponse(await currentDbConnectionClient.query(buildDescriptionCommentsRetrieveQuery({schema, entity}))), schema, entityName: entity?.name}
+}
+
+const buildDescriptionCommentsRetrieveQuery = ({schema, entity}) => {
+	const schemaTemplate = schema ? `'schema', '${schema}'` : `'schema', default`
+
+	if (!entity?.type) {
+		return `SELECT objtype, objname, value FROM fn_listextendedproperty ('MS_Description', ${schemaTemplate}, NULL, NULL, NULL, NULL);`
+	}
+
+	const entityTemplate = entity?.name ? `'${entity.type}', '${entity.name}', 'column', default` : `'${entity.type}', default, NULL, NULL`
+	return `SELECT objtype, objname, value FROM fn_listextendedproperty ('MS_Description', ${schemaTemplate}, ${entityTemplate});`
+}
+
 module.exports = {
 	getConnectionClient,
 	getObjectsFromDatabase,
@@ -891,4 +910,5 @@ module.exports = {
 	getDatabaseCollationOption,
 	getTableSystemTime,
 	getVersionInfo,
+	getDescriptionComments,
 }
