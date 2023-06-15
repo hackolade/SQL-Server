@@ -94,6 +94,10 @@
 				"from": { "childType": "timestamp_ntz" },
 				"to": { "mode": "datetime2", "childType": "datetime" }
 			},
+			{
+				"from": { "autoincrement" : {"inheritValues": true} },
+				"to": { "identity": {"inheritValues": true, "targetProperty": "autoincrement", "subPropertiesToInherit": {"identitySeed": {"name": "start_num", "forbiddenValues": [0], "defaultValue": 1}, "identityIncrement": {"name": "step_num"}, "id":{"name": "id"}}} }
+			},
 			["convertLengthToHasMaxLength", 8001]
 		]
 	}
