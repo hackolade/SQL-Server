@@ -95,7 +95,15 @@
 				"to": { "mode": "datetime2", "childType": "datetime" }
 			},
 			["convertLengthToHasMaxLength", 8001],
-			["replaceAutoIncrementWithIdentity"]
+			["replaceAutoIncrementWithIdentity", {
+					"autoincrement": {
+						"self": "identity", "subProps": {
+							"start_num": "identitySeed",
+							"step_num": "identityIncrement"
+						}
+					}
+				}
+			]
 		]
 	}
 }
