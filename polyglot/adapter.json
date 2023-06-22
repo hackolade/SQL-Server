@@ -95,7 +95,7 @@
 				"to": { "mode": "datetime2", "childType": "datetime" }
 			},
 			["convertLengthToHasMaxLength", 8001],
-			["replaceAutoIncrementWithIdentity", {
+			["renameBlockItemProperties", {
 					"autoincrement": {
 						"self": "identity", "subProps": {
 							"start_num": "identitySeed",
