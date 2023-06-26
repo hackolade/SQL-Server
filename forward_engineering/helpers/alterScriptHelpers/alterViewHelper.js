@@ -5,6 +5,7 @@ module.exports = (app, options) => {
 	const { generateIdToNameHashTable, generateIdToActivatedHashTable } = app.require('@hackolade/ddl-fe-utils');
 	const ddlProvider = require('../../ddlProvider')(null, options, app);
 	const { getTableName } = require('../general')(app);
+	const { AlterScriptDto } = require('./types/AlterScriptDto');
 
 	const getAddViewScript = view => {
 		const viewSchema = { ...view, ...(view.role ?? {}) };
@@ -16,13 +17,13 @@ module.exports = (app, options) => {
 		};
 		const hydratedView = ddlProvider.hydrateView({ viewData, entityData: [view] });
 
-		return ddlProvider.createView(hydratedView, {}, view.isActivated);
+		return AlterScriptDto.getInstance([ddlProvider.createView(hydratedView, {}, view.isActivated)], true, false);
 	};
 
 	const getDeleteViewScript = view => {
 		const viewName = getTableName(view.code || view.name, view?.role?.compMod?.keyspaceName);
 
-		return ddlProvider.dropView(viewName);
+		return AlterScriptDto.getInstance([ddlProvider.dropView(viewName)], true, true);
 	};
 
 	const getModifiedViewScript = view => {
@@ -42,7 +43,7 @@ module.exports = (app, options) => {
 		const isFieldsModifiedWithNoSelectStatement =
 			!_.trim(viewSchema.selectStatement) && !_.isEmpty(view.properties);
 
-		let alterView = '';
+		let alterView = AlterScriptDto.getInstance([], true, false);
 
 		if (
 			isViewAttributeModified ||
@@ -51,7 +52,7 @@ module.exports = (app, options) => {
 			isFieldsModifiedWithNoSelectStatement
 		) {
 			const hydratedView = ddlProvider.hydrateView({ viewData, entityData: [viewSchema] });
-			alterView = ddlProvider.alterView(hydratedView, null, viewSchema.isActivated);
+			alterView = AlterScriptDto.getInstance([ddlProvider.alterView(hydratedView, null, viewSchema.isActivated)], true, false);
 		}
 
 		const alterIndexesScripts = modifyGroupItems({
@@ -60,12 +61,12 @@ module.exports = (app, options) => {
 			hydrate: hydrateIndex({ idToNameHashTable, idToActivatedHashTable, schemaData }),
 			create: (viewName, index) =>
 				index.orReplace
-					? `${ddlProvider.dropIndex(viewName, index)}\n\n${ddlProvider.createViewIndex(viewName, index)}`
-					: ddlProvider.createViewIndex(viewName, index),
-			drop: (viewName, index) => ddlProvider.dropIndex(viewName, index),
+					? AlterScriptDto.getInstances([ddlProvider.dropIndex(viewName, index), ddlProvider.createViewIndex(viewName, index)], true, true)
+					: AlterScriptDto.getInstance([ddlProvider.createViewIndex(viewName, index)], true, false),
+			drop: (viewName, index) => AlterScriptDto.getInstance([ddlProvider.dropIndex(viewName, index)], true, true),
 		});
 
-		return [alterView, alterIndexesScripts].filter(Boolean).join('\n\n');
+		return [alterView, ...alterIndexesScripts];
 	};
 
 	const getKeys = (viewSchema, collectionRefsDefinitionsMap) => {
@@ -113,11 +114,11 @@ module.exports = (app, options) => {
 
 	const hydrateIndex =
 		({ idToNameHashTable, idToActivatedHashTable, schemaData }) =>
-		index => {
-			index = setIndexKeys(idToNameHashTable, idToActivatedHashTable, index);
+			index => {
+				index = setIndexKeys(idToNameHashTable, idToActivatedHashTable, index);
 
-			return ddlProvider.hydrateViewIndex(index, schemaData);
-		};
+				return ddlProvider.hydrateViewIndex(index, schemaData);
+			};
 
 		const getViewUpdateCommentScript = ({schemaName, viewName, comment}) => ddlProvider.updateViewComment({schemaName, viewName, comment})
 		const getViewDropCommentScript = ({schemaName, viewName}) => ddlProvider.dropViewComment({schemaName, viewName})

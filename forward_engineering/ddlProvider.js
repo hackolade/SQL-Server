@@ -185,8 +185,7 @@ module.exports = (baseProvider, options, app) => {
 				columnDefinition.isHidden,
 			);
 
-			return commentIfDeactivated(
-				assignTemplates(templates.columnDefinition, {
+			return assignTemplates(templates.columnDefinition, {
 					name: columnDefinition.name,
 					type: decorateType(type, columnDefinition),
 					primary_key: primaryKey + unique,
@@ -198,9 +197,7 @@ module.exports = (baseProvider, options, app) => {
 					encryptedWith,
 					terminator,
 					temporalTableTime,
-				}),
-				columnDefinition,
-			);
+				})
 		},
 
 		createIndex(tableName, index, dbData, isParentActivated = true) {

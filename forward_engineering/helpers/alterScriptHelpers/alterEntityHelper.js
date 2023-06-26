@@ -1,3 +1,19 @@
+/**
+ * @typedef {Object} Collection
+ * @property {string} type
+ * @property {boolean} isActivated
+ * @property {boolean} unique
+ * @property {boolean} hasMaxLength
+ * @property {string} subtype
+ * @property {Object} properties
+ * @property {Object} compMod
+ * @property {Array<string>} compositeKey
+ * @property {boolean} compositePrimaryKey
+ * @property {boolean} compositeUniqueKey
+ * @property {Object} role
+ * @property {string} GUID
+ */
+
 module.exports = (app, options) => {
 	const _ = app.require('lodash');
 	const { getEntityName } = app.require('@hackolade/ddl-fe-utils').general;
@@ -5,9 +21,15 @@ module.exports = (app, options) => {
 	const { getTableName } = require('../general')(app);
 	const ddlProvider = require('../../ddlProvider')(null, options, app);
 	const { generateIdToNameHashTable, generateIdToActivatedHashTable } = app.require('@hackolade/ddl-fe-utils');
-	const { checkFieldPropertiesChanged, modifyGroupItems, setIndexKeys } = require('./common')(app);
+	const { modifyGroupItems, setIndexKeys } = require('./common')(app);
+	const { getRenameColumnScripts, getChangeTypeScripts } = require('./alterColumnHelpers')(app, ddlProvider);
+	const { AlterScriptDto } = require('./types/AlterScriptDto');
 
-	const getAddCollectionScript = collection => {
+	/**
+	 * @param {Collection} collection
+	 * @return Array<AlterScriptDto>
+	 * */
+	const getAddCollectionScriptDto = collection => { //done but need clean up
 		const schemaName = collection.compMod.keyspaceName;
 		const schemaData = { schemaName };
 		const jsonSchema = { ...collection, ...(collection?.role || {}) };
@@ -45,20 +67,29 @@ module.exports = (app, options) => {
 			jsonSchema,
 			idToNameHashTable,
 		});
-		const tableScript = ddlProvider.createTable(hydratedTable, jsonSchema.isActivated);
+		const tableScriptDto = AlterScriptDto.getInstance([ddlProvider.createTable(hydratedTable, jsonSchema.isActivated)], true, false);
+		const indexesScriptsDto = AlterScriptDto.getInstances(indexesScripts, true, false);
 
-		return [tableScript, ...indexesScripts].join('\n\n');
+		return [tableScriptDto, ...indexesScriptsDto];
 	};
 
-	const getDeleteCollectionScript = collection => {
+	/**
+	 * @param {Collection} collection
+	 * @return {AlterScriptDto}
+	 * */
+	const getDeleteCollectionScriptDto = collection => {
 		const jsonSchema = { ...collection, ...(collection?.role || {}) };
 		const tableName = getEntityName(jsonSchema);
 		const schemaName = collection.compMod.keyspaceName;
 		const fullName = getTableName(tableName, schemaName);
 
-		return ddlProvider.dropTable(fullName);
+		return AlterScriptDto.getInstance([ddlProvider.dropTable(fullName)], true, true);
 	};
 
+	/**
+	 * @param {Collection} collection
+	 * @return {Array<AlterScriptDto>}
+	 * */
 	const getModifyCollectionScript = collection => {
 		const jsonSchema = { ...collection, ...(collection?.role || {}) };
 		const schemaName = collection.compMod.keyspaceName;
@@ -80,9 +111,12 @@ module.exports = (app, options) => {
 			}),
 			create: (tableName, index) =>
 				index.orReplace
-					? `${ddlProvider.dropIndex(tableName, index)}\n\n${ddlProvider.createIndex(tableName, index, null)}`
-					: ddlProvider.createIndex(tableName, index, schemaData),
-			drop: (tableName, index) => ddlProvider.dropIndex(tableName, index),
+					? AlterScriptDto.getInstances([
+						ddlProvider.dropIndex(tableName, index),
+						ddlProvider.createIndex(tableName, index, null)
+					], true, true)
+					: AlterScriptDto.getInstance([ddlProvider.createIndex(tableName, index, schemaData)], true, false),
+			drop: (tableName, index) => AlterScriptDto.getInstance([ddlProvider.dropIndex(tableName, index)], true, true),
 		});
 
 		const checkConstraintsScripts = modifyGroupItems({
@@ -91,25 +125,24 @@ module.exports = (app, options) => {
 			hydrate: ddlProvider.hydrateCheckConstraint,
 			create: (tableName, checkConstraint) =>
 				checkConstraint.orReplace
-					? `${ddlProvider.dropConstraint(
-							fullTableName,
-							checkConstraint.name,
-					  )}\n\n${ddlProvider.alterTableAddCheckConstraint(fullTableName, checkConstraint)}`
-					: ddlProvider.alterTableAddCheckConstraint(fullTableName, checkConstraint),
-			drop: (tableName, checkConstraint) => ddlProvider.dropConstraint(fullTableName, checkConstraint.name),
+					? AlterScriptDto.getInstances([
+						ddlProvider.dropConstraint(fullTableName, checkConstraint.name),
+						ddlProvider.alterTableAddCheckConstraint(fullTableName, checkConstraint)
+					], true, false)
+					: AlterScriptDto.getInstance([ddlProvider.alterTableAddCheckConstraint(fullTableName, checkConstraint)], true, false),
+			drop: (tableName, checkConstraint) => AlterScriptDto.getInstance([ddlProvider.dropConstraint(fullTableName, checkConstraint.name)], true, true),
 		});
 
-		const modifyTableOptionsScript = ddlProvider.alterTableOptions(jsonSchema, schemaData, idToNameHashTable);
+		const modifyTableOptionsScriptDto = AlterScriptDto.getInstance([ddlProvider.alterTableOptions(jsonSchema, schemaData, idToNameHashTable)], true, false);
 
-		return []
-			.concat(modifyTableOptionsScript)
-			.concat(checkConstraintsScripts)
-			.concat(indexesScripts)
-			.filter(Boolean)
-			.join('\n\n');
+		return [modifyTableOptionsScriptDto, ...checkConstraintsScripts, ...indexesScripts];
 	};
 
-	const getAddColumnScript = collection => {
+	/**
+	 * @param {Collection} collection
+	 * @return {Array<AlterScriptDto> | undefined}
+	 * */
+	const getAddColumnScriptDto = collection => {
 		const collectionSchema = { ...collection, ...(_.omit(collection?.role, 'properties') || {}) };
 		const tableName = collectionSchema?.code || collectionSchema?.collectionName || collectionSchema?.name;
 		const schemaName = collectionSchema.compMod?.keyspaceName;
@@ -118,45 +151,6 @@ module.exports = (app, options) => {
 
 		return _.toPairs(collection.properties)
 			.filter(([name, jsonSchema]) => !jsonSchema.compMod)
-			.map(([name, jsonSchema]) =>
-				createColumnDefinitionBySchema({
-					name,
-					jsonSchema,
-					parentJsonSchema: collectionSchema,
-					ddlProvider,
-					schemaData,
-				}),
-			)
-			.map(ddlProvider.convertColumnDefinition)
-			.map(script => ddlProvider.addColumn(fullName, script));
-	};
-
-	const getDeleteColumnScript = collection => {
-		const collectionSchema = { ...collection, ...(_.omit(collection?.role, 'properties') || {}) };
-		const tableName = collectionSchema?.code || collectionSchema?.collectionName || collectionSchema?.name;
-		const schemaName = collectionSchema.compMod?.keyspaceName;
-		const fullName = getTableName(tableName, schemaName);
-
-		return _.toPairs(collection.properties)
-			.filter(([name, jsonSchema]) => !jsonSchema.compMod)
-			.map(([name]) => ddlProvider.dropColumn(fullName, name));
-	};
-
-	const getModifyColumnScript = collection => {
-		const collectionSchema = { ...collection, ...(_.omit(collection?.role, 'properties') || {}) };
-		const tableName = collectionSchema?.code || collectionSchema?.collectionName || collectionSchema?.name;
-		const schemaName = collectionSchema.compMod?.keyspaceName;
-		const fullName = getTableName(tableName, schemaName);
-		const schemaData = { schemaName };
-
-		const renameColumnScripts = _.values(collection.properties)
-			.filter(jsonSchema => checkFieldPropertiesChanged(jsonSchema.compMod, ['name']))
-			.map(jsonSchema =>
-				ddlProvider.renameColumn(fullName, jsonSchema.compMod.oldField.name, jsonSchema.compMod.newField.name),
-			);
-
-		const changeTypeScripts = _.toPairs(collection.properties)
-			.filter(([name, jsonSchema]) => checkFieldPropertiesChanged(jsonSchema.compMod, ['type', 'mode']))
 			.map(([name, jsonSchema]) => {
 				const columnDefinition = createColumnDefinitionBySchema({
 					name,
@@ -166,19 +160,52 @@ module.exports = (app, options) => {
 					schemaData,
 				});
 
-				return ddlProvider.alterColumn(fullName, columnDefinition);
+				const script = ddlProvider.convertColumnDefinition(columnDefinition);
+
+				return AlterScriptDto.getInstance([ddlProvider.addColumn(fullName, script)], true, false);
 			});
+	};
+
+	/**
+	 * @param {Collection} collection
+	 * @return {Array<AlterScriptDto> | undefined}
+	 * */
+	const getDeleteColumnScriptDto = collection => {
+		const collectionSchema = { ...collection, ...(_.omit(collection?.role, 'properties') || {}) };
+		const tableName = collectionSchema?.code || collectionSchema?.collectionName || collectionSchema?.name;
+		const schemaName = collectionSchema.compMod?.keyspaceName;
+		const fullName = getTableName(tableName, schemaName);
+
+		return _.toPairs(collection.properties)
+			.filter(([name, jsonSchema]) => !jsonSchema.compMod)
+			.map(
+				([name]) => AlterScriptDto.getInstance([ddlProvider.dropColumn(fullName, name)], true, true)
+			);
+	};
+
+	/**
+	 * @param {Collection} collection
+	 * @return {Array<AlterScriptDto> | undefined}
+	 * */
+	const getModifyColumnScript = collection => {
+		const collectionSchema = { ...collection, ...(_.omit(collection?.role, 'properties') || {}) };
+		const tableName = collectionSchema?.code || collectionSchema?.collectionName || collectionSchema?.name;
+		const schemaName = collectionSchema.compMod?.keyspaceName;
+		const fullName = getTableName(tableName, schemaName);
+
+		const renameColumnScripts = getRenameColumnScripts(collection.properties, fullName);
+		const changeTypeScripts = getChangeTypeScripts(collection.properties, fullName, collectionSchema, schemaName);
 
 		return [...renameColumnScripts, ...changeTypeScripts];
 	};
 
 	const hydrateIndex =
 		({ idToNameHashTable, idToActivatedHashTable, ddlProvider, tableData, schemaData }) =>
-		index => {
-			index = setIndexKeys(idToNameHashTable, idToActivatedHashTable, index);
+			index => {
+				index = setIndexKeys(idToNameHashTable, idToActivatedHashTable, index);
 
-			return ddlProvider.hydrateIndex(index, tableData, schemaData);
-		};
+				return ddlProvider.hydrateIndex(index, tableData, schemaData);
+			};
 
 		const getTableUpdateCommentScript = ({schemaName, tableName, comment}) => ddlProvider.updateTableComment({schemaName, tableName, comment})
 		const getTableDropCommentScript = ({schemaName, tableName}) => ddlProvider.dropTableComment({schemaName, tableName})
@@ -267,12 +294,12 @@ module.exports = (app, options) => {
 		}
 
 	return {
-		getAddCollectionScript,
-		getDeleteCollectionScript,
-		getModifyCollectionScript,
-		getAddColumnScript,
-		getDeleteColumnScript,
-		getModifyColumnScript,
+		getAddCollectionScriptDto, // done but need to clean up
+		getDeleteCollectionScriptDto,
+		getModifyCollectionScriptDto: getModifyCollectionScript,
+		getAddColumnScriptDto,
+		getDeleteColumnScriptDto,
+		getModifyColumnScriptDto: getModifyColumnScript,
 		getTablesDropCommentAlterScripts,
 		getTablesModifyCommentsAlterScripts,
 		getColumnsCreateCommentAlterScripts,
