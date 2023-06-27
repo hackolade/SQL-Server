@@ -54,7 +54,7 @@ const prepareName = (name = '') => {
 	const containSpaces = /[\s-]/g;
 	if (containSpaces.test(name) && !isEscaped(name)) {
 		return `\`${name}\``;
-	} else if (RESERVED_WORDS_AS_ARRAY.includes(name.toLowerCase())) {
+	} else if (RESERVED_WORDS_AS_ARRAY.includes(name.toUpperCase())) {
 		return `\`${name}\``;
 	} else if (name === '') {
 		return '';
@@ -218,7 +218,7 @@ const getEntityName = (compMod = {}, type = 'collectionName') => {
 /**
  * @return {Array<any>}
  * */
-const prepareScript = (...scripts) => scripts.filter(Boolean);
+const filterEmptyScripts = (...scripts) => scripts.filter(Boolean);
 
 /**
  * @param dbVersionString {string}
@@ -268,7 +268,7 @@ module.exports = {
 	getEntityProperties,
 	getContainerName,
 	getEntityName,
-	prepareScript,
+	prepareScript: filterEmptyScripts,
 	getDBVersionNumber,
 	getIsChangeProperties,
 	getDifferentItems,

@@ -4,7 +4,10 @@ const logInfo = require('../reverse_engineering/helpers/logInfo');
 const { connect, getExternalBrowserUrl } = require('../reverse_engineering/api');
 const { logDatabaseVersion } = require('../reverse_engineering/reverseEngineeringService/reverseEngineeringService');
 const applyToInstanceHelper = require('./helpers/applyToInstanceHelper');
-const { buildEntityLevelAlterScript } = require('./helpers/alterScriptHelpers/alterScriptBuilder');
+const {
+	buildEntityLevelAlterScript,
+	parseDataForEntityLevelScript
+} = require('./helpers/alterScriptHelpers/alterScriptBuilder');
 
 /**
  * @typedef {import('./helpers/alterScriptHelpers/types/AlterScriptDto').AlterScriptDto} AlterScriptDto
@@ -40,52 +43,6 @@ const { buildEntityLevelAlterScript } = require('./helpers/alterScriptHelpers/al
  *     [id: string]: EntityJsonSchema
  * }} EntitiesJsonSchema
  */
-
-const parseEntities = (entities, serializedItems) => {
-	return entities.reduce((result, entityId) => {
-		try {
-			return Object.assign({}, result, {
-				[entityId]: JSON.parse(serializedItems[entityId]),
-			});
-		} catch (e) {
-			return result;
-		}
-	}, {});
-};
-
-/**
- * @param data {CoreData}
- * @param app {App}
- * @return {{
- *      jsonSchema: unknown,
- *      modelDefinitions: ModelDefinitions | unknown,
- *      internalDefinitions: InternalDefinitions | unknown,
- *      externalDefinitions: ExternalDefinitions | unknown,
- *      containerData: ContainerData | unknown,
- *      entityData: unknown,
- * }}
- * */
-const parseDataForEntityLevelScript = (data, app) => {
-	const _ = app.require('lodash');
-
-	const jsonSchema = JSON.parse(data.jsonSchema);
-	const modelDefinitions = JSON.parse(data.modelDefinitions);
-	const internalDefinitions = _.isObject(data.internalDefinitions)
-		? parseEntities(data.entities, data.internalDefinitions)
-		: JSON.parse(data.internalDefinitions);
-	const externalDefinitions = JSON.parse(data.externalDefinitions);
-	const containerData = data.containerData;
-	const entityData = data.entityData;
-
-	return {
-		jsonSchema,
-		modelDefinitions,
-		internalDefinitions,
-		externalDefinitions,
-		containerData,
-		entityData,
-	};
-};
 
 module.exports = {
 	/**

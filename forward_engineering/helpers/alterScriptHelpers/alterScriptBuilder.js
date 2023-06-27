@@ -26,6 +26,52 @@ const { getAlterScriptDtos, joinAlterScriptDtosIntoAlterScript } = require('../a
  * }} ContainerLevelAlterScriptData
  * */
 
+const parseEntities = (entities, serializedItems) => {
+	return entities.reduce((result, entityId) => {
+		try {
+			return Object.assign({}, result, {
+				[entityId]: JSON.parse(serializedItems[entityId]),
+			});
+		} catch (e) {
+			return result;
+		}
+	}, {});
+};
+
+/**
+ * @param data {CoreData}
+ * @param app {App}
+ * @return {{
+ *      jsonSchema: unknown,
+ *      modelDefinitions: ModelDefinitions | unknown,
+ *      internalDefinitions: InternalDefinitions | unknown,
+ *      externalDefinitions: ExternalDefinitions | unknown,
+ *      containerData: ContainerData | unknown,
+ *      entityData: unknown,
+ * }}
+ * */
+const parseDataForEntityLevelScript = (data, app) => {
+	const _ = app.require('lodash');
+
+	const jsonSchema = JSON.parse(data.jsonSchema);
+	const modelDefinitions = JSON.parse(data.modelDefinitions);
+	const internalDefinitions = _.isObject(data.internalDefinitions)
+		? parseEntities(data.entities, data.internalDefinitions)
+		: JSON.parse(data.internalDefinitions);
+	const externalDefinitions = JSON.parse(data.externalDefinitions);
+	const containerData = data.containerData;
+	const entityData = data.entityData;
+
+	return {
+		jsonSchema,
+		modelDefinitions,
+		internalDefinitions,
+		externalDefinitions,
+		containerData,
+		entityData,
+	};
+};
+
 /**
  * @param data {CoreData}
  * @param app {App}
@@ -55,4 +101,5 @@ const buildEntityLevelAlterScript = (data, app) => (entityLevelAlterScriptDto) =
 
 module.exports = {
 	buildEntityLevelAlterScript,
+	parseDataForEntityLevelScript
 };
