@@ -15,7 +15,7 @@ module.exports = app => {
 		const addedScripts = added.map(item => create(parentName, item));
 		const modifiedScripts = modified.map(item => create(parentName, { ...item, orReplace: true }));
 
-		return [].concat(modifiedScripts).concat(removedScripts).concat(addedScripts).filter(Boolean).join('\n\n');
+		return [].concat(modifiedScripts).concat(removedScripts).concat(addedScripts);
 	};
 
 	const getModifiedGroupItems = ({ new: newItems = [], old: oldItems = [] }, hydrate) => {

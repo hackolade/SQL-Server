@@ -2,6 +2,7 @@ module.exports = (app, options) => {
 	const _ = app.require('lodash');
 	const ddlProvider = require('../../ddlProvider')(null, options, app);
 	const { getDbData } = app.require('@hackolade/ddl-fe-utils').general;
+	const { AlterScriptDto } = require('./types/AlterScriptDto');
 
 	const getAddContainerScript = containerData => {
 		const constructedDbData = getDbData([containerData]);
@@ -11,11 +12,11 @@ module.exports = (app, options) => {
 			useDb: false,
 		});
 
-		return _.trim(ddlProvider.createSchema(schemaData));
+		return AlterScriptDto.getInstance([_.trim(ddlProvider.createSchema(schemaData))], true, false);
 	};
 
 	const getDeleteContainerScript = containerName => {
-		return ddlProvider.dropSchema(containerName);
+		return AlterScriptDto.getInstance([ddlProvider.dropSchema(containerName)], true, true);
 	};
 
 	const getUpdateSchemaCommentScript = ({schemaName, comment}) => ddlProvider.updateSchemaComment({schemaName, comment})
