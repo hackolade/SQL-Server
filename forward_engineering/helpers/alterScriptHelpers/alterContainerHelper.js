@@ -21,7 +21,7 @@ module.exports = (app, options) => {
 	const getUpdateSchemaCommentScript = ({schemaName, comment}) => ddlProvider.updateSchemaComment({schemaName, comment})
 	const getDropSchemaCommentScript = ({schemaName}) => ddlProvider.dropSchemaComment({schemaName})
 
-	const getSchemasDropCommentsAlterScripts = (schemas) => Object.keys(schemas).map(schemaName => getDropSchemaCommentScript({schemaName}))
+	const getSchemasDropCommentsAlterScripts = (schemas) => Object.keys(schemas).map(schemaName => schemas[schemaName]?.role?.description ? getDropSchemaCommentScript({schemaName}) : '')
 
 	const getSchemasModifyCommentsAlterScripts = (schemas) => {
 		return Object.keys(schemas).map(schemaName => {

@@ -185,7 +185,8 @@ module.exports = (app, options) => {
 
 		const getTablesDropCommentAlterScripts = (tables) => {
 			return Object.keys(tables).map(tableName => {
-				if (!tables[tableName]?.compMod?.deleted) {
+				const table = tables[tableName]
+				if (!table?.compMod?.deleted || !table?.role?.description) {
 					return ''
 				}
 				const schemaName = tables[tableName].role?.compMod.keyspaceName
@@ -241,7 +242,9 @@ module.exports = (app, options) => {
 					return []
 				}
 				const schemaName = tables[tableName].role?.compMod.keyspaceName
-				return Object.keys(columns).map(columnName => getColumnDropCommentScript({schemaName, tableName, columnName}))
+				return Object.keys(columns).map(columnName => {
+					return columns[columnName].description ? getColumnDropCommentScript({schemaName, tableName, columnName}) : ''
+				})
 			}).flat()
 		}
 
