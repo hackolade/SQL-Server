@@ -208,7 +208,11 @@ module.exports = (app, options) => {
 					return getTableDropCommentScript({schemaName, tableName})
 				}
 
-				return newComment ? getTableUpdateCommentScript({schemaName, tableName, comment: newComment}) : ''
+				if (!newComment || newComment === oldComment) {
+					return ''
+				}
+
+				return getTableUpdateCommentScript({schemaName, tableName, comment: newComment})
 				
 			})
 		}
@@ -225,8 +229,12 @@ module.exports = (app, options) => {
 				}
 				const schemaName = tables[tableName].role?.compMod.keyspaceName
 				return Object.keys(columns).map(columnName => {
-					const comment = columns[columnName].description
-					const oldComment = tables[tableName].role?.properties[columnName]?.description
+					const column = columns[columnName]
+					const isColumnRenamed = column?.compMod?.oldField?.name !== column?.compMod?.newField?.name
+					const columnNameToSearchComment = isColumnRenamed ? column?.compMod?.oldField?.name : columnName
+
+					const comment = column.description
+					const oldComment = tables[tableName].role?.properties[columnNameToSearchComment]?.description
 					if (!comment || oldComment) {
 						return ''
 					}
@@ -263,8 +271,12 @@ module.exports = (app, options) => {
 					if (isCommentRemoved) {
 						return getColumnDropCommentScript({schemaName, tableName, columnName})
 					}
+
+					if (!newComment || !oldComment || newComment === oldComment) {
+						return ''
+					}
 					
-					return newComment ? getColumnUpdateCommentScript({schemaName, tableName, columnName, comment: newComment}) : ''
+					return getColumnUpdateCommentScript({schemaName, tableName, columnName, comment: newComment})
 				})
 			}).flat()
 		}

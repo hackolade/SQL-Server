@@ -141,8 +141,12 @@ module.exports = (app, options) => {
 				if (isCommentRemoved) {
 					return getViewDropCommentScript({schemaName, viewName})
 				}
+
+				if (!newComment || newComment === oldComment) {
+					return ''
+				}
 	
-				return newComment ? getViewUpdateCommentScript({schemaName, viewName, comment: newComment}) : ''
+				return getViewUpdateCommentScript({schemaName, viewName, comment: newComment})
 				
 			})
 		}

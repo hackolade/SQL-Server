@@ -35,7 +35,11 @@ module.exports = (app, options) => {
 				return getDropSchemaCommentScript({schemaName})
 			}
 
-			return newComment ? getUpdateSchemaCommentScript({schemaName, comment: newComment}) : ''
+			if (!newComment || newComment === oldComment) {
+				return ''
+			}
+
+			return getUpdateSchemaCommentScript({schemaName, comment: newComment})
 			
 		})
 	}
