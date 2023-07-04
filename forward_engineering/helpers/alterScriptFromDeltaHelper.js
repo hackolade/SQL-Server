@@ -156,7 +156,6 @@ const getContainersCommentsAlterScripts = (collection, app, options) => {
 	if (deletedSchemas) {
 		addSchemasDropCommentsScripts = Array.isArray(deletedSchemas) ? deletedSchemas.map(schema => getSchemasDropCommentsAlterScripts(schema?.properties)).flat() : getSchemasDropCommentsAlterScripts(deletedSchemas?.properties)
 	}
-	
 
 	return { 
 		addSchemasModifyCommentsScripts, 
@@ -251,10 +250,10 @@ const getAlterScript = (collection, app, options) => {
 		'addContainersScripts',
 		'addViewsDropCommentsScripts',
 		'deleteViewsScripts',
-		'addTablesDropCommentsScripts',
-		'deleteCollectionScripts',
 		'addColumnDropCommentsScripts',
+		'addTablesDropCommentsScripts',
 		'deleteColumnScripts',
+		'deleteCollectionScripts',
 		'deleteUdtScripts',
 		'createUdtScripts',
 		'createCollectionsScripts',

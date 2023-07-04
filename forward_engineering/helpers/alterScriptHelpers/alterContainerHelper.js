@@ -21,7 +21,7 @@ module.exports = (app, options) => {
 	const getUpdateSchemaCommentScript = ({schemaName, comment}) => ddlProvider.updateSchemaComment({schemaName, comment})
 	const getDropSchemaCommentScript = ({schemaName}) => ddlProvider.dropSchemaComment({schemaName})
 
-	const getSchemasDropCommentsAlterScripts = (schemas) => Object.keys(schemas).map(schemaName => getDropSchemaCommentScript({schemaName}))
+	const getSchemasDropCommentsAlterScripts = (schemas) => Object.keys(schemas).map(schemaName => schemas[schemaName]?.role?.description ? getDropSchemaCommentScript({schemaName}) : '')
 
 	const getSchemasModifyCommentsAlterScripts = (schemas) => {
 		return Object.keys(schemas).map(schemaName => {
@@ -35,7 +35,11 @@ module.exports = (app, options) => {
 				return getDropSchemaCommentScript({schemaName})
 			}
 
-			return newComment ? getUpdateSchemaCommentScript({schemaName, comment: newComment}) : ''
+			if (!newComment || newComment === oldComment) {
+				return ''
+			}
+
+			return getUpdateSchemaCommentScript({schemaName, comment: newComment})
 			
 		})
 	}
