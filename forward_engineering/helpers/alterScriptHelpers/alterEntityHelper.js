@@ -189,7 +189,7 @@ module.exports = (app, options) => {
 				if (!table?.compMod?.deleted || !table?.role?.description) {
 					return ''
 				}
-				const schemaName = tables[tableName].role?.compMod.keyspaceName
+				const schemaName = table.role?.compMod.keyspaceName
 				return getTableDropCommentScript({schemaName, tableName})
 			})
 		}
