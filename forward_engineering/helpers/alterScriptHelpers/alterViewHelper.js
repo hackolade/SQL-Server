@@ -124,7 +124,11 @@ module.exports = (app, options) => {
 
 		const getViewsDropCommentAlterScripts = (views) => {	
 			return Object.keys(views).map(viewName => {
-				const schemaName = views[viewName].role?.compMod?.bucketProperties?.name
+				const view = views[viewName]
+				if (!view?.role?.description) {
+					return ''
+				}
+				const schemaName = view.role?.compMod?.bucketProperties?.name
 				return getViewDropCommentScript({schemaName, viewName})
 			})
 		}
