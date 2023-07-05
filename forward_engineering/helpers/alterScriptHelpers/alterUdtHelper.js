@@ -1,6 +1,6 @@
 module.exports = (app, options) => {
 	const _ = app.require('lodash');
-	const { createColumnDefinitionBySchema } = require('./createColumnDefinition')(_);
+	const { createColumnDefinitionBySchema } = require('./columnHelpers/createColumnDefinition')(_);
 	const ddlProvider = require('../../ddlProvider')(null, options, app);
 	const { AlterScriptDto } = require('./types/AlterScriptDto');
 
@@ -11,7 +11,7 @@ module.exports = (app, options) => {
 		return !_.isEmpty(schemaNames) ? schemaNames : DEFAULT_KEY_SPACE;
 	};
 
-	const getCreateUdtScript = jsonSchema => {
+	const getCreateUdtScriptDto = jsonSchema => {
 		const schemaNames = getSchemaNames(jsonSchema);
 
 		return Object.keys(schemaNames).map(schemaName => {
@@ -29,7 +29,7 @@ module.exports = (app, options) => {
 		});
 	};
 
-	const getDeleteUdtScript = udt => {
+	const getDeleteUdtScriptDto = udt => {
 		const schemaNames = getSchemaNames(udt);
 		return Object.keys(schemaNames).map(schemaName => {
 			const name = udt.code || udt.name || '';
@@ -39,7 +39,7 @@ module.exports = (app, options) => {
 	};
 
 	return {
-		getCreateUdtScript,
-		getDeleteUdtScript,
+		getCreateUdtScriptDto,
+		getDeleteUdtScriptDto,
 	};
 };
