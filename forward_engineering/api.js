@@ -1,4 +1,3 @@
-const { commentDropStatements } = require('./helpers/commentDropStatements');
 const { DROP_STATEMENTS } = require('./helpers/constants');
 const logInfo = require('../reverse_engineering/helpers/logInfo');
 const { connect, getExternalBrowserUrl } = require('../reverse_engineering/api');

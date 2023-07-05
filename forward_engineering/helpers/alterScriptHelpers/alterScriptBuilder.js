@@ -1,6 +1,5 @@
 'use strict';
 
-const { getAlterScriptDtos, joinAlterScriptDtosIntoAlterScript } = require('../alterScriptFromDeltaHelper');
 
 /**
  * @typedef {import('./helpers/alterScriptHelpers/types/AlterScriptDto').AlterScriptDto} AlterScriptDto
@@ -83,6 +82,7 @@ const getEntityLevelAlterScriptDtos = (data, app) => ({
 														  jsonSchema,
 														  internalDefinitions
 													  }) => {
+	const { getAlterScriptDtos } = require('../alterScriptFromDeltaHelper')(app.require('lodash'));
 	const definitions = [modelDefinitions, internalDefinitions, externalDefinitions];
 
 	return getAlterScriptDtos(jsonSchema, app, data.options);
@@ -94,6 +94,7 @@ const getEntityLevelAlterScriptDtos = (data, app) => ({
  * @return {(dto: EntityLevelAlterScriptData) => string}
  * */
 const buildEntityLevelAlterScript = (data, app) => (entityLevelAlterScriptDto) => {
+	const { joinAlterScriptDtosIntoAlterScript } = require('../alterScriptFromDeltaHelper')(app.require('lodash'));
 	const alterScriptDtos = getEntityLevelAlterScriptDtos(data, app)(entityLevelAlterScriptDto);
 
 	return joinAlterScriptDtosIntoAlterScript(alterScriptDtos, data);

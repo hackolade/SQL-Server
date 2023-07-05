@@ -43,28 +43,26 @@ module.exports = {
 		'ALTER TABLE ${tableName} ADD CONSTRAINT [${constraintName}] DEFAULT (${default}) FOR [${columnName}]${terminator}\n',
 
 	ifNotExistSchema:
-		"IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'${schemaName}')\nbegin\n\tEXEC('${statement}')\nend${terminator}",
+		'IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N\'${schemaName}\')\nbegin\n\tEXEC(\'${statement}\')\nend${terminator}',
 
 	ifNotExistDatabase:
-		"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = N'${databaseName}')\nbegin\n${statement}\nend${terminator}",
+		'IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = N\'${databaseName}\')\nbegin\n${statement}\nend${terminator}',
 
 	ifNotExistTable:
-		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${tableName}') AND type in (N'U'))\nbegin\n${statement}\nend${terminator}\n",
+		'IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N\'${tableName}\') AND type in (N\'U\'))\nbegin\n${statement}\nend${terminator}\n',
 
 	ifNotExistView:
-		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${viewName}') AND type in (N'V'))\nbegin\nEXEC('\n${statement}')\nend${terminator}",
+		'IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N\'${viewName}\') AND type in (N\'V\'))\nbegin\nEXEC(\'\n${statement}\')\nend${terminator}',
 
 	dropSchema: 'DROP SCHEMA IF EXISTS [${name}]${terminator}',
 
-	dropTable: 'DROP TABLE IF EXISTS ${name}${terminator}',
+	dropTable: 'DROP TABLE IF EXISTS [${name}]${terminator}',
 
 	dropIndex: 'DROP INDEX IF EXISTS [${name}] ON ${object}${terminator}',
 
-	dropConstraint: 'ALTER TABLE ${tableName} DROP CONSTRAINT [${name}]${terminator}',
+	dropConstraint: 'ALTER TABLE [${tableName}] DROP CONSTRAINT [${constraintName}]${terminator}',
 
 	alterTableOptions: 'ALTER TABLE ${tableName} ${options}${terminator}',
-
-	alterTableAddConstraint: 'ALTER TABLE ${tableName} ADD ${constraint}${terminator}',
 
 	alterTable: 'ALTER TABLE ${tableName} ${command}${terminator}',
 
@@ -72,9 +70,17 @@ module.exports = {
 
 	addColumn: 'ADD ${script}',
 
+	addCheckConstraint: 'ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintName} CHECK (${expression})${terminator}',
+
+	addNotNullConstraint: 'ALTER TABLE ${tableName} ALTER COLUMN ${columnName} ${columnType} NOT NULL${terminator}',
+
+	dropNotNullConstraint: 'ALTER TABLE ${tableName} ALTER COLUMN ${columnName} ${columnType} NULL${terminator}',
+
+	addConstraint: 'ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintStatement}${terminator}',
+
 	alterColumn: 'ALTER COLUMN [${name}] ${type}${collation}${not_null}',
 
-	renameColumn: "EXEC sp_rename '${fullTableName}.${oldColumnName}', '${newColumnName}', 'COLUMN';${terminator}",
+	renameColumn: 'EXEC sp_rename \'${fullTableName}.${oldColumnName}\', \'${newColumnName}\', \'COLUMN\';${terminator}',
 
 	dropView: 'DROP VIEW IF EXISTS ${name}${terminator}',
 

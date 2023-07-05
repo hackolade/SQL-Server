@@ -188,5 +188,6 @@ module.exports = app => {
 		isInlinePrimaryKey,
 		hydratePrimaryKeyOptions,
 		hydrateUniqueOptions,
+		getCompositePrimaryKeys
 	};
 };

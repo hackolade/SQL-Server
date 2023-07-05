@@ -3,7 +3,7 @@
 module.exports = (app, ddlProvider) => {
 	const _ = app.require('lodash');
 	const { checkFieldPropertiesChanged } = require('../common')(app);
-	const { createColumnDefinitionBySchema } = require('../createColumnDefinition')(_);
+	const { createColumnDefinitionBySchema } = require('./createColumnDefinition')(_);
 	const { AlterScriptDto } = require('../types/AlterScriptDto');
 
 	const getChangeTypeScriptsDto = (collectionProperties, fullName, collectionSchema, schemaName) => {

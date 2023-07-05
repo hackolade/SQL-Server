@@ -6,7 +6,6 @@ const objtypesToDescriptionCommentsInjectors = {
     TABLE: ({schemas, objname, value, schema}) => schemas.map(collection => collection?.schemaName === schema && collection.collectionName === objname ? setObjectProperty(collection, 'entityLevel.description', value): collection),
     VIEW: ({schemas, objname, value, schema}) => schemas.map(view => view?.schemaName === schema && view.collectionName === objname ? setObjectProperty(view, 'data.description', value) : view ),
     COLUMN: ({schemas, objname, value, schema, entityName}) => schemas.map(collection => {
-        debugger
         return !collection?.data 
         && collection?.validation?.jsonSchema?.properties
         && collection?.schemaName === schema
