@@ -35,6 +35,9 @@
 		}
 	],
 	"feLevelSelector": {
+		"entity": {
+			"separateBucket": true
+		},
 		"container": true,
 		"model": true
 	},
