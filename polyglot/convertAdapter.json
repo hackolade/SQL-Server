@@ -60,7 +60,15 @@
                     {
                         "name": "defaultOption",
                         "value": "Autoincrement",
-                        "ifExist": ["autoincrement"]
+                        "dependency": {
+                            "type": "and",
+                            "values": [
+                                {
+                                    "key": "autoincrement",
+                                    "exist": true
+                                }
+                            ]
+                        }
                     }
                 ]
             }
