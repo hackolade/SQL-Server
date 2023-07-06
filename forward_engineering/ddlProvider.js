@@ -901,7 +901,8 @@ module.exports = (baseProvider, options, app) => {
 			const templateConfig = {
 				tableName,
 				constraintName,
-				expression
+				expression,
+				terminator
 			};
 			return assignTemplates(templates.addCheckConstraint, templateConfig);
 		},
