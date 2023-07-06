@@ -5,14 +5,11 @@ const objtypesToDescriptionCommentsInjectors = {
     SCHEMA: ({schemas, objname, value}) => schemas.map(collection => collection.dbName === objname ? setObjectProperty(collection, 'bucketInfo.description', value): collection ),
     TABLE: ({schemas, objname, value, schema}) => schemas.map(collection => collection?.schemaName === schema && collection.collectionName === objname ? setObjectProperty(collection, 'entityLevel.description', value): collection),
     VIEW: ({schemas, objname, value, schema}) => schemas.map(view => view?.schemaName === schema && view.collectionName === objname ? setObjectProperty(view, 'data.description', value) : view ),
-    COLUMN: ({schemas, objname, value, schema, entityName}) => schemas.map(collection => {
-        debugger
-        return !collection?.data 
+    COLUMN: ({schemas, objname, value, schema, entityName}) => schemas.map(collection => !collection?.data 
         && collection?.validation?.jsonSchema?.properties
         && collection?.schemaName === schema
         && collection.name === entityName
-        && Object.keys(collection?.validation?.jsonSchema?.properties).includes(objname) ? setObjectProperty(collection, `collection.validation.jsonSchema.properties.${objname}.description`, value): collection 
-    })
+        && Object.keys(collection?.validation?.jsonSchema?.properties).includes(objname) ? setObjectProperty(collection, `collection.validation.jsonSchema.properties.${objname}.description`, value): collection )
 }
 
 const getJsonSchemasWithInjectedDescriptionComments = async ({client, dbName, jsonSchemas, logger}) => {
