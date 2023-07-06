@@ -153,7 +153,7 @@ module.exports = _ => {
 	};
 
 	const wrapInBrackets = name => {
-		return /\s|\W/.test(name) || _.includes(RESERVED_WORDS_AS_ARRAY, _.toUpper(name)) ? `[${name}]` : name;
+		return `[${name}]`;
 	};
 
 	const buildScript = (statements) => {

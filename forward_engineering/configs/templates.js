@@ -60,7 +60,7 @@ module.exports = {
 
 	dropIndex: 'DROP INDEX IF EXISTS [${name}] ON ${object}${terminator}',
 
-	dropConstraint: 'ALTER TABLE [${tableName}] DROP CONSTRAINT [${constraintName}]${terminator}',
+	dropConstraint: 'ALTER TABLE ${tableName} DROP CONSTRAINT ${constraintName}${terminator}',
 
 	alterTableOptions: 'ALTER TABLE ${tableName} ${options}${terminator}',
 

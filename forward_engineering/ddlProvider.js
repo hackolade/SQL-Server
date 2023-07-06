@@ -605,7 +605,7 @@ module.exports = (baseProvider, options, app) => {
 		dropConstraint(fullTableName, constraintName) {
 			return assignTemplates(templates.dropConstraint, {
 				tableName: fullTableName,
-				name: constraintName,
+				constraintName,
 				terminator,
 			});
 		},
