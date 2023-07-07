@@ -915,7 +915,8 @@ module.exports = (baseProvider, options, app) => {
 			return assignTemplates(templates.addNotNullConstraint, {
 				tableName,
 				columnName,
-				columnType: decorateType(type, columnDefinition)
+				columnType: decorateType(type, columnDefinition),
+				terminator
 			});
 		},
 
@@ -927,7 +928,8 @@ module.exports = (baseProvider, options, app) => {
 			return assignTemplates(templates.dropNotNullConstraint, {
 				tableName,
 				columnName,
-				columnType: decorateType(type, columnDefinition)
+				columnType: decorateType(type, columnDefinition),
+				terminator
 			});
 		},
 

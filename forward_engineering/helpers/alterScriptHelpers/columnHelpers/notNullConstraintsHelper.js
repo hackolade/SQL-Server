@@ -26,7 +26,7 @@ const getModifyNonNullColumnsScriptDtos = (_, ddlProvider) => (collection, colle
 		})
 		.map(([columnName, jsonSchema]) => {
 			const columnDefinition = createColumnDefinitionBySchema({
-				name,
+				name: columnName,
 				jsonSchema,
 				parentJsonSchema: collectionSchema,
 				ddlProvider,
