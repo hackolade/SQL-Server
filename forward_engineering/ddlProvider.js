@@ -221,12 +221,7 @@ module.exports = (baseProvider, options, app) => {
 			if (!isParentActivated) {
 				return createTableIndex(terminator, tableName, index, isActivated && isParentActivated);
 			}
-			return commentIfDeactivated(
-				createTableIndex(terminator, tableName, index, isActivated && isParentActivated),
-				{
-					isActivated,
-				},
-			);
+			return createTableIndex(terminator, tableName, index, isActivated && isParentActivated);
 		},
 
 		createCheckConstraint(checkConstraint) {

@@ -7,7 +7,7 @@ module.exports = (app, options) => {
 	const { getFullTableName, getEntityName } = require('../../utils/general')(app.require('lodash'));
 	const ddlProvider = require('../../ddlProvider')(null, options, app);
 	const { generateIdToNameHashTable, generateIdToActivatedHashTable } = app.require('@hackolade/ddl-fe-utils');
-	const { setIndexKeys } = require('./common')(app);
+	const { setIndexKeys, modifyGroupItems } = require('./common')(app);
 	const { getRenameColumnScriptsDto } = require('./columnHelpers/renameColumnHelpers')(app, ddlProvider);
 	const { getChangeTypeScriptsDto } = require('./columnHelpers/alterTypeHelper')(app, ddlProvider);
 	const { AlterScriptDto } = require('./types/AlterScriptDto');
@@ -58,7 +58,9 @@ module.exports = (app, options) => {
 			idToNameHashTable,
 		});
 		const tableScriptDto = AlterScriptDto.getInstance([ddlProvider.createTable(hydratedTable, jsonSchema.isActivated)], true, false);
-		const indexesScriptsDto = AlterScriptDto.getInstances(indexesScripts, true, false);
+		const indexesScriptsDto = indexesScripts
+			.map(indexScript => AlterScriptDto.getInstance([indexScript], true, false))
+			.filter(Boolean);
 
 		return [tableScriptDto, ...indexesScriptsDto].filter(Boolean);
 	};
@@ -79,12 +81,37 @@ module.exports = (app, options) => {
 	 * @return {Array<AlterScriptDto>}
 	 * */
 	const getModifyCollectionScriptDto = collection => {
+		const jsonSchema = { ...collection, ...(collection?.role || {}) };
+		const schemaName = collection.compMod?.keyspaceName;
+		const schemaData = { schemaName };
+		const idToNameHashTable = generateIdToNameHashTable(jsonSchema);
+		const idToActivatedHashTable = generateIdToActivatedHashTable(jsonSchema);
 		const modifyCheckConstraintScriptDtos = getModifyCheckConstraintScriptDtos(_, ddlProvider)(collection);
 		const modifyPKConstraintDtos = getModifyPkConstraintsScriptDtos(app, _, ddlProvider)(collection);
+		const indexesScriptsDtos = modifyGroupItems({
+			data: jsonSchema,
+			key: 'Indxs',
+			hydrate: hydrateIndex({
+				idToNameHashTable,
+				idToActivatedHashTable,
+				ddlProvider,
+				schemaData,
+				tableData: [jsonSchema],
+			}),
+			create: (tableName, index) =>
+				index.orReplace
+					? [
+						AlterScriptDto.getInstance([ddlProvider.dropIndex(tableName, index)], true, true),
+						AlterScriptDto.getInstance([ddlProvider.createIndex(tableName, index, null)], true, false)
+					]
+					: AlterScriptDto.getInstance([ddlProvider.createIndex(tableName, index, schemaData)], true, false),
+			drop: (tableName, index) => AlterScriptDto.getInstance([ddlProvider.dropIndex(tableName, index)], true, true),
+		}).flat();
 
 		return [
 			...modifyCheckConstraintScriptDtos,
-			...modifyPKConstraintDtos
+			...modifyPKConstraintDtos,
+			...indexesScriptsDtos
 		].filter(Boolean);
 	};
 

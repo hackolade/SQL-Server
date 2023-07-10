@@ -61,10 +61,13 @@ module.exports = (app, options) => {
 			hydrate: hydrateIndex({ idToNameHashTable, idToActivatedHashTable, schemaData }),
 			create: (viewName, index) =>
 				index.orReplace
-					? AlterScriptDto.getInstances([ddlProvider.dropIndex(viewName, index), ddlProvider.createViewIndex(viewName, index)], true, true)
+					? [
+						AlterScriptDto.getInstance([ddlProvider.dropIndex(viewName, index)], true, true),
+						AlterScriptDto.getInstance([ddlProvider.createViewIndex(viewName, index)], true, true),
+					]
 					: AlterScriptDto.getInstance([ddlProvider.createViewIndex(viewName, index)], true, false),
 			drop: (viewName, index) => AlterScriptDto.getInstance([ddlProvider.dropIndex(viewName, index)], true, true),
-		});
+		}).flat();
 
 		return [alterView, ...alterIndexesScripts];
 	};
