@@ -43,6 +43,7 @@ module.exports = (baseProvider, options, app) => {
 	const { wrapIfNotExistSchema, wrapIfNotExistDatabase, wrapIfNotExistTable, wrapIfNotExistView } =
 		require('./helpers/ifNotExistStatementHelper')(app);
 	const { getPartitionedTables, getCreateViewData } = require('./helpers/viewHelper')(app);
+	const { getFullTableName } = require('./utils/general')(_);
 
 	const terminator = getTerminator(options);
 
@@ -263,8 +264,8 @@ module.exports = (baseProvider, options, app) => {
 
 			return {
 				statement: assignTemplates(templates.createForeignKeyConstraint, {
-					primaryTable: getTableName(primaryTable, primarySchemaName || schemaData.schemaName),
-					name,
+					primaryTable: getTableName(primaryTable, primarySchemaName || schemaData.schemaName, false),
+					name: wrapInBrackets(name),
 					foreignKey: isActivated ? foreignKeysToString(foreignKey) : foreignActiveKeysToString(foreignKey),
 					primaryKey: isActivated ? foreignKeysToString(primaryKey) : foreignActiveKeysToString(primaryKey),
 					onDelete: foreignOnDelete ? ` ON DELETE ${foreignOnDelete}` : '',
@@ -296,9 +297,9 @@ module.exports = (baseProvider, options, app) => {
 
 			return {
 				statement: assignTemplates(templates.createForeignKey, {
-					primaryTable: getTableName(primaryTable, schemaData.schemaName),
-					foreignTable: getTableName(foreignTable, schemaData.schemaName),
-					name,
+					primaryTable: getTableName(primaryTable, schemaData.schemaName, false),
+					foreignTable: getTableName(foreignTable, schemaData.schemaName, false),
+					name: wrapInBrackets(name),
 					foreignKey: foreignKeysToString(foreignKey),
 					primaryKey: foreignKeysToString(primaryKey),
 					onDelete: foreignOnDelete ? ` ON DELETE ${foreignOnDelete}` : '',
@@ -933,9 +934,8 @@ module.exports = (baseProvider, options, app) => {
 			});
 		},
 
-		addPKConstraint(tableName, isParentActivated, keyData) {
-			debugger;
-			const constraintStatementDto = createKeyConstraint(templates, terminator, isParentActivated)(keyData);
+		addPKConstraint(tableName, isParentActivated, keyData, isPKWithOptions) {
+			const constraintStatementDto = createKeyConstraint(templates, terminator, isParentActivated)(keyData, isPKWithOptions);
 
 			return {
 				statement: assignTemplates(templates.addConstraint, {
@@ -950,14 +950,16 @@ module.exports = (baseProvider, options, app) => {
 		dropPKConstraint(tableName, constraintName) {
 			return assignTemplates(templates.dropConstraint, {
 				tableName,
-				constraintName
+				constraintName,
+				terminator
 			});
 		},
 
-		dropForeignKey(tableName, fkConstraintName) {
+		dropForeignKey(tableName, constraintName) {
 			const templateConfig = {
 				tableName,
-				fkConstraintName,
+				constraintName,
+				terminator
 			};
 			return assignTemplates(templates.dropConstraint, templateConfig);
 		},

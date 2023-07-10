@@ -252,6 +252,11 @@ const getCollectionNames = (_, collection) => {
 		entityName
 	};
 };
+
+const checkIsColumnsInCompositePKChanged = (newPKs, oldPKs) => {
+	const idx = [];
+
+};
 /**
  * @return {(collection: AlterCollectionDto) => Array<PkScriptModificationDto>}
  * */
@@ -276,12 +281,13 @@ const getAddCompositePkScriptDtos = (app, _, ddlProvider) => (collection) => {
 
 	return newPrimaryKeys
 		.map((newPk) => {
-			const keyData = getCompositePrimaryKeys({ ...collection, ...(collection?.role || {}) })[0];
+			const keyData = getCompositePrimaryKeys({ ...collection, ...(collection?.role || {}) }, true)[0];
 
 			const statementDto = ddlProvider.addPKConstraint(
 				fullTableName,
 				collection.isActivated,
-				keyData
+				keyData,
+				true
 			);
 			return new PkScriptModificationDto(statementDto.statement, fullTableName, false, statementDto.isActivated);
 		})
@@ -500,6 +506,8 @@ const getAddPkScriptDtos = (app, _, ddlProvider) => (collection) => {
 		getFullCollectionName,
 		getSchemaOfAlterCollection,
 		getEntityName,
+		wrapInBrackets,
+		buildDefaultPKName
 	} = require('../../../utils/general')(_);
 	const { hydratePrimaryKeyOptions } = require('../../keyHelper')(app);
 
@@ -519,12 +527,21 @@ const getAddPkScriptDtos = (app, _, ddlProvider) => (collection) => {
 			return wasRegularPkModified(_)(jsonSchema, collection);
 		})
 		.map(([name, jsonSchema]) => {
-			const keyData = hydratePrimaryKeyOptions(jsonSchema.primaryKeyOptions, name, jsonSchema.isActivated);
+			let keyData = {
+				constraintName: buildDefaultPKName(entityName, name),
+				columnName: wrapInBrackets(name),
+			};
+			const isPKWithOptions = Boolean(jsonSchema.primaryKeyOptions);
+
+			if (jsonSchema.primaryKeyOptions) {
+				keyData = hydratePrimaryKeyOptions(jsonSchema.primaryKeyOptions, name, jsonSchema.isActivated);
+			}
 
 			const statementDto = ddlProvider.addPKConstraint(
 				fullTableName,
 				collection.isActivated,
 				keyData,
+				isPKWithOptions
 			);
 			return new PkScriptModificationDto(statementDto.statement, fullTableName, false, statementDto.isActivated);
 		})

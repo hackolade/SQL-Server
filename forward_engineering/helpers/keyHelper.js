@@ -124,12 +124,14 @@ module.exports = app => {
 		});
 	};
 
-	const getCompositePrimaryKeys = jsonSchema => {
-		if (!Array.isArray(jsonSchema.primaryKey)) {
+	const getCompositePrimaryKeys = (jsonSchema, isModifiedPK) => {
+		if (!Array.isArray(jsonSchema.primaryKey) && !isModifiedPK) {
 			return [];
 		}
 
-		return jsonSchema.primaryKey
+		const primaryKey = jsonSchema.compMod.primaryKey.new
+
+		return primaryKey
 			.filter(primaryKey => !_.isEmpty(primaryKey.compositePrimaryKey))
 			.map(primaryKey => ({
 				...hydratePrimaryKeyOptions(primaryKey),

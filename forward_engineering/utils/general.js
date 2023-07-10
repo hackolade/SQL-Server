@@ -189,6 +189,12 @@ module.exports = _ => {
 		return { ...collection, ...(_.omit(collection?.role, 'properties') || {}) };
 	};
 
+	const buildDefaultPKName = (tableName, columnName) => {
+		const PKName = `PK_${tableName}_${columnName}`;
+
+		return wrapInBrackets(PKName);
+	};
+
 	return {
 		buildStatement,
 		getName,
@@ -210,5 +216,6 @@ module.exports = _ => {
 		filterEmptyScripts,
 		getSchemaOfAlterCollection,
 		getNamePrefixedWithSchemaName,
+		buildDefaultPKName
 	};
 };

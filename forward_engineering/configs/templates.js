@@ -25,10 +25,10 @@ module.exports = {
 	checkConstraint: 'CONSTRAINT [${name}] CHECK${notForReplication} (${expression})',
 
 	createForeignKeyConstraint:
-		'CONSTRAINT [${name}] FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${onDelete}${onUpdate}',
+		'CONSTRAINT ${name} FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${onDelete}${onUpdate}',
 
 	createForeignKey:
-		'ALTER TABLE ${foreignTable} ADD CONSTRAINT [${name}] FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${onDelete}${onUpdate}${terminator}',
+		'ALTER TABLE ${foreignTable} ADD CONSTRAINT ${name} FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${onDelete}${onUpdate}${terminator}',
 
 	createView:
 		'CREATE${materialized} VIEW ${name}\n${view_attribute}AS ${select_statement}${check_option}${options}${terminator}\n${comment}',
@@ -38,6 +38,8 @@ module.exports = {
 	createUdtFromBaseType: 'CREATE TYPE ${name} FROM ${base_type}${not_null}${terminator}\n',
 
 	createKeyConstraint: '${constraintName}${keyType}${clustered}${columns}${options}${partition}',
+
+	createRegularPrimaryKeyConstraint: '${constraintName} PRIMARY KEY (${columnName})',
 
 	createDefaultConstraint:
 		'ALTER TABLE ${tableName} ADD CONSTRAINT [${constraintName}] DEFAULT (${default}) FOR [${columnName}]${terminator}\n',
@@ -56,7 +58,7 @@ module.exports = {
 
 	dropSchema: 'DROP SCHEMA IF EXISTS [${name}]${terminator}',
 
-	dropTable: 'DROP TABLE IF EXISTS [${name}]${terminator}',
+	dropTable: 'DROP TABLE IF EXISTS ${name}${terminator}',
 
 	dropIndex: 'DROP INDEX IF EXISTS [${name}] ON ${object}${terminator}',
 
