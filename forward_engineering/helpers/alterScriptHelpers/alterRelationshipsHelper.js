@@ -32,7 +32,7 @@ const getAddSingleForeignKeyStatementDto = (ddlProvider, _) => (relationship) =>
 	const compMod = relationship.role.compMod;
 
 	const relationshipName = compMod.name?.new || getRelationshipName(relationship) || '';
-	const schemaName = getFullChildTableName(_)(relationship);
+	const schemaName = compMod.parent.bucket.name;
 
 	return ddlProvider.createForeignKey({
 		name: relationshipName,
