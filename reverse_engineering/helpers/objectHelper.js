@@ -5,8 +5,12 @@
  * @param {any} value 
  * @returns {object}
  */
-const set = (data, keyChain, value) => {
-	const keys = keyChain.split('.');
+const setProperty = (data, key, value) => {
+	return { ...data, [key]: value };
+};
+
+const set = (data, key, value) => {
+	const keys = key.split('.');
 
 	if (keys.length === 1) {
 		return setProperty(data, keys[0], value);
