@@ -8,9 +8,19 @@ module.exports = app => {
 	const { getRelationOptionsIndex } = require('./indexHelper')(app);
 	const { trimBraces } = require('./general')(app);
 
-	const createKeyConstraint = (templates, terminator, isParentActivated) => keyData => {
+	const createKeyConstraint = (templates, terminator, isParentActivated) => (keyData, isPKWithOptions) => {
 		const isAllColumnsDeactivated = checkAllKeysDeactivated(keyData.columns || []);
 		const columns = getKeyColumns(isAllColumnsDeactivated, isParentActivated, keyData.columns);
+
+		if (!isPKWithOptions) {
+			return {
+				statement: assignTemplates(templates.createRegularPrimaryKeyConstraint, {
+					constraintName: keyData.constraintName,
+					columnName: keyData.columnName
+				}),
+				isActivated: !isAllColumnsDeactivated
+			}
+		}
 
 		if (!keyDataHasOptions(keyData)) {
 			return {

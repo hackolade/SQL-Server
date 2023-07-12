@@ -8,8 +8,14 @@ module.exports = (baseProvider, options, app) => {
 	const { assignTemplates } = app.require('@hackolade/ddl-fe-utils');
 	const { checkAllKeysDeactivated, divideIntoActivatedAndDeactivated, getEntityName } =
 		app.require('@hackolade/ddl-fe-utils').general;
+	const { wrapInBrackets } = require('./utils/general')(_);
 
-	const { decorateType, getIdentity, getEncryptedWith, getColumnsComments } = require('./helpers/columnDefinitionHelper')(app);
+	const {
+		decorateType,
+		getIdentity,
+		getEncryptedWith,
+		getColumnsComments
+	} = require('./helpers/columnDefinitionHelper')(app);
 	const {
 		createIndex,
 		hydrateIndex,
@@ -37,6 +43,7 @@ module.exports = (baseProvider, options, app) => {
 	const { wrapIfNotExistSchema, wrapIfNotExistDatabase, wrapIfNotExistTable, wrapIfNotExistView } =
 		require('./helpers/ifNotExistStatementHelper')(app);
 	const { getPartitionedTables, getCreateViewData } = require('./helpers/viewHelper')(app);
+	const { getFullTableName } = require('./utils/general')(_);
 
 	const terminator = getTerminator(options);
 
@@ -44,7 +51,11 @@ module.exports = (baseProvider, options, app) => {
 		createSchema({ schemaName, databaseName, ifNotExist, comment }) {
 			const schemaTerminator = ifNotExist ? ';' : terminator;
 
-			const schemaComment = comment ? this.createSchemaComment({schemaName, comment, customTerminator: schemaTerminator}) : ''
+			const schemaComment = comment ? this.createSchemaComment({
+				schemaName,
+				comment,
+				customTerminator: schemaTerminator
+			}) : '';
 
 			let schemaStatement = assignTemplates(templates.createSchema, {
 				name: schemaName,
@@ -106,8 +117,13 @@ module.exports = (baseProvider, options, app) => {
 		) {
 			const tableTerminator = ifNotExist ? ';' : terminator;
 			const tableName = getTableName(name, schemaData.schemaName);
-			const tableComment = comment && !options.memory_optimized ? this.createTableComment({schemaName: schemaData.schemaName, tableName: name, customTerminator: tableTerminator, comment}) : ''
-			const columnComments = getColumnsComments(name, tableTerminator, columnDefinitions)
+			const tableComment = comment && !options.memory_optimized ? this.createTableComment({
+				schemaName: schemaData.schemaName,
+				tableName: name,
+				customTerminator: tableTerminator,
+				comment
+			}) : '';
+			const columnComments = getColumnsComments(name, tableTerminator, columnDefinitions);
 			const dividedKeysConstraints = divideIntoActivatedAndDeactivated(
 				keyConstraints.map(createKeyConstraint(templates, tableTerminator, isActivated)),
 				key => key.statement,
@@ -119,7 +135,7 @@ module.exports = (baseProvider, options, app) => {
 					: '';
 			const dividedForeignKeys = divideIntoActivatedAndDeactivated(foreignKeyConstraints, key => key.statement);
 			const foreignKeyConstraintsString = generateConstraintsString(dividedForeignKeys, isActivated);
-			const tableAndColumnCommentsSeparator = tableComment ? '\n\n' : ''
+			const tableAndColumnCommentsSeparator = tableComment ? '\n\n' : '';
 			const tableStatement = assignTemplates(templates.createTable, {
 				name: tableName,
 				column_definitions: columns.join(',\n\t'),
@@ -130,10 +146,10 @@ module.exports = (baseProvider, options, app) => {
 				keyConstraints: keyConstraintsString,
 				memoryOptimizedIndexes: memoryOptimizedIndexes.length
 					? ',\n\t' +
-					  memoryOptimizedIndexes
-							.map(createMemoryOptimizedIndex(isActivated))
-							.map(index => commentIfDeactivated(index.statement, index))
-							.join(',\n\t')
+					memoryOptimizedIndexes
+						.map(createMemoryOptimizedIndex(isActivated))
+						.map(index => commentIfDeactivated(index.statement, index))
+						.join(',\n\t')
 					: '',
 				terminator: tableTerminator,
 				comment: tableComment ? `\n${tableComment}` : '',
@@ -147,11 +163,11 @@ module.exports = (baseProvider, options, app) => {
 
 			return ifNotExist
 				? wrapIfNotExistTable({
-						tableStatement: fullTableStatement,
-						templates,
-						tableName: getTableName(name, schemaData.schemaName, false),
-						terminator,
-				  })
+					tableStatement: fullTableStatement,
+					templates,
+					tableName: getTableName(name, schemaData.schemaName, false),
+					terminator,
+				})
 				: fullTableStatement;
 		},
 
@@ -185,22 +201,19 @@ module.exports = (baseProvider, options, app) => {
 				columnDefinition.isHidden,
 			);
 
-			return commentIfDeactivated(
-				assignTemplates(templates.columnDefinition, {
-					name: columnDefinition.name,
-					type: decorateType(type, columnDefinition),
-					primary_key: primaryKey + unique,
-					not_null: notNull,
-					default: defaultValue,
-					sparse,
-					maskedWithFunction,
-					identity,
-					encryptedWith,
-					terminator,
-					temporalTableTime,
-				}),
-				columnDefinition,
-			);
+			return assignTemplates(templates.columnDefinition, {
+				name: columnDefinition.name,
+				type: decorateType(type, columnDefinition),
+				primary_key: primaryKey + unique,
+				not_null: notNull,
+				default: defaultValue,
+				sparse,
+				maskedWithFunction,
+				identity,
+				encryptedWith,
+				terminator,
+				temporalTableTime,
+			});
 		},
 
 		createIndex(tableName, index, dbData, isParentActivated = true) {
@@ -208,12 +221,7 @@ module.exports = (baseProvider, options, app) => {
 			if (!isParentActivated) {
 				return createTableIndex(terminator, tableName, index, isActivated && isParentActivated);
 			}
-			return commentIfDeactivated(
-				createTableIndex(terminator, tableName, index, isActivated && isParentActivated),
-				{
-					isActivated,
-				},
-			);
+			return createTableIndex(terminator, tableName, index, isActivated && isParentActivated);
 		},
 
 		createCheckConstraint(checkConstraint) {
@@ -251,8 +259,8 @@ module.exports = (baseProvider, options, app) => {
 
 			return {
 				statement: assignTemplates(templates.createForeignKeyConstraint, {
-					primaryTable: getTableName(primaryTable, primarySchemaName || schemaData.schemaName),
-					name,
+					primaryTable: getTableName(primaryTable, primarySchemaName || schemaData.schemaName, false),
+					name: wrapInBrackets(name),
 					foreignKey: isActivated ? foreignKeysToString(foreignKey) : foreignActiveKeysToString(foreignKey),
 					primaryKey: isActivated ? foreignKeysToString(primaryKey) : foreignActiveKeysToString(primaryKey),
 					onDelete: foreignOnDelete ? ` ON DELETE ${foreignOnDelete}` : '',
@@ -284,9 +292,9 @@ module.exports = (baseProvider, options, app) => {
 
 			return {
 				statement: assignTemplates(templates.createForeignKey, {
-					primaryTable: getTableName(primaryTable, schemaData.schemaName),
-					foreignTable: getTableName(foreignTable, schemaData.schemaName),
-					name,
+					primaryTable: getTableName(primaryTable, schemaData.schemaName, true),
+					foreignTable: getTableName(foreignTable, schemaData.schemaName, true),
+					name: wrapInBrackets(name),
 					foreignKey: foreignKeysToString(foreignKey),
 					primaryKey: foreignKeysToString(primaryKey),
 					onDelete: foreignOnDelete ? ` ON DELETE ${foreignOnDelete}` : '',
@@ -335,7 +343,12 @@ module.exports = (baseProvider, options, app) => {
 				return '';
 			}
 
-			const viewComment = comment ? this.createViewComment({schemaName: schemaData.schemaName, viewName: name, comment, customTerminator: viewData.terminator}) : ''
+			const viewComment = comment ? this.createViewComment({
+				schemaName: schemaData.schemaName,
+				viewName: name,
+				comment,
+				customTerminator: viewData.terminator
+			}) : '';
 
 			const viewStatement = assignTemplates(templates.createView, {
 				name: viewData.viewName,
@@ -536,7 +549,7 @@ module.exports = (baseProvider, options, app) => {
 			const firstTab = _.get(entityData, '[0]', {});
 			const isPartitioned = _.get(entityData, '[0].partitioned');
 			const ifNotExist = _.get(entityData, '[0].ifNotExist');
-			const comment = _.get(entityData, '[0].description')
+			const comment = _.get(entityData, '[0].description');
 			return {
 				...viewData,
 				selectStatement: firstTab.selectStatement || '',
@@ -548,10 +561,10 @@ module.exports = (baseProvider, options, app) => {
 				comment,
 				partitionedTables: isPartitioned
 					? getPartitionedTables(
-							_.get(entityData, '[0].partitionedTables', []),
-							relatedSchemas,
-							relatedContainers,
-					  )
+						_.get(entityData, '[0].partitionedTables', []),
+						relatedSchemas,
+						relatedContainers,
+					)
 					: [],
 			};
 		},
@@ -588,7 +601,7 @@ module.exports = (baseProvider, options, app) => {
 		dropConstraint(fullTableName, constraintName) {
 			return assignTemplates(templates.dropConstraint, {
 				tableName: fullTableName,
-				name: constraintName,
+				constraintName,
 				terminator,
 			});
 		},
@@ -749,135 +762,201 @@ module.exports = (baseProvider, options, app) => {
 			});
 		},
 
-		createSchemaComment({schemaName, comment, customTerminator}) {
+		createSchemaComment({ schemaName, comment, customTerminator }) {
 			return assignTemplates(templates.createSchemaComment, {
 				value: comment,
-				schemaName: `[${schemaName}]`,
+				schemaName: wrapInBrackets(schemaName),
 				terminator: customTerminator ?? terminator
-			})
+			});
 		},
 
-		createTableComment({schemaName, tableName, comment, customTerminator}) {
+		createTableComment({ schemaName, tableName, comment, customTerminator }) {
 			if (!schemaName) {
-				return ''
+				return '';
 			}
 			return assignTemplates(templates.createTableComment, {
 				value: comment,
-				schemaName: `[${schemaName}]`,
-				tableName: `[${tableName}]`,
+				schemaName: wrapInBrackets(schemaName),
+				tableName: wrapInBrackets(tableName),
 				terminator: customTerminator ?? terminator
-			})
+			});
 		},
 
-		createColumnComment({schemaName, tableName, columnName, comment, customTerminator}) {
+		createColumnComment({ schemaName, tableName, columnName, comment, customTerminator }) {
 			if (!tableName || !columnName) {
-				return ''
+				return '';
 			}
 			return assignTemplates(templates.createColumnComment, {
 				value: comment,
-				schemaName: `[${schemaName}]`,
-				tableName: `[${tableName}]`,
-				columnName: `[${columnName}]`,
+				schemaName: wrapInBrackets(schemaName),
+				tableName: wrapInBrackets(tableName),
+				columnName: wrapInBrackets(columnName),
 				terminator: customTerminator ?? terminator
 			});
 		},
 
-		createViewComment({schemaName, viewName, comment, customTerminator}) {
+		createViewComment({ schemaName, viewName, comment, customTerminator }) {
 			if (!schemaName) {
-				return ''
+				return '';
 			}
 			return assignTemplates(templates.createViewComment, {
 				value: comment,
-				schemaName: `[${schemaName}]`,
-				viewName: `[${viewName}]`,
-				terminator: customTerminator ?? terminator
-			})
-		},
-
-		dropSchemaComment({schemaName, customTerminator}) {
-			return assignTemplates(templates.dropSchemaComment, {
-				schemaName: `[${schemaName}]`,
-				terminator: customTerminator ?? terminator
-			})
-		},
-
-		dropTableComment({schemaName, tableName, customTerminator}) {
-			if (!schemaName) {
-				return ''
-			}
-			return assignTemplates(templates.dropTableComment, {
-				schemaName: `[${schemaName}]`,
-				tableName: `[${tableName}]`,
-				terminator: customTerminator ?? terminator
-			})
-		},
-
-		dropColumnComment({schemaName, tableName, columnName, customTerminator}) {
-			if (!schemaName || !tableName) {
-				return ''
-			}
-			return assignTemplates(templates.dropColumnComment, {
-				schemaName: `[${schemaName}]`,
-				tableName: `[${tableName}]`,
-				columnName: `[${columnName}]`,
+				schemaName: wrapInBrackets(schemaName),
+				viewName: wrapInBrackets(viewName),
 				terminator: customTerminator ?? terminator
 			});
 		},
 
-		dropViewComment({schemaName, viewName, customTerminator}) {
+		dropSchemaComment({ schemaName, customTerminator }) {
+			return assignTemplates(templates.dropSchemaComment, {
+				schemaName: wrapInBrackets(schemaName),
+				terminator: customTerminator ?? terminator
+			});
+		},
+
+		dropTableComment({ schemaName, tableName, customTerminator }) {
 			if (!schemaName) {
-				return ''
+				return '';
+			}
+			return assignTemplates(templates.dropTableComment, {
+				schemaName: wrapInBrackets(schemaName),
+				tableName: wrapInBrackets(tableName),
+				terminator: customTerminator ?? terminator
+			});
+		},
+
+		dropColumnComment({ schemaName, tableName, columnName, customTerminator }) {
+			if (!schemaName || !tableName) {
+				return '';
+			}
+			return assignTemplates(templates.dropColumnComment, {
+				schemaName: wrapInBrackets(schemaName),
+				tableName: wrapInBrackets(tableName),
+				columnName: wrapInBrackets(columnName),
+				terminator: customTerminator ?? terminator
+			});
+		},
+
+		dropViewComment({ schemaName, viewName, customTerminator }) {
+			if (!schemaName) {
+				return '';
 			}
 			return assignTemplates(templates.dropViewComment, {
-				schemaName: `[${schemaName}]`,
-				viewName: `[${viewName}]`,
+				schemaName: wrapInBrackets(schemaName),
+				viewName: wrapInBrackets(viewName),
 				terminator: customTerminator ?? terminator
-			})
+			});
 		},
 
-		updateSchemaComment({schemaName, comment, customTerminator}) {
+		updateSchemaComment({ schemaName, comment, customTerminator }) {
 			return assignTemplates(templates.updateSchemaComment, {
 				value: comment,
-				schemaName: `[${schemaName}]`,
+				schemaName: wrapInBrackets(schemaName),
 				terminator: customTerminator ?? terminator
-			})
+			});
 		},
 
-		updateTableComment({schemaName, tableName, comment, customTerminator}) {
+		updateTableComment({ schemaName, tableName, comment, customTerminator }) {
 			if (!schemaName) {
-				return ''
+				return '';
 			}
 			return assignTemplates(templates.updateTableComment, {
 				value: comment,
-				schemaName: `[${schemaName}]`,
-				tableName: `[${tableName}]`,
-				terminator: customTerminator ?? terminator
-			})
-		},
-
-		updateColumnComment({schemaName, tableName, columnName, comment, customTerminator}) {
-			if (!schemaName || !tableName) {
-				return ''
-			}
-			return assignTemplates(templates.updateColumnComment, {
-				value: comment,
-				schemaName: `[${schemaName}]`,
-				tableName: `[${tableName}]`,
-				columnName: `[${columnName}]`,
+				schemaName: wrapInBrackets(schemaName),
+				tableName: wrapInBrackets(tableName),
 				terminator: customTerminator ?? terminator
 			});
 		},
 
-		updateViewComment({schemaName, viewName, comment, customTerminator}) {
+		updateColumnComment({ schemaName, tableName, columnName, comment, customTerminator }) {
+			if (!schemaName || !tableName) {
+				return '';
+			}
+			return assignTemplates(templates.updateColumnComment, {
+				value: comment,
+				schemaName: wrapInBrackets(schemaName),
+				tableName: wrapInBrackets(tableName),
+				columnName: wrapInBrackets(columnName),
+				terminator: customTerminator ?? terminator
+			});
+		},
+
+		updateViewComment({ schemaName, viewName, comment, customTerminator }) {
 			if (!schemaName) {
-				return ''
+				return '';
 			}
 			return assignTemplates(templates.updateViewComment, {
 				value: comment,
-				schemaName: `[${schemaName}]`,
-				viewName: `[${viewName}]`,
+				schemaName: wrapInBrackets(schemaName),
+				viewName: wrapInBrackets(viewName),
 				terminator: customTerminator ?? terminator
-			})
-		}
+			});
+		},
+
+		addCheckConstraint(tableName, constraintName, expression) {
+			const templateConfig = {
+				tableName,
+				constraintName,
+				expression,
+				terminator
+			};
+			return assignTemplates(templates.addCheckConstraint, templateConfig);
+		},
+
+		setNotNullConstraint(tableName, columnName, columnDefinition) {
+			const type = hasType(columnDefinition.type)
+				? _.toUpper(columnDefinition.type)
+				: getTableName(columnDefinition.type, columnDefinition.schemaName);
+
+			return assignTemplates(templates.addNotNullConstraint, {
+				tableName,
+				columnName,
+				columnType: decorateType(type, columnDefinition),
+				terminator
+			});
+		},
+
+		dropNotNullConstraint(tableName, columnName, columnDefinition) {
+			const type = hasType(columnDefinition.type)
+				? _.toUpper(columnDefinition.type)
+				: getTableName(columnDefinition.type, columnDefinition.schemaName);
+
+			return assignTemplates(templates.dropNotNullConstraint, {
+				tableName,
+				columnName,
+				columnType: decorateType(type, columnDefinition),
+				terminator
+			});
+		},
+
+		addPKConstraint(tableName, isParentActivated, keyData, isPKWithOptions) {
+			const constraintStatementDto = createKeyConstraint(templates, terminator, isParentActivated)(keyData, isPKWithOptions);
+
+			return {
+				statement: assignTemplates(templates.addConstraint, {
+					tableName,
+					constraintStatement: (constraintStatementDto.statement || '').trim(),
+					terminator
+				}),
+				isActivated: constraintStatementDto.isActivated
+			};
+		},
+
+		dropPKConstraint(tableName, constraintName) {
+			return assignTemplates(templates.dropConstraint, {
+				tableName,
+				constraintName,
+				terminator
+			});
+		},
+
+		dropForeignKey(tableName, constraintName) {
+			const templateConfig = {
+				tableName,
+				constraintName,
+				terminator
+			};
+			return assignTemplates(templates.dropConstraint, templateConfig);
+		},
 	};
 };

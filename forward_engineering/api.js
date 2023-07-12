@@ -1,28 +1,61 @@
-const { commentDropStatements } = require('./helpers/commentDropStatements');
 const { DROP_STATEMENTS } = require('./helpers/constants');
 const logInfo = require('../reverse_engineering/helpers/logInfo');
 const { connect, getExternalBrowserUrl } = require('../reverse_engineering/api');
 const { logDatabaseVersion } = require('../reverse_engineering/reverseEngineeringService/reverseEngineeringService');
 const applyToInstanceHelper = require('./helpers/applyToInstanceHelper');
+const {
+	buildEntityLevelAlterScript,
+	parseDataForEntityLevelScript
+} = require('./helpers/alterScriptHelpers/alterScriptBuilder');
+
+/**
+ * @typedef {import('./helpers/alterScriptHelpers/types/AlterScriptDto').AlterScriptDto} AlterScriptDto
+ * @typedef {import('./types/coreApplicationDataTypes').ContainerJsonSchema} ContainerJsonSchema
+ * @typedef {import('./types/coreApplicationDataTypes').ContainerStyles} ContainerStyles
+ * @typedef {import('./types/coreApplicationDataTypes').EntityData} EntityData
+ * @typedef {import('./types/coreApplicationDataTypes').EntityJsonSchema} EntityJsonSchema
+ * @typedef {import('./types/coreApplicationDataTypes').ExternalDefinitions} ExternalDefinitions
+ * @typedef {import('./types/coreApplicationDataTypes').InternalDefinitions} InternalDefinitions
+ * @typedef {import('./types/coreApplicationDataTypes').ModelDefinitions} ModelDefinitions
+ * @typedef {import('./types/coreApplicationTypes').App} App
+ * @typedef {import('./types/coreApplicationTypes').Logger} Logger
+ * @typedef {import('./types/coreApplicationTypes').CoreData} CoreData
+ * @typedef {import('./types/coreApplicationTypes').PluginError} PluginError
+ *
+ * @typedef {(error?: PluginError | null, result?: any | null) => void} PluginCallback
+ * */
+
+/**
+ * @typedef {[ContainerJsonSchema, ContainerStyles]} ContainerData
+ * */
+/**
+ * @typedef {{
+ *     [id: string]: EntityJsonSchema
+ * }} EntitiesJsonSchema
+ */
+
+/**
+ * @typedef {[ContainerJsonSchema, ContainerStyles]} ContainerData
+ * */
+/**
+ * @typedef {{
+ *     [id: string]: EntityJsonSchema
+ * }} EntitiesJsonSchema
+ */
 
 module.exports = {
+	/**
+	 * @param data {CoreData}
+	 * @param logger {Logger}
+	 * @param callback {PluginCallback}
+	 * @param app {App}
+	 * */
 	generateScript(data, logger, callback, app) {
 		try {
-			const { getAlterScript } = require('./helpers/alterScriptFromDeltaHelper');
+			const parsedData = parseDataForEntityLevelScript(data, app);
+			const scripts = buildEntityLevelAlterScript(data, app)(parsedData);
 
-			const collection = JSON.parse(data.jsonSchema);
-			if (!collection) {
-				throw new Error(
-					'"comparisonModelCollection" is not found. Alter script can be generated only from Delta model',
-				);
-			}
-			const script = getAlterScript(collection, app, data.options);
-
-			const applyDropStatements = data.options?.additionalOptions?.some(
-				option => option.id === 'applyDropStatements' && option.value,
-			);
-
-			callback(null, applyDropStatements ? script : commentDropStatements(script));
+			callback(null, scripts);
 		} catch (error) {
 			logger.log(
 				'error',
@@ -77,7 +110,7 @@ module.exports = {
 				await logDatabaseVersion(client, logger);
 			}
 			callback(null);
-		} catch(error) {
+		} catch (error) {
 			logger.log('error', { message: error.message, stack: error.stack, error }, 'Test connection');
 			callback({ message: error.message, stack: error.stack });
 		}
@@ -85,7 +118,7 @@ module.exports = {
 	async applyToInstance(connectionInfo, logger, callback, app) {
 		logger.clear();
 		logInfo('Apply To Instance', connectionInfo, logger);
-		
+
 		try {
 			await applyToInstanceHelper.applyToInstance(connectionInfo, logger, app);
 			callback(null);

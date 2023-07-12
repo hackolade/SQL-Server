@@ -1,0 +1,10 @@
+{
+  "name": "sqlserver",
+  "version": "1.0.0",
+  "description": "",
+  "author": "Hackolade",
+  "dependencies": {
+    "sql-formatter": "^2.3.3"
+  },
+  "installed": true
+}

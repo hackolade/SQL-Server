@@ -1,7 +1,8 @@
 module.exports = (app, options) => {
 	const _ = app.require('lodash');
-	const { createColumnDefinitionBySchema } = require('./createColumnDefinition')(_);
+	const { createColumnDefinitionBySchema } = require('./columnHelpers/createColumnDefinition')(_);
 	const ddlProvider = require('../../ddlProvider')(null, options, app);
+	const { AlterScriptDto } = require('./types/AlterScriptDto');
 
 	const DEFAULT_KEY_SPACE = { 'Default_Keyspace': [] };
 
@@ -10,12 +11,12 @@ module.exports = (app, options) => {
 		return !_.isEmpty(schemaNames) ? schemaNames : DEFAULT_KEY_SPACE;
 	};
 
-	const getCreateUdtScript = jsonSchema => {
+	const getCreateUdtScriptDto = jsonSchema => {
 		const schemaNames = getSchemaNames(jsonSchema);
 
 		return Object.keys(schemaNames).map(schemaName => {
 			const schemaData = { schemaName };
-	
+
 			const udt = createColumnDefinitionBySchema({
 				name: jsonSchema.code || jsonSchema.name,
 				jsonSchema: jsonSchema,
@@ -24,22 +25,21 @@ module.exports = (app, options) => {
 				schemaData,
 			});
 
-			return ddlProvider.createUdt({ ...udt, schemaName });
+			return AlterScriptDto.getInstance([ddlProvider.createUdt({ ...udt, schemaName })], true, false);
 		});
-
-		return ddlProvider.createUdt(udt);
 	};
 
-	const getDeleteUdtScript = udt => {
+	const getDeleteUdtScriptDto = udt => {
 		const schemaNames = getSchemaNames(udt);
 		return Object.keys(schemaNames).map(schemaName => {
 			const name = udt.code || udt.name || '';
-			return ddlProvider.dropUdt({ name, schemaName });
+
+			return AlterScriptDto.getInstance([ddlProvider.dropUdt({ name, schemaName })], true, true);
 		});
 	};
 
 	return {
-		getCreateUdtScript,
-		getDeleteUdtScript,
+		getCreateUdtScriptDto,
+		getDeleteUdtScriptDto,
 	};
 };

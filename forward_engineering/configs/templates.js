@@ -25,10 +25,10 @@ module.exports = {
 	checkConstraint: 'CONSTRAINT [${name}] CHECK${notForReplication} (${expression})',
 
 	createForeignKeyConstraint:
-		'CONSTRAINT [${name}] FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${onDelete}${onUpdate}',
+		'CONSTRAINT ${name} FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${onDelete}${onUpdate}',
 
 	createForeignKey:
-		'ALTER TABLE ${foreignTable} ADD CONSTRAINT [${name}] FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable}(${primaryKey})${onDelete}${onUpdate}${terminator}',
+		'ALTER TABLE ${foreignTable} ADD CONSTRAINT ${name} FOREIGN KEY (${foreignKey}) REFERENCES ${primaryTable} (${primaryKey})${onDelete}${onUpdate}${terminator}',
 
 	createView:
 		'CREATE${materialized} VIEW ${name}\n${view_attribute}AS ${select_statement}${check_option}${options}${terminator}\n${comment}',
@@ -39,20 +39,22 @@ module.exports = {
 
 	createKeyConstraint: '${constraintName}${keyType}${clustered}${columns}${options}${partition}',
 
+	createRegularPrimaryKeyConstraint: '${constraintName} PRIMARY KEY (${columnName})',
+
 	createDefaultConstraint:
 		'ALTER TABLE ${tableName} ADD CONSTRAINT [${constraintName}] DEFAULT (${default}) FOR [${columnName}]${terminator}\n',
 
 	ifNotExistSchema:
-		"IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N'${schemaName}')\nbegin\n\tEXEC('${statement}')\nend${terminator}",
+		'IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = N\'${schemaName}\')\nbegin\n\tEXEC(\'${statement}\')\nend${terminator}',
 
 	ifNotExistDatabase:
-		"IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = N'${databaseName}')\nbegin\n${statement}\nend${terminator}",
+		'IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = N\'${databaseName}\')\nbegin\n${statement}\nend${terminator}',
 
 	ifNotExistTable:
-		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${tableName}') AND type in (N'U'))\nbegin\n${statement}\nend${terminator}\n",
+		'IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N\'${tableName}\') AND type in (N\'U\'))\nbegin\n${statement}\nend${terminator}\n',
 
 	ifNotExistView:
-		"IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'${viewName}') AND type in (N'V'))\nbegin\nEXEC('\n${statement}')\nend${terminator}",
+		'IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N\'${viewName}\') AND type in (N\'V\'))\nbegin\nEXEC(\'\n${statement}\')\nend${terminator}',
 
 	dropSchema: 'DROP SCHEMA IF EXISTS [${name}]${terminator}',
 
@@ -60,11 +62,9 @@ module.exports = {
 
 	dropIndex: 'DROP INDEX IF EXISTS [${name}] ON ${object}${terminator}',
 
-	dropConstraint: 'ALTER TABLE ${tableName} DROP CONSTRAINT [${name}]${terminator}',
+	dropConstraint: 'ALTER TABLE ${tableName} DROP CONSTRAINT ${constraintName}${terminator}',
 
 	alterTableOptions: 'ALTER TABLE ${tableName} ${options}${terminator}',
-
-	alterTableAddConstraint: 'ALTER TABLE ${tableName} ADD ${constraint}${terminator}',
 
 	alterTable: 'ALTER TABLE ${tableName} ${command}${terminator}',
 
@@ -72,9 +72,17 @@ module.exports = {
 
 	addColumn: 'ADD ${script}',
 
+	addCheckConstraint: 'ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintName} CHECK (${expression})${terminator}',
+
+	addNotNullConstraint: 'ALTER TABLE ${tableName} ALTER COLUMN ${columnName} ${columnType} NOT NULL${terminator}',
+
+	dropNotNullConstraint: 'ALTER TABLE ${tableName} ALTER COLUMN ${columnName} ${columnType} NULL${terminator}',
+
+	addConstraint: 'ALTER TABLE ${tableName} ADD CONSTRAINT ${constraintStatement}${terminator}',
+
 	alterColumn: 'ALTER COLUMN [${name}] ${type}${collation}${not_null}',
 
-	renameColumn: "EXEC sp_rename '${fullTableName}.${oldColumnName}', '${newColumnName}', 'COLUMN';${terminator}",
+	renameColumn: 'EXEC sp_rename \'${fullTableName}.${oldColumnName}\', \'${newColumnName}\', \'COLUMN\';${terminator}',
 
 	dropView: 'DROP VIEW IF EXISTS ${name}${terminator}',
 
