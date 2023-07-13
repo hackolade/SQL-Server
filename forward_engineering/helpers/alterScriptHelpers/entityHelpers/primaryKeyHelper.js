@@ -287,6 +287,7 @@ const getAddCompositePkScriptDtos = (app, _, ddlProvider) => (collection) => {
 				fullTableName,
 				collection.isActivated,
 				keyData,
+				true,
 				true
 			);
 			return new PkScriptModificationDto(statementDto.statement, fullTableName, false, statementDto.isActivated);
@@ -541,7 +542,8 @@ const getAddPkScriptDtos = (app, _, ddlProvider) => (collection) => {
 				fullTableName,
 				collection.isActivated,
 				keyData,
-				isPKWithOptions
+				isPKWithOptions,
+				true
 			);
 			return new PkScriptModificationDto(statementDto.statement, fullTableName, false, statementDto.isActivated);
 		})

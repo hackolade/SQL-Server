@@ -259,7 +259,7 @@ module.exports = (baseProvider, options, app) => {
 
 			return {
 				statement: assignTemplates(templates.createForeignKeyConstraint, {
-					primaryTable: getTableName(primaryTable, primarySchemaName || schemaData.schemaName, false),
+					primaryTable: getTableName(primaryTable, primarySchemaName || schemaData.schemaName, true),
 					name: wrapInBrackets(name),
 					foreignKey: isActivated ? foreignKeysToString(foreignKey) : foreignActiveKeysToString(foreignKey),
 					primaryKey: isActivated ? foreignKeysToString(primaryKey) : foreignActiveKeysToString(primaryKey),
@@ -929,8 +929,8 @@ module.exports = (baseProvider, options, app) => {
 			});
 		},
 
-		addPKConstraint(tableName, isParentActivated, keyData, isPKWithOptions) {
-			const constraintStatementDto = createKeyConstraint(templates, terminator, isParentActivated)(keyData, isPKWithOptions);
+		addPKConstraint(tableName, isParentActivated, keyData, isPKWithOptions, isAlterScript) {
+			const constraintStatementDto = createKeyConstraint(templates, terminator, isParentActivated, isPKWithOptions, isAlterScript)(keyData);
 
 			return {
 				statement: assignTemplates(templates.addConstraint, {

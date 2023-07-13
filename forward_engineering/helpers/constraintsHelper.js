@@ -8,11 +8,11 @@ module.exports = app => {
 	const { getRelationOptionsIndex } = require('./indexHelper')(app);
 	const { trimBraces } = require('./general')(app);
 
-	const createKeyConstraint = (templates, terminator, isParentActivated) => (keyData, isPKWithOptions) => {
+	const createKeyConstraint = (templates, terminator, isParentActivated, isPKWithOptions, isAlterScript) => (keyData) => {
 		const isAllColumnsDeactivated = checkAllKeysDeactivated(keyData.columns || []);
 		const columns = getKeyColumns(isAllColumnsDeactivated, isParentActivated, keyData.columns);
 
-		if (!isPKWithOptions) {
+		if (!isPKWithOptions && isAlterScript) {
 			return {
 				statement: assignTemplates(templates.createRegularPrimaryKeyConstraint, {
 					constraintName: keyData.constraintName,
@@ -25,7 +25,7 @@ module.exports = app => {
 		if (!keyDataHasOptions(keyData)) {
 			return {
 				statement: assignTemplates(templates.createKeyConstraint, {
-					constraintName: keyData.name ? `CONSTRAINT [${keyData.name}] ` : '',
+					constraintName: keyData.name ? `[${keyData.name}]` : '',
 					keyType: keyData.keyType,
 					clustered: '',
 					columns: '',
@@ -42,7 +42,7 @@ module.exports = app => {
 
 		return {
 			statement: assignTemplates(templates.createKeyConstraint, {
-				constraintName: keyData.name ? `CONSTRAINT [${keyData.name}] ` : '',
+				constraintName: keyData.name ? `[${keyData.name}] ` : '',
 				keyType: keyData.keyType,
 				clustered: keyData.clustered ? ' CLUSTERED' : ' NONCLUSTERED',
 				columns,

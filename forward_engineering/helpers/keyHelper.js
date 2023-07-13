@@ -129,7 +129,9 @@ module.exports = app => {
 			return [];
 		}
 
-		const primaryKey = jsonSchema.compMod.primaryKey.new
+		const primaryKey = isModifiedPK
+			? jsonSchema.compMod.primaryKey.new
+			: jsonSchema.primaryKey
 
 		return primaryKey
 			.filter(primaryKey => !_.isEmpty(primaryKey.compositePrimaryKey))
