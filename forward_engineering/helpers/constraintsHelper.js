@@ -19,13 +19,15 @@ module.exports = app => {
 					columnName: keyData.columnName
 				}),
 				isActivated: !isAllColumnsDeactivated
-			}
+			};
 		}
+
+		const additionalConstraintStatement = isAlterScript ? '' : 'CONSTRAINT';
 
 		if (!keyDataHasOptions(keyData)) {
 			return {
 				statement: assignTemplates(templates.createKeyConstraint, {
-					constraintName: keyData.name ? `[${keyData.name}]` : '',
+					constraintName: keyData.name ? `${additionalConstraintStatement}[${keyData.name}]` : '',
 					keyType: keyData.keyType,
 					clustered: '',
 					columns: '',
@@ -42,7 +44,7 @@ module.exports = app => {
 
 		return {
 			statement: assignTemplates(templates.createKeyConstraint, {
-				constraintName: keyData.name ? `[${keyData.name}] ` : '',
+				constraintName: keyData.name ? `${additionalConstraintStatement} [${keyData.name}] ` : '',
 				keyType: keyData.keyType,
 				clustered: keyData.clustered ? ' CLUSTERED' : ' NONCLUSTERED',
 				columns,
@@ -110,9 +112,9 @@ module.exports = app => {
 		const dividedColumns = divideIntoActivatedAndDeactivated(columns, columnMapToString);
 		const deactivatedColumnsAsString = dividedColumns?.deactivatedItems?.length
 			? commentIfDeactivated(dividedColumns.deactivatedItems.join(', '), {
-					isActivated: false,
-					isPartOfLine: true,
-			  })
+				isActivated: false,
+				isPartOfLine: true,
+			})
 			: '';
 
 		return !isAllColumnsDeactivated && isParentActivated
