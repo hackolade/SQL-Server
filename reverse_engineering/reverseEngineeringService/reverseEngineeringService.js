@@ -289,7 +289,7 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				const tableInfo = await getTableInfo(dbConnectionClient, dbName, tableName, schemaName, logger);
 
 				const [tableRows, fieldsKeyConstraints] = await Promise.all([
-					containsJson(tableInfo) ? await getTableRow(dbConnectionClient, dbName, tableName, schemaName, reverseEngineeringOptions.rowCollectionSettings, logger) : Promise.resolve([]),
+					containsJson(tableInfo) ? await getTableRow(dbConnectionClient, dbName, tableName, schemaName, reverseEngineeringOptions.recordSamplingSettings, logger) : Promise.resolve([]),
 					await getTableKeyConstraints(dbConnectionClient, dbName, tableName, schemaName, logger)
 				]);
 				const tableType = tableInfo[0]['TABLE_TYPE'];

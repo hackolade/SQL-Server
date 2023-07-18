@@ -4,6 +4,7 @@ const https = require('https');
 const { getObjectsFromDatabase, getNewConnectionClientByDb } = require('./helpers');
 const msal = require('@azure/msal-node');
 const fs = require('fs');
+const getSampleDocSize = require('../helpers/getSampleDocSize');
 
 const QUERY_REQUEST_TIMEOUT = 60000;
 
@@ -247,23 +248,34 @@ const getTableSystemTime = async (connectionClient, dbName, tableName, tableSche
 	;`);
 };
 
-const getTableRow = async (connectionClient, dbName, tableName, tableSchema, reverseEngineeringOptions, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting data query',
-		objects: [
-			`[${tableSchema}].[${tableName}]`
-		],
-		skip: true
-	}, logger);
-	const percentageWord = reverseEngineeringOptions.isAbsoluteValue ? '' : 'PERCENT';
+const getTableRow = async (connectionClient, dbName, tableName, tableSchema, recordSamplingSettings, logger) => {
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting data query',
+			objects: [`[${tableSchema}].[${tableName}]`],
+			skip: true,
+		},
+		logger,
+	);
+	let amount;
 
-	return mapResponse(await currentDbConnectionClient
+	if (recordSamplingSettings.active === 'absolute') {
+		amount = Number(recordSamplingSettings.absolute.value);
+	} else {
+		const rowCount = await getTableRowCount(tableSchema, tableName, currentDbConnectionClient);
+		amount = getSampleDocSize(rowCount, recordSamplingSettings);
+	}
+
+	return mapResponse(
+		await currentDbConnectionClient
 			.request()
 			.input('tableName', sql.VarChar, tableName)
 			.input('tableSchema', sql.VarChar, tableSchema)
-			.input('amount', sql.Int, reverseEngineeringOptions.value)
-			.input('percent', sql.VarChar, percentageWord)
-			.query`EXEC('SELECT TOP '+ @Amount +' '+ @Percent +' * FROM [' + @TableSchema + '].[' + @TableName + '];');`);
+			.input('amount', sql.Int, amount)
+			.query`EXEC('SELECT TOP '+ @Amount +' * FROM [' + @TableSchema + '].[' + @TableName + '];');`,
+	);
 };
 
 const getTableForeignKeys = async (connectionClient, dbName, logger) => {
@@ -912,4 +924,12 @@ module.exports = {
 	getTableSystemTime,
 	getVersionInfo,
 	getDescriptionComments,
+}
+
+async function getTableRowCount(tableSchema, tableName, currentDbConnectionClient) {
+	const rowCountQuery = `SELECT COUNT(*) as rowsCount FROM [${tableSchema}].[${tableName}]`;
+	const rowCountResponse = await currentDbConnectionClient.query(rowCountQuery);
+	const rowCount = rowCountResponse?.recordset[0]?.rowsCount;
+
+	return rowCount;
 }
