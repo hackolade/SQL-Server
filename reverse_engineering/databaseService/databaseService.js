@@ -74,7 +74,8 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			domain: connectionInfo.userDomain,
 			options: {
 				encrypt: connectionInfo.encryptWindowsConnection === undefined ? false : Boolean(connectionInfo.encryptWindowsConnection),
-				enableArithAbort: true
+				enableArithAbort: true,
+          		trustServerCertificate: getSslConfig(connectionInfo).trustServerCertificate
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
 			requestTimeout:  Number(connectionInfo.queryRequestTimeout) || 60000
