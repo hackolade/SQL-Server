@@ -47,9 +47,9 @@ const getConnectionClient = async (connectionInfo, logger) => {
 	const hostName = getHostName(connectionInfo.host);
 	const userName = isEmail(connectionInfo.userName) && hostName ? `${connectionInfo.userName}@${hostName}` : connectionInfo.userName;
 	const tenantId = connectionInfo.connectionTenantId || connectionInfo.tenantId || 'common';
+	const sslOptions = getSslConfig(connectionInfo);
 
 	if (connectionInfo.authMethod === 'Username / Password') {
-		const sslOptions = getSslConfig(connectionInfo);
 		return await sql.connect({
 			user: userName,
 			password: connectionInfo.userPassword,
@@ -73,8 +73,9 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			database: connectionInfo.databaseName,
 			domain: connectionInfo.userDomain,
 			options: {
+				...sslOptions,
 				encrypt: connectionInfo.encryptWindowsConnection === undefined ? false : Boolean(connectionInfo.encryptWindowsConnection),
-				enableArithAbort: true
+				enableArithAbort: true,
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
 			requestTimeout:  Number(connectionInfo.queryRequestTimeout) || 60000
@@ -89,7 +90,7 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			port: +connectionInfo.port,
 			database: connectionInfo.databaseName,
 			options: {
-				...getSslConfig(connectionInfo),
+				...sslOptions,
 				encrypt: true,
 				enableArithAbort: true,
 			},
@@ -110,7 +111,7 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			port: +connectionInfo.port,
 			database: connectionInfo.databaseName,
 			options: {
-				...getSslConfig(connectionInfo),
+				...sslOptions,
 				encrypt: true,
 				enableArithAbort: true
 			},
