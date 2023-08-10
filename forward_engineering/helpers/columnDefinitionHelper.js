@@ -130,12 +130,23 @@ module.exports = app => {
 		.join('\n')
 	};
 
+	/**
+	 * 
+	 * @param {string} type 
+	 * @returns {boolean}
+	 */
+	const canHaveIdentity = (type) => {
+		const typesAllowedToHaveAutoIncrement = ["tinyint", "smallint", "int", "bigint"]
+		return typesAllowedToHaveAutoIncrement.includes(type)
+	}
+
 	return {
 		decorateType,
 		decorateDefault,
 		getIdentity,
 		getEncryptedWith,
 		addClustered,
-		getColumnsComments
+		getColumnsComments,
+		canHaveIdentity
 	};
 };
