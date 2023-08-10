@@ -14,7 +14,8 @@ module.exports = (baseProvider, options, app) => {
 		decorateType,
 		getIdentity,
 		getEncryptedWith,
-		getColumnsComments
+		getColumnsComments,
+		canHaveIdentity,
 	} = require('./helpers/columnDefinitionHelper')(app);
 	const {
 		createIndex,
@@ -188,7 +189,7 @@ module.exports = (baseProvider, options, app) => {
 			const maskedWithFunction = columnDefinition.maskedWithFunction
 				? ` MASKED WITH (FUNCTION='${columnDefinition.maskedWithFunction}')`
 				: '';
-			const identity = getIdentity(columnDefinition.identity);
+			const identityContainer = columnDefinition.identity && {identity: getIdentity(columnDefinition.identity)}
 			const encryptedWith = !_.isEmpty(columnDefinition.encryption)
 				? getEncryptedWith(columnDefinition.encryption[0])
 				: '';
@@ -209,10 +210,10 @@ module.exports = (baseProvider, options, app) => {
 				default: defaultValue,
 				sparse,
 				maskedWithFunction,
-				identity,
 				encryptedWith,
 				terminator,
 				temporalTableTime,
+				...(identityContainer)
 			});
 		},
 
@@ -440,10 +441,6 @@ module.exports = (baseProvider, options, app) => {
 				xmlSchemaCollection: String(jsonSchema.xml_schema_collection || ''),
 				sparse: Boolean(jsonSchema.sparse),
 				maskedWithFunction: String(jsonSchema.maskedWithFunction || ''),
-				identity: {
-					seed: Number(_.get(jsonSchema, 'identity.identitySeed', 0)),
-					increment: Number(_.get(jsonSchema, 'identity.identityIncrement', 0)),
-				},
 				schemaName: schemaData.schemaName,
 				unique: keyHelper.isInlineUnique(jsonSchema),
 				uniqueKeyOptions: _.omit(
@@ -457,7 +454,13 @@ module.exports = (baseProvider, options, app) => {
 					: isTempTableEndTimeColumnHidden,
 				encryption,
 				hasMaxLength: columnDefinition.hasMaxLength || jsonSchema.type === 'jsonObject',
-				comment: jsonSchema.description
+				comment: jsonSchema.description,
+				...(canHaveIdentity(jsonSchema.mode) && {
+						identity: {
+						seed: Number(_.get(jsonSchema, 'identity.identitySeed', 0)),
+						increment: Number(_.get(jsonSchema, 'identity.identityIncrement', 0)),
+					}
+				}),
 			});
 		},
 
