@@ -49,8 +49,32 @@ const adaptType = field => {
 };
 
 
-const adaptJsonSchema = (_, jsonSchema) => {
+const adaptSchema = (_, jsonSchema) => {
 	return mapJsonSchema(_)(jsonSchema, adaptType);
 };
+
+const adaptJsonSchema = (data, logger, callback, app) => {
+	const formatError = error => {
+		return Object.assign({ title: 'Adapt JSON Schema' }, Object.getOwnPropertyNames(error).reduce((accumulator, key) => {
+			return Object.assign(accumulator, {
+				[key]: error[key]
+			});
+		}, {}));
+	};
+	logger.log('info', 'Adaptation of JSON Schema started...', 'Adapt JSON Schema');
+	try {
+		const jsonSchema = JSON.parse(data.jsonSchema);
+		const adaptedJsonSchema = adaptSchema(app.require('lodash'), jsonSchema);
+		
+		logger.log('info', 'Adaptation of JSON Schema finished.', 'Adapt JSON Schema');
+
+		callback(null, {
+			jsonSchema: JSON.stringify(adaptedJsonSchema)
+		});
+	} catch(error) {
+		const formattedError = formatError(error);
+		callback(formattedError);
+	}
+}
 
 module.exports = { adaptJsonSchema };
