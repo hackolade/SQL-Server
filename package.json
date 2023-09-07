@@ -1,7 +1,7 @@
 {
     "name": "SQLServer",
-    "version": "0.1.67",
-    "versionDate": "2023-09-01",
+    "version": "0.1.68",
+    "versionDate": "2023-09-07",
     "author": "hackolade",
     "engines": {
         "hackolade": "6.7.1",
@@ -12,9 +12,13 @@
             "applicationTarget": "MSSQLServer",
             "title": "MS SQL Server",
             "versions": [
-                "2016",
+                "2008",
+				"2012",
+				"2014",
+				"2016",
                 "2017",
-                "2019"
+                "2019",
+				"2022"
             ]
         },
         "features": {
