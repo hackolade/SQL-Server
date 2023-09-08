@@ -57,7 +57,7 @@
  * @property {boolean} compositePartitionKey
  * @property {boolean} compositePrimaryKey
  * @property {boolean} compositeUniqueKey
- * @property {Array<AlterCollectionColumnPrimaryKeyOptionDto> | undefined} primaryKeyOptions
+ * @property {Array<AlterCollectionColumnPrimaryKeyOptionDto> | AlterCollectionColumnPrimaryKeyOptionDto | undefined} primaryKeyOptions
  * @property {boolean} triggerUpdateColumns
  * @property {AlterCollectionColumnCompModDto} compMod
  * @property {string} GUID

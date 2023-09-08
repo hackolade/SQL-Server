@@ -102,6 +102,20 @@ const extractOptionsForComparisonWithRegularPkOptions = (optionHolder) => {
 };
 
 /**
+ * @param primaryKeyOptions {AlterCollectionColumnPrimaryKeyOptionDto[] | AlterCollectionColumnPrimaryKeyOptionDto | undefined}
+ * @return {AlterCollectionColumnPrimaryKeyOptionDto[]}
+ */
+const getPrimaryKeyOptionsArray = (primaryKeyOptions) => {
+	if (Array.isArray(primaryKeyOptions)) {
+		return primaryKeyOptions;
+	} else if (typeof primaryKeyOptions === 'object') {
+		return [primaryKeyOptions]
+	} else {
+		return [];
+	}
+}
+
+/**
  * @param columnJsonSchema {AlterCollectionColumnDto}
  * @return {Array<Partial<AlterCollectionColumnPrimaryKeyOptionDto>>}
  * */
@@ -109,7 +123,7 @@ const getCustomPropertiesOfRegularPkForComparisonWithRegularPkOptions = (columnJ
 	/**
 	 * @type {Array<AlterCollectionColumnPrimaryKeyOptionDto>}
 	 * */
-	const constraintOptions = columnJsonSchema.primaryKeyOptions || [];
+	const constraintOptions = getPrimaryKeyOptionsArray(columnJsonSchema.primaryKeyOptions);
 	return constraintOptions
 		.map(option => extractOptionsForComparisonWithRegularPkOptions(option));
 };
@@ -349,7 +363,7 @@ const getModifyCompositePkScriptDtos = (app, _, ddlProvider) => (collection) => 
  * @return {string}
  * */
 const getConstraintNameForRegularPk = (columnJsonSchema, entityName) => {
-	const constraintOptions = columnJsonSchema.primaryKeyOptions;
+	const constraintOptions = getPrimaryKeyOptionsArray(columnJsonSchema.primaryKeyOptions);
 	if (constraintOptions?.length && constraintOptions?.length > 0) {
 		/**
 		 * @type {AlterCollectionColumnPrimaryKeyOptionDto}
