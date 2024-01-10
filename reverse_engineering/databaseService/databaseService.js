@@ -264,9 +264,15 @@ const getTableRow = async (connectionClient, dbName, tableName, tableSchema, rec
 
 	if (recordSamplingSettings.active === 'absolute') {
 		amount = Number(recordSamplingSettings.absolute.value);
+		logger.log('info', { message: `Get ${amount} rows from '${tableName}' table for sampling JSON data.` }, 'Reverse Engineering');
 	} else {
 		const rowCount = await getTableRowCount(tableSchema, tableName, currentDbConnectionClient);
 		amount = getSampleDocSize(rowCount, recordSamplingSettings);
+		logger.log(
+			'info',
+			{ message: `Get ${amount} rows of total ${rowCount} from '${tableName}' table for sampling JSON data.` },
+			'Reverse Engineering',
+		);
 	}
 
 	return mapResponse(
@@ -330,6 +336,9 @@ const getDatabaseIndexes = async (connectionClient, dbName, logger) => {
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${dbName}' database indexes.`}, 'Reverse Engineering');
+
 	return mapResponse(await currentDbConnectionClient.query`
 		SELECT
 			TableName = t.name,
@@ -355,18 +364,27 @@ const getDatabaseIndexes = async (connectionClient, dbName, logger) => {
 };
 
 const getIndexesBucketCount = async (connectionClient, dbName, indexesId, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting total buckets of indexes',
-		objects: [
-			'sys.dm_db_xtp_hash_index_stats',
-		],
-		skip: true
-	}, logger);
-    return mapResponse(await currentDbConnectionClient.query(`
+	if (!indexesId.length) {
+		return [];
+	}
+
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting total buckets of indexes',
+			objects: ['sys.dm_db_xtp_hash_index_stats'],
+			skip: true,
+		},
+		logger,
+	);
+
+	return mapResponse(
+		await currentDbConnectionClient.query(`
 		SELECT hs.total_bucket_count, hs.index_id
 		FROM sys.dm_db_xtp_hash_index_stats hs
-		WHERE hs.index_id IN (${indexesId.join(', ')})`)
-    );
+		WHERE hs.index_id IN (${indexesId.join(', ')})`),
+	);
 };
 
 const getSpatialIndexes = async (connectionClient, dbName, logger) => {
@@ -381,6 +399,9 @@ const getSpatialIndexes = async (connectionClient, dbName, logger) => {
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${dbName}' database spatial indexes.`}, 'Reverse Engineering');
+
 	return mapResponse(await currentDbConnectionClient.query`
 		SELECT
 			TableName = t.name,
@@ -423,7 +444,9 @@ const getFullTextIndexes = async (connectionClient, dbName, logger) => {
 		],
 		skip: true
 	}, logger);
-	
+
+	logger.log('info', { message: `Get '${dbName}' database full text indexes.`}, 'Reverse Engineering');
+
 	const result = await currentDbConnectionClient.query`
 		SELECT
 			OBJECT_SCHEMA_NAME(F.object_id) AS schemaName,
@@ -463,6 +486,9 @@ const getViewsIndexes = async (connectionClient, dbName, logger) => {
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${dbName}' database views indexes.`}, 'Reverse Engineering');
+
 	return mapResponse(await currentDbConnectionClient.query`
 		SELECT
 			TableName = t.name,
@@ -497,6 +523,9 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${tableName}' table columns description.` }, 'Reverse Engineering');
+
 	return mapResponse(currentDbConnectionClient.query`
 		SELECT
 			st.name [Table],
@@ -522,6 +551,8 @@ const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName, logger
 		skip: true
 	}, logger);
 
+	logger.log('info', { message: `Get '${dbName}' database memory optimized indexes.`}, 'Reverse Engineering');
+
 	return mapResponse(await currentDbConnectionClient.query`
 		SELECT
 			T.name,
@@ -545,6 +576,9 @@ const getDatabaseCheckConstraints = async (connectionClient, dbName, logger) => 
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${dbName}' database check constraints.`}, 'Reverse Engineering');
+
 	return mapResponse(currentDbConnectionClient.query`
 		SELECT con.[name],
 			t.[name] AS [table],
@@ -573,6 +607,9 @@ const getViewTableInfo = async (connectionClient, dbName, viewName, schemaName, 
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${viewName}' view table info.` }, 'Reverse Engineering');
+
 	const objectId = `${schemaName}.${viewName}`;
 	return mapResponse(currentDbConnectionClient.query`
 		SELECT
@@ -621,6 +658,9 @@ const getViewColumnRelations = async (connectionClient, dbName, viewName, schema
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${viewName}' view column relations.` }, 'Reverse Engineering');
+
 	return mapResponse(currentDbConnectionClient
 	.request()
 	.input('tableName', sql.VarChar, viewName)
@@ -642,6 +682,9 @@ const getViewStatement = async (connectionClient, dbName, viewName, schemaName, 
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${viewName}' view statement.` }, 'Reverse Engineering');
+
 	const objectId = `${schemaName}.${viewName}`;
 	return mapResponse(currentDbConnectionClient
 		.query`SELECT M.*, V.with_check_option
@@ -664,6 +707,9 @@ const getTableKeyConstraints = async (connectionClient, dbName, tableName, schem
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${tableName}' table key constraints.` }, 'Reverse Engineering');
+
 	const objectId = `${schemaName}.${tableName}`;
 	return mapResponse(await currentDbConnectionClient.query`
 		SELECT TC.TABLE_NAME AS tableName, TC.Constraint_Name AS constraintName,
@@ -695,6 +741,9 @@ const getTableMaskedColumns = async (connectionClient, dbName, tableName, schema
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${tableName}' table masked columns.` }, 'Reverse Engineering');
+
 	const objectId = `${schemaName}.${tableName}`;
 	return mapResponse(await currentDbConnectionClient.query`
 		SELECT name, masking_function FROM sys.masked_columns
@@ -711,6 +760,9 @@ const getDatabaseXmlSchemaCollection = async (connectionClient, dbName, logger) 
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${dbName}' database xml schema collection.`}, 'Reverse Engineering');
+
 	return mapResponse( await currentDbConnectionClient.query`
 		SELECT xsc.name AS collectionName,
 				SCHEMA_NAME(xsc.schema_id) AS schemaName,
@@ -732,6 +784,9 @@ const getTableDefaultConstraintNames = async (connectionClient, dbName, tableNam
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${tableName}' table default constraint names.` }, 'Reverse Engineering');
+
 	return mapResponse(await currentDbConnectionClient.query`
 	SELECT
 		ac.name AS columnName,
@@ -761,6 +816,9 @@ const getDatabaseUserDefinedTypes = async (connectionClient, dbName, logger) => 
 		],
 		skip: true
 	}, logger);
+
+	logger.log('info', { message: `Get '${dbName}' database UDTs.`}, 'Reverse Engineering');
+
 	return mapResponse(currentDbConnectionClient.query`
 		SELECT * FROM sys.types
 		WHERE is_user_defined = 1
@@ -884,7 +942,11 @@ const getDescriptionComments = async (connectionClient, dbName, {schema, entity}
 		action: 'MS_Description query',
 		objects: []
 	}, logger);
+
+	logger.log('info', { message: `Get description comments for '${entity?.name}'.` }, 'Reverse Engineering');
+
 	const commentsRequestResponse = await currentDbConnectionClient.query(buildDescriptionCommentsRetrieveQuery({schema, entity}))
+
 	return {...commentsRequestResponse.recordset[0], schema, entityName: entity?.name}
 }
 
