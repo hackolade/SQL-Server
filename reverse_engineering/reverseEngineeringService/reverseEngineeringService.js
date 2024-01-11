@@ -63,8 +63,10 @@ const mergeCollectionsWithViews = jsonSchemas =>
 
 const getCollectionsRelationships = logger => async (dbConnectionClient) => {
 	const dbName = dbConnectionClient.config.database;
+	logger.log('info', { message: `Fetching tables relationships.` }, 'Reverse Engineering');
 	logger.progress({ message: 'Fetching tables relationships', containerName: dbName, entityName: '' });
 	const tableForeignKeys = await getTableForeignKeys(dbConnectionClient, dbName, logger);
+
 	return reverseTableForeignKeys(tableForeignKeys, dbName);
 };
 
@@ -275,6 +277,7 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 	const databaseIndexes = addTotalBucketCountToDatabaseIndexes(rawDatabaseIndexes, indexesBucketCount);
 
 	return await Object.entries(tablesInfo).reduce(async (jsonSchemas, [schemaName, tableNames]) => {
+		logger.log('info', { message: `Fetching '${dbName}' database information`}, 'Reverse Engineering');
 		logger.progress({ message: 'Fetching database information', containerName: dbName, entityName: '' });
 		const tablesInfo = await Promise.all(
 			tableNames.map(async untrimmedTableName => {
@@ -285,6 +288,7 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				const tableXmlSchemas = xmlSchemaCollections.filter(collection =>
 					collection.tableName === tableName && collection.schemaName === schemaName);
 				const tableCheckConstraints = databaseCheckConstraints.filter(cc => cc.table === tableName);
+				logger.log('info', { message: `Fetching '${tableName}' table information from '${dbName}' database`}, 'Reverse Engineering');
 				logger.progress({ message: 'Fetching table information', containerName: dbName, entityName: tableName });
 				const tableInfo = await getTableInfo(dbConnectionClient, dbName, tableName, schemaName, logger);
 
