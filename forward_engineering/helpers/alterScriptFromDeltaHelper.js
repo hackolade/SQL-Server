@@ -103,7 +103,6 @@ module.exports = _ => {
 			.concat(collection.properties?.entities?.properties?.modified?.items)
 			.filter(Boolean)
 			.map(item => Object.values(item.properties)[0])
-			.filter(collection => !collection.compMod)
 			.flatMap(getModifyColumnScriptDto);
 
 		return {
