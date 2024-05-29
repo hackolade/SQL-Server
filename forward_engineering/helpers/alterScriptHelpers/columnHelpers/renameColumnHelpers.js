@@ -9,7 +9,11 @@ module.exports = (app, ddlProvider) => {
 		return _.values(collectionProperties)
 			.filter(jsonSchema => checkFieldPropertiesChanged(jsonSchema.compMod, ['name']))
 			.map(jsonSchema => {
-				const script = ddlProvider.renameColumn(fullName, jsonSchema.compMod.oldField.name, jsonSchema.compMod.newField.name);
+				const script = ddlProvider.renameColumn(
+					fullName,
+					jsonSchema.compMod.oldField.name,
+					jsonSchema.compMod.newField.name,
+				);
 
 				return AlterScriptDto.getInstance([script], true, false);
 			});

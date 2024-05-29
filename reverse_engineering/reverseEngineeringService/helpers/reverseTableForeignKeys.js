@@ -13,7 +13,6 @@ const prepareDeleteAndUpdate = value => {
 	}
 };
 
-
 const reverseTableForeignKeys = tableForeignKeys => {
 	const tableForeignKeysObject = tableForeignKeys.reduce((data, foreignKey) => {
 		const foreignKeyName = foreignKey.FK_NAME;
@@ -25,7 +24,7 @@ const reverseTableForeignKeys = tableForeignKeys => {
 				return {
 					...existedForeignKey,
 					parentField: [...existedForeignKey.parentField, foreignKey.referenced_column],
-					childField: [...existedForeignKey.childField, foreignKey.column]
+					childField: [...existedForeignKey.childField, foreignKey.column],
 				};
 			} else {
 				return {
@@ -40,14 +39,14 @@ const reverseTableForeignKeys = tableForeignKeys => {
 					relationshipInfo: {
 						relationshipOnDelete,
 						relationshipOnUpdate,
-					}
-				}
+					},
+				};
 			}
 		};
 
 		return {
 			...data,
-			[foreignKeyName]: getForeignKey(existedForeignKey)
+			[foreignKeyName]: getForeignKey(existedForeignKey),
 		};
 	}, {});
 

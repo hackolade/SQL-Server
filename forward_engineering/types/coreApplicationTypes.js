@@ -2,130 +2,128 @@ class PluginError {
 	/**
 	 * @type string
 	 */
-	message
+	message;
 
 	/**
 	 * @type {string | undefined}
 	 */
-	stack
+	stack;
 }
 
 class App {
-
 	/**
 	 * @type {(library: string) => any}
 	 * */
-	require
+	require;
 }
 
 class Logger {
-
 	/**
 	 * @type {(level: string, additionalInfoDto: Object, message: string, hiddenKeys?: any) => void}
 	 * */
-	log
+	log;
 
 	/**
 	 * @type {() => void}
 	 * */
-	clear
+	clear;
 }
 
 class CoreData {
 	/**
 	 * @type {string}
 	 */
-	jsonSchema
+	jsonSchema;
 
 	/**
 	 * @type {string}
 	 */
-	modelDefinitions
+	modelDefinitions;
 
 	/**
 	 * @type {string}
 	 */
-	internalDefinitions
+	internalDefinitions;
 
 	/**
 	 * @type {string}
 	 */
-	externalDefinitions
+	externalDefinitions;
 
 	/**
 	 * @type {any}
 	 */
-	containerData
+	containerData;
 
 	/**
 	 * @type {any}
 	 */
-	entityData
+	entityData;
 
 	/**
 	 * @type {any}
 	 */
-	entities
+	entities;
 
 	/**
 	 * @type {Array<any>}
 	 */
-	views
+	views;
 
 	/**
 	 * @type {Object | undefined}
 	 */
-	viewData
+	viewData;
 
 	/**
 	 * @type {Array<any>}
 	 */
-	relationships
+	relationships;
 
 	/**
 	 * @type {Object | undefined}
 	 */
-	collectionRefsDefinitionsMap
+	collectionRefsDefinitionsMap;
 
 	/**
 	 * @type {boolean}
 	 */
-	isUpdateScript
+	isUpdateScript;
 
 	/**
 	 * @type {'container' | 'entity'}
 	 */
-	level
+	level;
 
 	/**
 	 * @type {string | undefined}
 	 */
-	host
+	host;
 
 	/**
 	 * @type {string | undefined}
 	 */
-	clusterId
+	clusterId;
 
 	/**
 	 * @type {string | undefined}
 	 */
-	accessToken
+	accessToken;
 
 	/**
 	 * @type {string | number | undefined}
 	 */
-	applyToInstanceQueryRequestTimeout
+	applyToInstanceQueryRequestTimeout;
 
 	/**
 	 * @type {string | undefined}
 	 */
-	script
+	script;
 
 	/**
 	 * @type {any | undefined}
 	 */
-	hiddenKeys
+	hiddenKeys;
 
 	/**
 	 * @type {Array<{
@@ -133,7 +131,7 @@ class CoreData {
 	 *     value: any,
 	 * }> | {separateBucket: boolean}}
 	 */
-	options
+	options;
 
 	/**
 	 * @type {[
@@ -147,7 +145,7 @@ class CoreData {
 	 *     { sources: [] }
 	 * ]}
 	 * */
-	modelData
+	modelData;
 }
 
 module.exports = {
@@ -155,4 +153,4 @@ module.exports = {
 	CoreData,
 	Logger,
 	PluginError,
-}
+};

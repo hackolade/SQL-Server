@@ -2,124 +2,119 @@ class ContainerJsonSchema {
 	/**
 	 * @type {string}
 	 */
-	name
+	name;
 
 	/**
 	 * @type {boolean}
 	 */
-	isActivated
+	isActivated;
 }
 
 class ContainerStyles {
 	/**
 	 * @type {Object}
 	 * */
-	backgroundColor
+	backgroundColor;
 }
 
 class EntityData {
-
 	/**
 	 * @type {string | undefined}
 	 */
-	collectionName
+	collectionName;
 
 	/**
 	 * @type {boolean | undefined}
 	 */
-	isActivated
+	isActivated;
 
 	/**
 	 * @type {string | undefined}
 	 */
-	bucketId
+	bucketId;
 
 	/**
 	 * @type {any | undefined}
 	 */
-	additionalProperties
+	additionalProperties;
 
 	/**
 	 * @type {boolean | undefined}
 	 */
-	tableIfNotExists
+	tableIfNotExists;
 }
 
 class InternalDefinitions {
-
 	/**
 	 * @type {string}
 	 */
-	$schema
+	$schema;
 
 	/**
 	 * @type {"definitions"}
 	 */
-	type
+	type;
 
 	/**
 	 * @type {string}
 	 */
-	GUID
+	GUID;
 }
 
 class ModelDefinitions {
-
 	/**
 	 * @type {string}
 	 */
-	$schema
+	$schema;
 
 	/**
 	 * @type {"definitions"}
 	 */
-	type
+	type;
 
 	/**
 	 * @type {string}
 	 */
-	GUID
+	GUID;
 }
 
 class ExternalDefinitions {
-
 	/**
 	 * @type {string}
 	 */
-	$schema
+	$schema;
 
 	/**
 	 * @type {"externalDefinitions"}
 	 */
-	type
+	type;
 
 	/**
 	 * @type {string}
 	 */
-	GUID
+	GUID;
 }
 
 class FieldJsonSchema {
-
 	/**
 	 * @type {string}
 	 */
-	type
+	type;
 
 	/**
 	 * @type {boolean}
 	 */
-	isActivated
+	isActivated;
 
 	/**
 	 * @type {string}
 	 */
-	mode
+	mode;
 
 	/**
 	 * @type {string}
 	 */
-	subtype
+	subtype;
 
 	/**
 	 * @type {[
@@ -129,77 +124,76 @@ class FieldJsonSchema {
 	 *     "compositeUniqueKey",
 	 * ]}
 	 */
-	compositeKey
+	compositeKey;
 
 	/**
 	 * @type {boolean}
 	 */
-	compositePartitionKey
+	compositePartitionKey;
 
 	/**
 	 * @type {boolean}
 	 */
-	compositeClusteringKey
+	compositeClusteringKey;
 
 	/**
 	 * @type {boolean}
 	 */
-	compositePrimaryKey
+	compositePrimaryKey;
 
 	/**
 	 * @type {boolean}
 	 */
-	compositeUniqueKey
+	compositeUniqueKey;
 
 	/**
 	 * @type {string}
 	 */
-	GUID
+	GUID;
 }
 
 class EntityJsonSchema {
-
 	/**
 	 * @type {string}
 	 */
-	$schema
+	$schema;
 
 	/**
 	 * @type {"object"}
 	 */
-	type
+	type;
 
 	/**
 	 * @type {string}
 	 */
-	title
+	title;
 
 	/**
 	 * @type {{
 	 *     [fieldName: string]: FieldJsonSchema
 	 * }}
 	 */
-	properties
+	properties;
 
 	/**
 	 * @type {boolean}
 	 */
-	isActivated
+	isActivated;
 
 	/**
 	 * @type {boolean}
 	 */
-	additionalProperties
+	additionalProperties;
 
 	/**
 	 * @type {boolean}
 	 */
-	tableIfNotExists
+	tableIfNotExists;
 
 	/**
 	 * @type {string}
 	 */
-	GUID
+	GUID;
 }
 
 module.exports = {
@@ -211,4 +205,4 @@ module.exports = {
 	ExternalDefinitions,
 	FieldJsonSchema,
 	EntityJsonSchema,
-}
+};

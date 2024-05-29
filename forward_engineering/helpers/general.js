@@ -8,7 +8,7 @@ module.exports = app => {
 	const { checkAllKeysDeactivated } = app.require('@hackolade/ddl-fe-utils').general;
 
 	const getTableName = (tableName, schemaName, brackets = true) => {
-		const withBrackets = name => brackets ? `[${name}]` : name;
+		const withBrackets = name => (brackets ? `[${name}]` : name);
 		if (schemaName) {
 			return `${withBrackets(schemaName)}.${withBrackets(tableName)}`;
 		} else {

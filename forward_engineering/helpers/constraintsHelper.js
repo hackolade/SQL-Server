@@ -8,53 +8,54 @@ module.exports = app => {
 	const { getRelationOptionsIndex } = require('./indexHelper')(app);
 	const { trimBraces } = require('./general')(app);
 
-	const createKeyConstraint = (templates, terminator, isParentActivated, isPKWithOptions, isAlterScript) => (keyData) => {
-		const isAllColumnsDeactivated = checkAllKeysDeactivated(keyData.columns || []);
-		const columns = getKeyColumns(isAllColumnsDeactivated, isParentActivated, keyData.columns);
+	const createKeyConstraint =
+		(templates, terminator, isParentActivated, isPKWithOptions, isAlterScript) => keyData => {
+			const isAllColumnsDeactivated = checkAllKeysDeactivated(keyData.columns || []);
+			const columns = getKeyColumns(isAllColumnsDeactivated, isParentActivated, keyData.columns);
 
-		if (!isPKWithOptions && isAlterScript) {
-			return {
-				statement: assignTemplates(templates.createRegularPrimaryKeyConstraint, {
-					constraintName: keyData.constraintName,
-					columnName: keyData.columnName
-				}),
-				isActivated: !isAllColumnsDeactivated
-			};
-		}
+			if (!isPKWithOptions && isAlterScript) {
+				return {
+					statement: assignTemplates(templates.createRegularPrimaryKeyConstraint, {
+						constraintName: keyData.constraintName,
+						columnName: keyData.columnName,
+					}),
+					isActivated: !isAllColumnsDeactivated,
+				};
+			}
 
-		const additionalConstraintStatement = isAlterScript ? '' : 'CONSTRAINT';
+			const additionalConstraintStatement = isAlterScript ? '' : 'CONSTRAINT';
 
-		if (!keyDataHasOptions(keyData)) {
+			if (!keyDataHasOptions(keyData)) {
+				return {
+					statement: assignTemplates(templates.createKeyConstraint, {
+						constraintName: keyData.name ? `${additionalConstraintStatement}[${keyData.name}]` : '',
+						keyType: keyData.keyType,
+						clustered: '',
+						columns: '',
+						options: '',
+						partition: '',
+						terminator: '',
+					}),
+					isActivated: !isAllColumnsDeactivated,
+				};
+			}
+
+			const indexOptions = getRelationOptionsIndex(adaptIndexOptions(keyData.indexOption));
+			const partition = keyData.partition ? ` ON [${keyData.partition}]` : '';
+
 			return {
 				statement: assignTemplates(templates.createKeyConstraint, {
-					constraintName: keyData.name ? `${additionalConstraintStatement}[${keyData.name}]` : '',
+					constraintName: keyData.name ? `${additionalConstraintStatement} [${keyData.name}] ` : '',
 					keyType: keyData.keyType,
-					clustered: '',
-					columns: '',
-					options: '',
-					partition: '',
-					terminator: '',
+					clustered: keyData.clustered ? ' CLUSTERED' : ' NONCLUSTERED',
+					columns,
+					options: indexOptions.length ? ' WITH (\n\t\t' + indexOptions.join(',\n\t\t') + '\n\t)' : '',
+					partition,
+					terminator,
 				}),
 				isActivated: !isAllColumnsDeactivated,
 			};
-		}
-
-		const indexOptions = getRelationOptionsIndex(adaptIndexOptions(keyData.indexOption));
-		const partition = keyData.partition ? ` ON [${keyData.partition}]` : '';
-
-		return {
-			statement: assignTemplates(templates.createKeyConstraint, {
-				constraintName: keyData.name ? `${additionalConstraintStatement} [${keyData.name}] ` : '',
-				keyType: keyData.keyType,
-				clustered: keyData.clustered ? ' CLUSTERED' : ' NONCLUSTERED',
-				columns,
-				options: indexOptions.length ? ' WITH (\n\t\t' + indexOptions.join(',\n\t\t') + '\n\t)' : '',
-				partition,
-				terminator,
-			}),
-			isActivated: !isAllColumnsDeactivated,
 		};
-	};
 
 	const keyDataHasOptions = keyData => {
 		const indexOption = clean(keyData.indexOption);
@@ -112,9 +113,9 @@ module.exports = app => {
 		const dividedColumns = divideIntoActivatedAndDeactivated(columns, columnMapToString);
 		const deactivatedColumnsAsString = dividedColumns?.deactivatedItems?.length
 			? commentIfDeactivated(dividedColumns.deactivatedItems.join(', '), {
-				isActivated: false,
-				isPartOfLine: true,
-			})
+					isActivated: false,
+					isPartOfLine: true,
+				})
 			: '';
 
 		return !isAllColumnsDeactivated && isParentActivated
