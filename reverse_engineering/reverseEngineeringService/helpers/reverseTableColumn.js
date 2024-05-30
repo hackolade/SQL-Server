@@ -8,7 +8,6 @@ const handleType = type => {
 		case 'datetime':
 		case 'date':
 			return { type: 'datetime', mode: type };
-		case 'binary':
 		case 'image':
 		case 'varbinary':
 		case 'binary':
@@ -20,7 +19,6 @@ const handleType = type => {
 		case 'nvarchar':
 		case 'varchar':
 			return { type: 'char', mode: type };
-		case 'bigint':
 		case 'decimal':
 		case 'float':
 		case 'money':
