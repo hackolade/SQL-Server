@@ -105,5 +105,20 @@
 				}
 			]
 		]
+	},
+	"postConvert": {
+		"modify": {
+			"field": [
+				{
+					"from": {
+						"type": "jsonObject"
+					},
+					"to": {
+						"hasMaxLength": true,
+						"mode": "nvarchar"
+					}
+				}
+			]	
+		}
 	}
 }

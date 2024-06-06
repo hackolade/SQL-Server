@@ -271,6 +271,24 @@ making sure that you maintain a proper JSON format.
 				],
 				"defaultValue": "string"
 			},
+			{
+				"propertyName": "Min Properties",
+				"propertyKeyword": "minProperties",
+				"propertyType": "numeric",
+				"dependency": {
+					"key": "subtype",
+					"value": "object"
+				}
+			},
+			{
+				"propertyName": "Max Properties",
+				"propertyKeyword": "maxProperties",
+				"propertyType": "numeric",
+				"dependency": {
+					"key": "subtype",
+					"value": "object"
+				}
+			},
 			"default",
 			{
 				"propertyName": "Default constraint name",
