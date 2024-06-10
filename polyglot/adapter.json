@@ -117,6 +117,15 @@
 						"hasMaxLength": true,
 						"mode": "nvarchar"
 					}
+				},
+				{
+					"from": {
+						"type": "jsonArray"
+					},
+					"to": {
+						"hasMaxLength": true,
+						"mode": "nvarchar"
+					}
 				}
 			]	
 		}
