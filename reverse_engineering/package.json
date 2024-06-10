@@ -10,8 +10,7 @@
     "crypto": "^1.0.1",
     "mssql": "^7.2.1",
     "qs": "^6.9.1",
-    "randomstring": "^1.2.1",
-    "tunnel-ssh": "^4.1.6"
+    "randomstring": "^1.2.1"
   },
   "installed": true
 }

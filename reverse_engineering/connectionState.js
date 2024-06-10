@@ -1,15 +1,28 @@
 const { getConnectionClient } = require('./databaseService/databaseService');
-const sshHelper = require('./helpers/sshHelper');
 
 const stateInstance = {
 	_client: null,
-	_sshTunnel: null,
+	_isSshTunnel: false,
 	getClient: () => this._client,
-	setClient: async (connectionInfo, attempts = 0, logger) => {
-		if (connectionInfo.ssh && !this._sshTunnel) {
-			const sshData = await sshHelper.connectViaSsh(connectionInfo);
-			connectionInfo = sshData.info;
-			this._sshTunnel = sshData.tunnel;			
+	setClient: async (connectionInfo, sshService, attempts = 0, logger) => {
+		if (connectionInfo.ssh && !this._isSshTunnel) {			
+			const { options } = await sshService.openTunnel({
+				sshAuthMethod: connectionInfo.ssh_method === 'privateKey' ? 'IDENTITY_FILE' : 'USER_PASSWORD',
+				sshTunnelHostname: connectionInfo.ssh_host,
+				sshTunnelPort: connectionInfo.ssh_port,
+				sshTunnelUsername: connectionInfo.ssh_user,
+				sshTunnelPassword: connectionInfo.ssh_password,
+				sshTunnelIdentityFile: connectionInfo.ssh_key_file,
+				sshTunnelPassphrase: connectionInfo.ssh_key_passphrase,
+				host: connectionInfo.host,
+				port: connectionInfo.port,
+			});
+	
+			this._isSshTunnel = true;	
+			connectionInfo = {
+				...connectionInfo,
+				...options,
+			};
 		}
 
 		try {
@@ -22,18 +35,18 @@ const stateInstance = {
 				return stateInstance.setClient({
 					...connectionInfo,
 					encryptConnection: false,
-				}, attempts + 1, logger);
+				}, sshService, attempts + 1, logger);
 			}
 			
 			throw error;
 		}
 	},
-	clearClient: () => {
+	clearClient: async (sshService) => {
 		this._client = null;
 
-		if (this._sshTunnel) {
-			this._sshTunnel.close();
-			this._sshTunnel = null;
+		if (this._isSshTunnel) {
+			await sshService.closeConsumer();
+			this._isSshTunnel = false;
 		}
 	},
 }
