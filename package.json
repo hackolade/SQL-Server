@@ -60,6 +60,7 @@
         "axios": "0.21.1",
         "base64url": "3.0.1",
         "crypto": "1.0.1",
+        "lodash": "4.17.21",
         "mssql": "7.2.1",
         "qs": "6.9.1",
         "randomstring": "1.2.1",
@@ -79,8 +80,8 @@
     },
     "devDependencies": {
         "@hackolade/hck-esbuild-plugins-pack": "0.0.1",
-        "@typescript-eslint/parser": "7.11.0",
         "@typescript-eslint/eslint-plugin": "7.11.0",
+        "@typescript-eslint/parser": "7.11.0",
         "esbuild": "0.20.2",
         "esbuild-plugin-clean": "1.0.1",
         "eslint": "8.57.0",
