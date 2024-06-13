@@ -108,5 +108,29 @@
 				}
 			]
 		]
+	},
+	"postConvert": {
+		"modify": {
+			"field": [
+				{
+					"from": {
+						"type": "jsonObject"
+					},
+					"to": {
+						"hasMaxLength": true,
+						"mode": "varchar"
+					}
+				},
+				{
+					"from": {
+						"type": "jsonArray"
+					},
+					"to": {
+						"hasMaxLength": true,
+						"mode": "varchar"
+					}
+				}
+			]	
+		}
 	}
 }
