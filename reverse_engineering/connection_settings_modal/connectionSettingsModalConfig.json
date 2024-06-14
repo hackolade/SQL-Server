@@ -14,13 +14,16 @@
 				"inputKeyword": "source",
 				"inputType": "select",
 				"defaultValue": "On-premise",
-				"options": [{
-					"value": "On-premise",
-					"label": "On-premise database"
-				},{
-					"value": "azure",
-					"label": "Azure SQL database"
-				}],
+				"options": [
+					{
+						"value": "On-premise",
+						"label": "On-premise database"
+					},
+					{
+						"value": "azure",
+						"label": "Azure SQL database"
+					}
+				],
 				"customStyle": { "width": "43%" },
 				"description": "Choose source"
 			},
@@ -54,7 +57,12 @@
 				"inputType": "text",
 				"dependency": {
 					"key": "authMethod",
-					"value": ["Username / Password", "Username / Password (Windows)", "Azure Active Directory (Username / Password)", "Azure Active Directory (MFA)"]
+					"value": [
+						"Username / Password",
+						"Username / Password (Windows)",
+						"Azure Active Directory (Username / Password)",
+						"Azure Active Directory (MFA)"
+					]
 				},
 				"regex": "([^\\s])"
 			},
@@ -66,7 +74,12 @@
 				"defaultValue": 1433,
 				"dependency": {
 					"key": "authMethod",
-					"value": ["Username / Password", "Username / Password (Windows)", "Azure Active Directory (Username / Password)", "Azure Active Directory (MFA)"]
+					"value": [
+						"Username / Password",
+						"Username / Password (Windows)",
+						"Azure Active Directory (Username / Password)",
+						"Azure Active Directory (MFA)"
+					]
 				}
 			}
 		]
@@ -102,19 +115,24 @@
 				"inputKeyword": "authMethod",
 				"inputType": "select",
 				"defaultValue": "Username / Password",
-				"options": [{
-					"value": "Username / Password",
-					"label": "SQL Server"
-				},{
-					"value": "Username / Password (Windows)",
-					"label": "Windows"
-				},{
-					"value": "Azure Active Directory (Username / Password)",
-					"label": "Azure Active Directory (Username / Password)"
-				},{
-					"value": "Azure Active Directory (MFA)",
-					"label": "Azure Active Directory (MFA)"
-				}]
+				"options": [
+					{
+						"value": "Username / Password",
+						"label": "SQL Server"
+					},
+					{
+						"value": "Username / Password (Windows)",
+						"label": "Windows"
+					},
+					{
+						"value": "Azure Active Directory (Username / Password)",
+						"label": "Azure Active Directory (Username / Password)"
+					},
+					{
+						"value": "Azure Active Directory (MFA)",
+						"label": "Azure Active Directory (MFA)"
+					}
+				]
 			},
 			{
 				"inputLabel": "User Domain",
@@ -136,7 +154,11 @@
 				"inputPlaceholder": "User Name",
 				"dependency": {
 					"key": "authMethod",
-					"value": ["Username / Password", "Username / Password (Windows)", "Azure Active Directory (Username / Password)"]
+					"value": [
+						"Username / Password",
+						"Username / Password (Windows)",
+						"Azure Active Directory (Username / Password)"
+					]
 				},
 				"validation": {
 					"regex": "([^\\s])"
@@ -149,7 +171,11 @@
 				"inputPlaceholder": "Password",
 				"dependency": {
 					"key": "authMethod",
-					"value": ["Username / Password", "Username / Password (Windows)", "Azure Active Directory (Username / Password)"]
+					"value": [
+						"Username / Password",
+						"Username / Password (Windows)",
+						"Azure Active Directory (Username / Password)"
+					]
 				},
 				"isHiddenKey": true,
 				"validation": {
@@ -206,19 +232,24 @@
 				"inputLabel": "SSL",
 				"inputKeyword": "sslType",
 				"inputType": "select",
-				"options": [{
-					"value": "SYSTEMCA", 
-					"label": "SYSTEMCA"
-				},{
-					"value": "TRUST_ALL_CERTIFICATES",
-					"label": "Trust server certificates"
-				},{
-					"value": "TRUST_CUSTOM_CA_SIGNED_CERTIFICATES",
-					"label": "Server validation"
-				},{
-					"value": "TRUST_SERVER_CLIENT_CERTIFICATES",
-					"label": "Server and client validation"
-				}]
+				"options": [
+					{
+						"value": "SYSTEMCA",
+						"label": "SYSTEMCA"
+					},
+					{
+						"value": "TRUST_ALL_CERTIFICATES",
+						"label": "Trust server certificates"
+					},
+					{
+						"value": "TRUST_CUSTOM_CA_SIGNED_CERTIFICATES",
+						"label": "Server validation"
+					},
+					{
+						"value": "TRUST_SERVER_CLIENT_CERTIFICATES",
+						"label": "Server and client validation"
+					}
+				]
 			},
 			{
 				"inputLabel": "Certificate Authority",
@@ -228,10 +259,12 @@
 				"extensions": ["pem", "crt", "key"],
 				"dependency": {
 					"type": "and",
-					"values": [{
-						"key": "sslType",
-						"value": ["TRUST_CUSTOM_CA_SIGNED_CERTIFICATES", "TRUST_SERVER_CLIENT_CERTIFICATES"]
-					}]
+					"values": [
+						{
+							"key": "sslType",
+							"value": ["TRUST_CUSTOM_CA_SIGNED_CERTIFICATES", "TRUST_SERVER_CLIENT_CERTIFICATES"]
+						}
+					]
 				}
 			},
 			{
@@ -242,10 +275,12 @@
 				"extensions": ["pem", "crt", "key"],
 				"dependency": {
 					"type": "and",
-					"values": [{
-						"key": "sslType",
-						"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
-					}]
+					"values": [
+						{
+							"key": "sslType",
+							"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
+						}
+					]
 				}
 			},
 			{
@@ -256,10 +291,12 @@
 				"extensions": ["pem", "crt", "key"],
 				"dependency": {
 					"type": "and",
-					"values": [{
-						"key": "sslType",
-						"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
-					}]
+					"values": [
+						{
+							"key": "sslType",
+							"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
+						}
+					]
 				}
 			},
 			{
@@ -270,10 +307,12 @@
 				"isHiddenKey": true,
 				"dependency": {
 					"type": "and",
-					"values": [{
-						"key": "sslType",
-						"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
-					}]
+					"values": [
+						{
+							"key": "sslType",
+							"value": "TRUST_SERVER_CLIENT_CERTIFICATES"
+						}
+					]
 				}
 			}
 		]
@@ -323,13 +362,16 @@
 				"inputLabel": "SSH Auth Method",
 				"inputKeyword": "ssh_method",
 				"inputType": "select",
-				"options": [{
-					"value": "privateKey", 
-					"label": "Private Key"
-				}, {
-					"value": "password",
-					"label": "Password"
-				}],
+				"options": [
+					{
+						"value": "privateKey",
+						"label": "Private Key"
+					},
+					{
+						"value": "password",
+						"label": "Password"
+					}
+				],
 				"disable": {
 					"key": "ssh",
 					"value": false

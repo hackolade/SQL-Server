@@ -11,7 +11,7 @@ module.exports = _ => {
 	 * @param scripts {Array<string>}
 	 * @return {Array<string>}
 	 * */
-	const assertNoEmptyStatements = (scripts) => {
+	const assertNoEmptyStatements = scripts => {
 		return scripts
 			.filter(Boolean)
 			.map(script => {
@@ -30,13 +30,8 @@ module.exports = _ => {
 	 * @return {{ [key: string]: Array<AlterScriptDto>}}}
 	 * */
 	const getAlterContainersScriptsDtos = (collection, app, options) => {
-		const {
-			getAddContainerScriptDto,
-			getDeleteContainerScriptDto
-		} = require('./alterScriptHelpers/alterContainerHelper')(
-			app,
-			options,
-		);
+		const { getAddContainerScriptDto, getDeleteContainerScriptDto } =
+			require('./alterScriptHelpers/alterContainerHelper')(app, options);
 
 		const addedContainers = collection.properties?.containers?.properties?.added?.items;
 		const deletedContainers = collection.properties?.containers?.properties?.deleted?.items;
@@ -46,7 +41,7 @@ module.exports = _ => {
 			.filter(Boolean)
 			.map(container => ({
 				...Object.values(container.properties)[0],
-				name: Object.keys(container.properties)[0]
+				name: Object.keys(container.properties)[0],
 			}))
 			.flatMap(getAddContainerScriptDto);
 		const deleteContainersScriptsDtos = []
@@ -71,25 +66,33 @@ module.exports = _ => {
 		} = require('./alterScriptHelpers/alterEntityHelper')(app, options);
 
 		const createScriptsData = []
-		.concat(collection.properties?.entities?.properties?.added?.items)
-		.filter(Boolean)
-		.map(item => Object.values(item.properties)[0])
+			.concat(collection.properties?.entities?.properties?.added?.items)
+			.filter(Boolean)
+			.map(item => Object.values(item.properties)[0]);
 
 		const deleteScriptsData = []
-		.concat(collection.properties?.entities?.properties?.deleted?.items)
-		.filter(Boolean)
-		.map(item => Object.values(item.properties)[0])
+			.concat(collection.properties?.entities?.properties?.deleted?.items)
+			.filter(Boolean)
+			.map(item => Object.values(item.properties)[0]);
 
 		const modifyScriptsData = []
-		.concat(collection.properties?.entities?.properties?.modified?.items)
-		.filter(Boolean)
-		.map(item => Object.values(item.properties)[0])
+			.concat(collection.properties?.entities?.properties?.modified?.items)
+			.filter(Boolean)
+			.map(item => Object.values(item.properties)[0]);
 
-		const createCollectionsScriptsDtos = createScriptsData.filter(collection => collection.compMod?.created).flatMap(getAddCollectionScriptDto);
-		const deleteCollectionScriptsDtos = deleteScriptsData.filter(collection => collection.compMod?.deleted).flatMap(getDeleteCollectionScriptDto);
+		const createCollectionsScriptsDtos = createScriptsData
+			.filter(collection => collection.compMod?.created)
+			.flatMap(getAddCollectionScriptDto);
+		const deleteCollectionScriptsDtos = deleteScriptsData
+			.filter(collection => collection.compMod?.deleted)
+			.flatMap(getDeleteCollectionScriptDto);
 		const modifyCollectionScriptsDtos = modifyScriptsData.flatMap(getModifyCollectionScriptDto);
-		const addColumnScriptsDtos = createScriptsData.filter(collection => !collection.compMod?.created).flatMap(getAddColumnScriptDto);
-		const deleteColumnScriptsDtos = deleteScriptsData.filter(collection => !collection.compMod?.deleted).flatMap(getDeleteColumnScriptDto);
+		const addColumnScriptsDtos = createScriptsData
+			.filter(collection => !collection.compMod?.created)
+			.flatMap(getAddColumnScriptDto);
+		const deleteColumnScriptsDtos = deleteScriptsData
+			.filter(collection => !collection.compMod?.deleted)
+			.flatMap(getDeleteColumnScriptDto);
 		const modifyColumnScriptDtos = modifyScriptsData.flatMap(getModifyColumnScriptDto);
 
 		return {
@@ -98,7 +101,7 @@ module.exports = _ => {
 			modifyCollectionScriptsDtos,
 			addColumnScriptsDtos,
 			deleteColumnScriptsDtos,
-			modifyColumnScriptDtos
+			modifyColumnScriptDtos,
 		};
 	};
 
@@ -140,10 +143,10 @@ module.exports = _ => {
 	 * @return {{ [key: string]: Array<AlterScriptDto>}}}
 	 * */
 	const getAlterModelDefinitionsScriptsDtos = (collection, app, options) => {
-		const {
-			getCreateUdtScriptDto,
-			getDeleteUdtScriptDto
-		} = require('./alterScriptHelpers/alterUdtHelper')(app, options);
+		const { getCreateUdtScriptDto, getDeleteUdtScriptDto } = require('./alterScriptHelpers/alterUdtHelper')(
+			app,
+			options,
+		);
 
 		const createUdtScriptsDtos = []
 			.concat(collection.properties?.modelDefinitions?.properties?.added?.items)
@@ -169,7 +172,7 @@ module.exports = _ => {
 		const {
 			getModifyForeignKeyScriptDtos,
 			getAddForeignKeyScriptDtos,
-			getDeleteForeignKeyScriptDtos
+			getDeleteForeignKeyScriptDtos,
 		} = require('./alterScriptHelpers/alterRelationshipsHelper');
 
 		const addedRelationships = []
@@ -200,13 +203,8 @@ module.exports = _ => {
 	};
 
 	const getContainersCommentsAlterScriptsDtos = (collection, app, options) => {
-		const {
-			getSchemasDropCommentsAlterScriptsDto,
-			getSchemasModifyCommentsAlterScriptsDto
-		} = require('./alterScriptHelpers/alterContainerHelper')(
-			app,
-			options,
-		);
+		const { getSchemasDropCommentsAlterScriptsDto, getSchemasModifyCommentsAlterScriptsDto } =
+			require('./alterScriptHelpers/alterContainerHelper')(app, options);
 		const modifiedSchemas = collection.properties?.containers?.properties?.modified?.items;
 		const deletedSchemas = collection.properties?.containers?.properties?.deleted?.items;
 
@@ -215,17 +213,20 @@ module.exports = _ => {
 		let addSchemasDropCommentsScriptsDtos = [];
 
 		if (modifiedSchemas) {
-			addSchemasModifyCommentsScriptsDtos = Array.isArray(modifiedSchemas) ? modifiedSchemas.map(schema => getSchemasModifyCommentsAlterScriptsDto(schema?.properties)).flat() : getSchemasModifyCommentsAlterScriptsDto(modifiedSchemas?.properties);
+			addSchemasModifyCommentsScriptsDtos = Array.isArray(modifiedSchemas)
+				? modifiedSchemas.map(schema => getSchemasModifyCommentsAlterScriptsDto(schema?.properties)).flat()
+				: getSchemasModifyCommentsAlterScriptsDto(modifiedSchemas?.properties);
 		}
 
 		if (deletedSchemas) {
-			addSchemasDropCommentsScriptsDtos = Array.isArray(deletedSchemas) ? deletedSchemas.map(schema => getSchemasDropCommentsAlterScriptsDto(schema?.properties)).flat() : getSchemasDropCommentsAlterScriptsDto(deletedSchemas?.properties);
+			addSchemasDropCommentsScriptsDtos = Array.isArray(deletedSchemas)
+				? deletedSchemas.map(schema => getSchemasDropCommentsAlterScriptsDto(schema?.properties)).flat()
+				: getSchemasDropCommentsAlterScriptsDto(deletedSchemas?.properties);
 		}
-
 
 		return {
 			addSchemasModifyCommentsScriptsDtos,
-			addSchemasDropCommentsScriptsDtos
+			addSchemasDropCommentsScriptsDtos,
 		};
 	};
 
@@ -235,11 +236,8 @@ module.exports = _ => {
 			getTablesModifyCommentsAlterScriptsDto,
 			getColumnsCreateCommentAlterScriptsDto,
 			getColumnsDropCommentAlterScriptsDto,
-			getColumnsModifyCommentAlterScriptsDto
-		} = require('./alterScriptHelpers/alterEntityHelper')(
-			app,
-			options,
-		);
+			getColumnsModifyCommentAlterScriptsDto,
+		} = require('./alterScriptHelpers/alterEntityHelper')(app, options);
 		const modifiedTables = collection.properties?.entities?.properties?.modified?.items;
 		const deletedTables = collection.properties?.entities?.properties?.deleted?.items;
 
@@ -253,14 +251,24 @@ module.exports = _ => {
 		let addColumnDropCommentsScriptsDtos = [];
 
 		if (modifiedTables) {
-			addColumnCreateCommentsScripsDtos = Array.isArray(modifiedTables) ? modifiedTables.map(schema => getColumnsCreateCommentAlterScriptsDto(schema?.properties)).flat() : getColumnsCreateCommentAlterScriptsDto(modifiedTables?.properties);
-			addTablesModifyCommentsScriptsDtos = Array.isArray(modifiedTables) ? modifiedTables.map(schema => getTablesModifyCommentsAlterScriptsDto(schema?.properties)).flat() : getTablesModifyCommentsAlterScriptsDto(modifiedTables?.properties);
-			addColumnModifyCommentsScriptsDtos = Array.isArray(modifiedTables) ? modifiedTables.map(schema => getColumnsModifyCommentAlterScriptsDto(schema?.properties)).flat() : getColumnsModifyCommentAlterScriptsDto(modifiedTables?.properties);
+			addColumnCreateCommentsScripsDtos = Array.isArray(modifiedTables)
+				? modifiedTables.map(schema => getColumnsCreateCommentAlterScriptsDto(schema?.properties)).flat()
+				: getColumnsCreateCommentAlterScriptsDto(modifiedTables?.properties);
+			addTablesModifyCommentsScriptsDtos = Array.isArray(modifiedTables)
+				? modifiedTables.map(schema => getTablesModifyCommentsAlterScriptsDto(schema?.properties)).flat()
+				: getTablesModifyCommentsAlterScriptsDto(modifiedTables?.properties);
+			addColumnModifyCommentsScriptsDtos = Array.isArray(modifiedTables)
+				? modifiedTables.map(schema => getColumnsModifyCommentAlterScriptsDto(schema?.properties)).flat()
+				: getColumnsModifyCommentAlterScriptsDto(modifiedTables?.properties);
 		}
 
 		if (deletedTables) {
-			addTablesDropCommentsScriptsDtos = Array.isArray(deletedTables) ? deletedTables.map(schema => getTablesDropCommentAlterScriptsDto(schema?.properties)).flat() : getTablesDropCommentAlterScriptsDto(deletedTables?.properties);
-			addColumnDropCommentsScriptsDtos = Array.isArray(deletedTables) ? deletedTables.map(schema => getColumnsDropCommentAlterScriptsDto(schema?.properties)).flat() : getColumnsDropCommentAlterScriptsDto(deletedTables?.properties);
+			addTablesDropCommentsScriptsDtos = Array.isArray(deletedTables)
+				? deletedTables.map(schema => getTablesDropCommentAlterScriptsDto(schema?.properties)).flat()
+				: getTablesDropCommentAlterScriptsDto(deletedTables?.properties);
+			addColumnDropCommentsScriptsDtos = Array.isArray(deletedTables)
+				? deletedTables.map(schema => getColumnsDropCommentAlterScriptsDto(schema?.properties)).flat()
+				: getColumnsDropCommentAlterScriptsDto(deletedTables?.properties);
 		}
 
 		return {
@@ -268,18 +276,13 @@ module.exports = _ => {
 			addTablesDropCommentsScriptsDtos,
 			addColumnCreateCommentsScripsDtos,
 			addColumnModifyCommentsScriptsDtos,
-			addColumnDropCommentsScriptsDtos
+			addColumnDropCommentsScriptsDtos,
 		};
 	};
 
 	const getViewsCommentsAlterScriptsDtos = (collection, app, options) => {
-		const {
-			getViewsDropCommentAlterScriptsDto,
-			getViewsModifyCommentsAlterScriptsDto,
-		} = require('./alterScriptHelpers/alterViewHelper')(
-			app,
-			options,
-		);
+		const { getViewsDropCommentAlterScriptsDto, getViewsModifyCommentsAlterScriptsDto } =
+			require('./alterScriptHelpers/alterViewHelper')(app, options);
 
 		//Added views comments creation is already done in generation of ddl
 		const modifiedViews = collection.properties?.views?.properties?.modified?.items;
@@ -289,16 +292,20 @@ module.exports = _ => {
 		let addViewsDropCommentsScriptsDtos = [];
 
 		if (modifiedViews) {
-			addViewsModifyCommentsScriptsDtos = Array.isArray(modifiedViews) ? modifiedViews.map(schema => getViewsModifyCommentsAlterScriptsDto(schema?.properties)).flat() : getViewsModifyCommentsAlterScriptsDto(modifiedViews?.properties);
+			addViewsModifyCommentsScriptsDtos = Array.isArray(modifiedViews)
+				? modifiedViews.map(schema => getViewsModifyCommentsAlterScriptsDto(schema?.properties)).flat()
+				: getViewsModifyCommentsAlterScriptsDto(modifiedViews?.properties);
 		}
 
 		if (deletedViews) {
-			addViewsDropCommentsScriptsDtos = Array.isArray(deletedViews) ? deletedViews.map(schema => getViewsDropCommentAlterScriptsDto(schema?.properties)).flat() : getViewsDropCommentAlterScriptsDto(deletedViews?.properties);
+			addViewsDropCommentsScriptsDtos = Array.isArray(deletedViews)
+				? deletedViews.map(schema => getViewsDropCommentAlterScriptsDto(schema?.properties)).flat()
+				: getViewsDropCommentAlterScriptsDto(deletedViews?.properties);
 		}
 
 		return {
 			addViewsModifyCommentsScriptsDtos,
-			addViewsDropCommentsScriptsDtos
+			addViewsDropCommentsScriptsDtos,
 		};
 	};
 
@@ -316,18 +323,18 @@ module.exports = _ => {
 		const { additionalOptions = [] } = data.options || {};
 		const applyDropStatements = (additionalOptions.find(option => option.id === 'applyDropStatements') || {}).value;
 
-		const scripts = scriptDtos.flatMap((dto) => {
+		const scripts = scriptDtos.flatMap(dto => {
 			if (dto.isActivated === false) {
-				return dto.scripts
-					.map((scriptDto) => commentDeactivatedStatements(scriptDto.script, false));
+				return dto.scripts.map(scriptDto => commentDeactivatedStatements(scriptDto.script, false));
 			}
 
 			if (!applyDropStatements) {
-				return dto.scripts
-					.map((scriptDto) => commentDeactivatedStatements(scriptDto.script, !scriptDto.isDropScript));
+				return dto.scripts.map(scriptDto =>
+					commentDeactivatedStatements(scriptDto.script, !scriptDto.isDropScript),
+				);
 			}
 
-			return dto.scripts.map((scriptDto) => scriptDto.script);
+			return dto.scripts.map(scriptDto => scriptDto.script);
 		});
 
 		return assertNoEmptyStatements(scripts);
@@ -345,7 +352,7 @@ module.exports = _ => {
 			...getContainersCommentsAlterScriptsDtos(collection, app, options),
 			...getCollectionsCommentsAlterScriptsDtos(collection, app, options),
 			...getViewsCommentsAlterScriptsDtos(collection, app, options),
-			...getAlterRelationshipsScriptDtos(collection, app)
+			...getAlterRelationshipsScriptDtos(collection, app),
 		};
 
 		return [
@@ -374,7 +381,9 @@ module.exports = _ => {
 			'deleteFkScriptDtos',
 			'addFkScriptDtos',
 			'modifiedFkScriptDtos',
-		].flatMap(name => script[name]).filter(Boolean);
+		]
+			.flatMap(name => script[name])
+			.filter(Boolean);
 	};
 
 	/**
@@ -388,7 +397,10 @@ module.exports = _ => {
 	 * @return {string}
 	 * */
 	const joinAlterScriptDtosIntoAlterScript = (alterScriptDtos, data) => {
-		const scriptAsStringsWithCommentedUnwantedDDL = getAlterStatementsWithCommentedUnwantedDDL(alterScriptDtos, data);
+		const scriptAsStringsWithCommentedUnwantedDDL = getAlterStatementsWithCommentedUnwantedDDL(
+			alterScriptDtos,
+			data,
+		);
 
 		return buildScript(scriptAsStringsWithCommentedUnwantedDDL);
 	};
@@ -400,6 +412,6 @@ module.exports = _ => {
 		getAlterCollectionsScriptsDtos,
 		getAlterViewScriptsDtos,
 		getAlterModelDefinitionsScriptsDtos,
-		joinAlterScriptDtosIntoAlterScript
+		joinAlterScriptDtosIntoAlterScript,
 	};
 };

@@ -1,8 +1,7 @@
 const ssh = require('tunnel-ssh');
 const fs = require('fs');
 
-
-const getSshConfig = (info) => {
+const getSshConfig = info => {
 	const config = {
 		username: info.ssh_user,
 		host: info.ssh_host,
@@ -11,35 +10,36 @@ const getSshConfig = (info) => {
 		dstPort: info.port,
 		localHost: '127.0.0.1',
 		localPort: info.port,
-		keepAlive: true
+		keepAlive: true,
 	};
 
 	if (info.ssh_method === 'privateKey') {
 		return Object.assign({}, config, {
 			privateKey: fs.readFileSync(info.ssh_key_file),
-			passphrase: info.ssh_key_passphrase
+			passphrase: info.ssh_key_passphrase,
 		});
 	} else {
 		return Object.assign({}, config, {
-			password: info.ssh_password
+			password: info.ssh_password,
 		});
 	}
 };
 
-const connectViaSsh = (info) => new Promise((resolve, reject) => {
-	ssh(getSshConfig(info), (err, tunnel) => {
-		if (err) {
-			reject(err);
-		} else {
-			resolve({
-				tunnel,
-				info: Object.assign({}, info, {
-					host: '127.0.0.1',
-				})
-			});
-		}
+const connectViaSsh = info =>
+	new Promise((resolve, reject) => {
+		ssh(getSshConfig(info), (err, tunnel) => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve({
+					tunnel,
+					info: Object.assign({}, info, {
+						host: '127.0.0.1',
+					}),
+				});
+			}
+		});
 	});
-});
 
 module.exports = {
 	connectViaSsh,

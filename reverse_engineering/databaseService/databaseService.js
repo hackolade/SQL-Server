@@ -8,7 +8,7 @@ const getSampleDocSize = require('../helpers/getSampleDocSize');
 
 const QUERY_REQUEST_TIMEOUT = 60000;
 
-const getSslConfig = (connectionInfo) => {
+const getSslConfig = connectionInfo => {
 	const encrypt = connectionInfo.encryptConnection === undefined ? true : Boolean(connectionInfo.encryptConnection);
 
 	if (connectionInfo.sslType === 'SYSTEMCA') {
@@ -34,9 +34,9 @@ const getSslConfig = (connectionInfo) => {
 			cryptoCredentialsDetails: {
 				ca: fs.readFileSync(connectionInfo.certAuthority),
 				cert: connectionInfo.clientCert && fs.readFileSync(connectionInfo.clientCert),
-				key: connectionInfo.clientPrivateKey&& fs.readFileSync(connectionInfo.clientPrivateKey),
+				key: connectionInfo.clientPrivateKey && fs.readFileSync(connectionInfo.clientPrivateKey),
 				passphrase: connectionInfo.passphrase,
-			}
+			},
 		};
 	}
 
@@ -45,7 +45,10 @@ const getSslConfig = (connectionInfo) => {
 
 const getConnectionClient = async (connectionInfo, logger) => {
 	const hostName = getHostName(connectionInfo.host);
-	const userName = isEmail(connectionInfo.userName) && hostName ? `${connectionInfo.userName}@${hostName}` : connectionInfo.userName;
+	const userName =
+		isEmail(connectionInfo.userName) && hostName
+			? `${connectionInfo.userName}@${hostName}`
+			: connectionInfo.userName;
 	const tenantId = connectionInfo.connectionTenantId || connectionInfo.tenantId || 'common';
 	const sslOptions = getSslConfig(connectionInfo);
 
@@ -58,11 +61,12 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			database: connectionInfo.databaseName,
 			options: {
 				enableArithAbort: true,
-				encrypt: connectionInfo.encryptConnection === undefined ? true : Boolean(connectionInfo.encryptConnection),
+				encrypt:
+					connectionInfo.encryptConnection === undefined ? true : Boolean(connectionInfo.encryptConnection),
 				...sslOptions,
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
-			requestTimeout:  Number(connectionInfo.queryRequestTimeout) || 60000
+			requestTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
 		});
 	} else if (connectionInfo.authMethod === 'Username / Password (Windows)') {
 		return await sql.connect({
@@ -74,11 +78,14 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			domain: connectionInfo.userDomain,
 			options: {
 				...sslOptions,
-				encrypt: connectionInfo.encryptWindowsConnection === undefined ? false : Boolean(connectionInfo.encryptWindowsConnection),
+				encrypt:
+					connectionInfo.encryptWindowsConnection === undefined
+						? false
+						: Boolean(connectionInfo.encryptWindowsConnection),
 				enableArithAbort: true,
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
-			requestTimeout:  Number(connectionInfo.queryRequestTimeout) || 60000
+			requestTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
 		});
 	} else if (connectionInfo.authMethod === 'Azure Active Directory (MFA)') {
 		const clientId = '0dc36597-bc44-49f8-a4a7-ae5401959b85';
@@ -97,15 +104,15 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			authentication: {
 				type: 'azure-active-directory-access-token',
 				options: {
-					token
-				}
+					token,
+				},
 			},
 			connectTimeout: QUERY_REQUEST_TIMEOUT,
-			requestTimeout: QUERY_REQUEST_TIMEOUT
+			requestTimeout: QUERY_REQUEST_TIMEOUT,
 		});
 	} else if (connectionInfo.authMethod === 'Azure Active Directory (Username / Password)') {
 		return await sql.connect({
-			user: userName ,
+			user: userName,
 			password: connectionInfo.userPassword,
 			server: connectionInfo.host,
 			port: +connectionInfo.port,
@@ -113,17 +120,17 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			options: {
 				...sslOptions,
 				encrypt: true,
-				enableArithAbort: true
+				enableArithAbort: true,
 			},
 			authentication: {
 				type: 'azure-active-directory-password',
 				options: {
 					userName: connectionInfo.userName,
-					password: connectionInfo.userPassword
-				}
+					password: connectionInfo.userPassword,
+				},
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
-			requestTimeout:  Number(connectionInfo.queryRequestTimeout) || 60000
+			requestTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
 		});
 	}
 
@@ -137,8 +144,11 @@ const getHostName = url => (url || '').split('.')[0];
 const PERMISSION_DENIED_CODE = 297;
 
 const addPermissionDeniedMetaData = (error, meta) => {
-	error.message = 'The user does not have permission to perform ' + meta.action +
-		'. Please, check the access to the next objects: ' + meta.objects.join(', ');
+	error.message =
+		'The user does not have permission to perform ' +
+		meta.action +
+		'. Please, check the access to the next objects: ' +
+		meta.objects.join(', ');
 
 	return error;
 };
@@ -165,8 +175,12 @@ const getClient = async (connectionClient, dbName, meta, logger) => {
 					}
 
 					if (meta.skip) {
-						logger.log('error', { message: error.message, stack: error.stack, error }, 'Perform ' + meta.action);
-						logger.progress({ message: 'Failed: ' + meta.action, containerName: dbName, entityName: ''});
+						logger.log(
+							'error',
+							{ message: error.message, stack: error.stack, error },
+							'Perform ' + meta.action,
+						);
+						logger.progress({ message: 'Failed: ' + meta.action, containerName: dbName, entityName: '' });
 
 						return [];
 					}
@@ -174,19 +188,22 @@ const getClient = async (connectionClient, dbName, meta, logger) => {
 
 				throw error;
 			}
-		}
+		},
 	};
 
 	return _inst;
 };
 
 const getVersionInfo = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting version info',
-		objects: [
-			'VersionInfo',
-		]
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting version info',
+			objects: ['VersionInfo'],
+		},
+		logger,
+	);
 
 	try {
 		return mapResponse(await currentDbConnectionClient.query`SELECT @@VERSION VersionInfo;`);
@@ -201,20 +218,21 @@ const getVersionInfo = async (connectionClient, dbName, logger) => {
 			return [];
 		}
 	}
-	
 };
 
 const getTableInfo = async (connectionClient, dbName, tableName, tableSchema, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'table information query',
-		objects: [
-			'INFORMATION_SCHEMA.COLUMNS',
-			'sys.identity_columns',
-			'sys.objects',
-		]
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'table information query',
+			objects: ['INFORMATION_SCHEMA.COLUMNS', 'sys.identity_columns', 'sys.objects'],
+		},
+		logger,
+	);
 	const objectId = `${tableSchema}.${tableName}`;
-	return mapResponse(await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT c.*,
 				ic.SEED_VALUE,
 				ic.INCREMENT_VALUE,
@@ -226,19 +244,24 @@ const getTableInfo = async (connectionClient, dbName, tableName, tableSchema, lo
 		LEFT JOIN sys.objects o ON o.object_id=OBJECT_ID(${objectId})
 		WHERE c.table_name = ${tableName}
 		AND c.table_schema = ${tableSchema}
-	;`);
+	;`,
+	);
 };
 
 const getTableSystemTime = async (connectionClient, dbName, tableName, tableSchema, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'table information query',
-		objects: [
-			'sys.periods',
-		],
-		skip: true,
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'table information query',
+			objects: ['sys.periods'],
+			skip: true,
+		},
+		logger,
+	);
 	const objectId = `${tableSchema}.${tableName}`;
-	return mapResponse(await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT col_name(p.object_id, p.start_column_id)                                          as startColumn,
 		COLUMNPROPERTY(p.object_id, col_name(p.object_id, p.start_column_id), 'IsHidden') as startColumnIsHidden,
 		col_name(p.object_id, p.end_column_id)                                            as endColumn,
@@ -246,7 +269,8 @@ const getTableSystemTime = async (connectionClient, dbName, tableName, tableSche
 		FROM sys.periods p
 		WHERE p.object_id = OBJECT_ID(${objectId})
 		AND p.period_type = 1;
-	;`);
+	;`,
+	);
 };
 
 const getTableRow = async (connectionClient, dbName, tableName, tableSchema, recordSamplingSettings, logger) => {
@@ -264,7 +288,11 @@ const getTableRow = async (connectionClient, dbName, tableName, tableSchema, rec
 
 	if (recordSamplingSettings.active === 'absolute') {
 		amount = Number(recordSamplingSettings.absolute.value);
-		logger.log('info', { message: `Get ${amount} rows from '${tableName}' table for sampling JSON data.` }, 'Reverse Engineering');
+		logger.log(
+			'info',
+			{ message: `Get ${amount} rows from '${tableName}' table for sampling JSON data.` },
+			'Reverse Engineering',
+		);
 	} else {
 		const rowCount = await getTableRowCount(tableSchema, tableName, currentDbConnectionClient);
 		amount = getSampleDocSize(rowCount, recordSamplingSettings);
@@ -286,19 +314,25 @@ const getTableRow = async (connectionClient, dbName, tableName, tableSchema, rec
 };
 
 const getTableForeignKeys = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting foreign keys query',
-		objects: [
-			'sys.foreign_key_columns',
-			'sys.foreign_keys',
-			'sys.objects',
-			'sys.tables',
-			'sys.schemas',
-			'sys.columns',
-		],
-		skip: true
-	}, logger);
-	return mapResponse(await currentDbConnectionClient.query`
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting foreign keys query',
+			objects: [
+				'sys.foreign_key_columns',
+				'sys.foreign_keys',
+				'sys.objects',
+				'sys.tables',
+				'sys.schemas',
+				'sys.columns',
+			],
+			skip: true,
+		},
+		logger,
+	);
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT obj.name AS FK_NAME,
 				sch.name AS [schema_name],
 				tab1.name AS [table],
@@ -322,24 +356,26 @@ const getTableForeignKeys = async (connectionClient, dbName, logger) => {
 			ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id
 		INNER JOIN sys.foreign_keys fk
 			ON fk.object_id = obj.object_id
-		`);
+		`,
+	);
 };
 
 const getDatabaseIndexes = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting indexes query',
-		objects: [
-			'sys.indexes',
-			'sys.tables',
-			'sys.index_columns',
-			'sys.partitions',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting indexes query',
+			objects: ['sys.indexes', 'sys.tables', 'sys.index_columns', 'sys.partitions'],
+			skip: true,
+		},
+		logger,
+	);
 
-	logger.log('info', { message: `Get '${dbName}' database indexes.`}, 'Reverse Engineering');
+	logger.log('info', { message: `Get '${dbName}' database indexes.` }, 'Reverse Engineering');
 
-	return mapResponse(await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT
 			TableName = t.name,
 			IndexName = ind.name,
@@ -360,7 +396,8 @@ const getDatabaseIndexes = async (connectionClient, dbName, logger) => {
 			ind.is_primary_key = 0
 			AND ind.is_unique_constraint = 0
 			AND t.is_ms_shipped = 0
-		`);
+		`,
+	);
 };
 
 const getIndexesBucketCount = async (connectionClient, dbName, indexesId, logger) => {
@@ -388,21 +425,27 @@ const getIndexesBucketCount = async (connectionClient, dbName, indexesId, logger
 };
 
 const getSpatialIndexes = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting spatial indexes',
-		objects: [
-			'sys.spatial_indexes',
-			'sys.tables',
-			'sys.index_columns',
-			'sys.partitions',
-			'sys.spatial_index_tessellations',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting spatial indexes',
+			objects: [
+				'sys.spatial_indexes',
+				'sys.tables',
+				'sys.index_columns',
+				'sys.partitions',
+				'sys.spatial_index_tessellations',
+			],
+			skip: true,
+		},
+		logger,
+	);
 
-	logger.log('info', { message: `Get '${dbName}' database spatial indexes.`}, 'Reverse Engineering');
+	logger.log('info', { message: `Get '${dbName}' database spatial indexes.` }, 'Reverse Engineering');
 
-	return mapResponse(await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT
 			TableName = t.name,
 			IndexName = ind.name,
@@ -427,25 +470,31 @@ const getSpatialIndexes = async (connectionClient, dbName, logger) => {
 		LEFT JOIN sys.spatial_index_tessellations sit
 			ON ind.object_id = sit.object_id AND ind.index_id = sit.index_id
 		LEFT JOIN sys.partitions p
-			ON p.object_id = t.object_id AND ind.index_id = p.index_id`);
+			ON p.object_id = t.object_id AND ind.index_id = p.index_id`,
+	);
 };
 
 const getFullTextIndexes = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName,  {
-		action: 'getting full text indexes',
-		objects: [
-			'sys.fulltext_indexes',
-			'sys.fulltext_index_columns',
-			'sys.indexes',
-			'sys.fulltext_stoplists',
-			'sys.registered_search_property_lists',
-			'sys.filegroups',
-			'sys.fulltext_catalogs',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting full text indexes',
+			objects: [
+				'sys.fulltext_indexes',
+				'sys.fulltext_index_columns',
+				'sys.indexes',
+				'sys.fulltext_stoplists',
+				'sys.registered_search_property_lists',
+				'sys.filegroups',
+				'sys.fulltext_catalogs',
+			],
+			skip: true,
+		},
+		logger,
+	);
 
-	logger.log('info', { message: `Get '${dbName}' database full text indexes.`}, 'Reverse Engineering');
+	logger.log('info', { message: `Get '${dbName}' database full text indexes.` }, 'Reverse Engineering');
 
 	const result = await currentDbConnectionClient.query`
 		SELECT
@@ -476,20 +525,21 @@ const getFullTextIndexes = async (connectionClient, dbName, logger) => {
 };
 
 const getViewsIndexes = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting view indexes query',
-		objects: [
-			'sys.indexes',
-			'sys.views',
-			'sys.index_columns',
-			'sys.partitions',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting view indexes query',
+			objects: ['sys.indexes', 'sys.views', 'sys.index_columns', 'sys.partitions'],
+			skip: true,
+		},
+		logger,
+	);
 
-	logger.log('info', { message: `Get '${dbName}' database views indexes.`}, 'Reverse Engineering');
+	logger.log('info', { message: `Get '${dbName}' database views indexes.` }, 'Reverse Engineering');
 
-	return mapResponse(await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT
 			TableName = t.name,
 			IndexName = ind.name,
@@ -510,19 +560,21 @@ const getViewsIndexes = async (connectionClient, dbName, logger) => {
 			ind.is_primary_key = 0
 			AND ind.is_unique_constraint = 0
 			AND t.is_ms_shipped = 0
-		`);
+		`,
+	);
 };
 
 const getTableColumnsDescription = async (connectionClient, dbName, tableName, schemaName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting table columns description',
-		objects: [
-			'sys.tables',
-			'sys.columns',
-			'sys.extended_properties',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting table columns description',
+			objects: ['sys.tables', 'sys.columns', 'sys.extended_properties'],
+			skip: true,
+		},
+		logger,
+	);
 
 	logger.log('info', { message: `Get '${tableName}' table columns description.` }, 'Reverse Engineering');
 
@@ -542,18 +594,21 @@ const getTableColumnsDescription = async (connectionClient, dbName, tableName, s
 };
 
 const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting memory optimized tables',
-		objects: [
-			'sys.tables',
-			'sys.objects',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting memory optimized tables',
+			objects: ['sys.tables', 'sys.objects'],
+			skip: true,
+		},
+		logger,
+	);
 
-	logger.log('info', { message: `Get '${dbName}' database memory optimized indexes.`}, 'Reverse Engineering');
+	logger.log('info', { message: `Get '${dbName}' database memory optimized indexes.` }, 'Reverse Engineering');
 
-	return mapResponse(await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT
 			T.name,
 			T.durability,
@@ -563,21 +618,23 @@ const getDatabaseMemoryOptimizedTables = async (connectionClient, dbName, logger
 			T.temporal_type_desc,
 			T.is_memory_optimized
 		FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
-	`);
+	`,
+	);
 };
 
 const getDatabaseCheckConstraints = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting check constraints',
-		objects: [
-			'sys.check_constraints',
-			'sys.objects',
-			'sys.all_columns',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting check constraints',
+			objects: ['sys.check_constraints', 'sys.objects', 'sys.all_columns'],
+			skip: true,
+		},
+		logger,
+	);
 
-	logger.log('info', { message: `Get '${dbName}' database check constraints.`}, 'Reverse Engineering');
+	logger.log('info', { message: `Get '${dbName}' database check constraints.` }, 'Reverse Engineering');
 
 	return mapResponse(currentDbConnectionClient.query`
 		SELECT con.[name],
@@ -597,16 +654,16 @@ const getDatabaseCheckConstraints = async (connectionClient, dbName, logger) => 
 };
 
 const getViewTableInfo = async (connectionClient, dbName, viewName, schemaName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'information view query',
-		objects: [
-			'sys.sql_dependencies',
-			'sys.objects',
-			'sys.columns',
-			'sys.types',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'information view query',
+			objects: ['sys.sql_dependencies', 'sys.objects', 'sys.columns', 'sys.types'],
+			skip: true,
+		},
+		logger,
+	);
 
 	logger.log('info', { message: `Get '${viewName}' view table info.` }, 'Reverse Engineering');
 
@@ -651,21 +708,23 @@ const getViewTableInfo = async (connectionClient, dbName, viewName, schemaName, 
 };
 
 const getViewColumnRelations = async (connectionClient, dbName, viewName, schemaName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting view column relations',
-		objects: [
-			'sys.dm_exec_describe_first_result_set',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting view column relations',
+			objects: ['sys.dm_exec_describe_first_result_set'],
+			skip: true,
+		},
+		logger,
+	);
 
 	logger.log('info', { message: `Get '${viewName}' view column relations.` }, 'Reverse Engineering');
 
 	return mapResponse(currentDbConnectionClient
-	.request()
-	.input('tableName', sql.VarChar, viewName)
-	.input('tableSchema', sql.VarChar, schemaName)
-	.query`
+		.request()
+		.input('tableName', sql.VarChar, viewName)
+		.input('tableSchema', sql.VarChar, schemaName).query`
 			SELECT name, source_database, source_schema,
 				source_table, source_column
 				FROM sys.dm_exec_describe_first_result_set(N'SELECT TOP 1 * FROM [' + @TableSchema + '].[' + @TableName + ']', NULL, 1)
@@ -674,44 +733,51 @@ const getViewColumnRelations = async (connectionClient, dbName, viewName, schema
 };
 
 const getViewStatement = async (connectionClient, dbName, viewName, schemaName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting view statements',
-		objects: [
-			'sys.sql_modules',
-			'sys.views',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting view statements',
+			objects: ['sys.sql_modules', 'sys.views'],
+			skip: true,
+		},
+		logger,
+	);
 
 	logger.log('info', { message: `Get '${viewName}' view statement.` }, 'Reverse Engineering');
 
 	const objectId = `${schemaName}.${viewName}`;
-	return mapResponse(currentDbConnectionClient
-		.query`SELECT M.*, V.with_check_option
+	return mapResponse(currentDbConnectionClient.query`SELECT M.*, V.with_check_option
 			FROM sys.sql_modules M INNER JOIN sys.views V ON M.object_id=V.object_id
 			WHERE M.object_id=OBJECT_ID(${objectId})
 		`);
 };
 
 const getTableKeyConstraints = async (connectionClient, dbName, tableName, schemaName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting constraints of keys',
-		objects: [
-			'INFORMATION_SCHEMA.TABLE_CONSTRAINTS',
-			'INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE',
-			'sys.indexes',
-			'sys.stats',
-			'sys.data_spaces',
-			'sys.index_columns',
-			'sys.partitions',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting constraints of keys',
+			objects: [
+				'INFORMATION_SCHEMA.TABLE_CONSTRAINTS',
+				'INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE',
+				'sys.indexes',
+				'sys.stats',
+				'sys.data_spaces',
+				'sys.index_columns',
+				'sys.partitions',
+			],
+			skip: true,
+		},
+		logger,
+	);
 
 	logger.log('info', { message: `Get '${tableName}' table key constraints.` }, 'Reverse Engineering');
 
 	const objectId = `${schemaName}.${tableName}`;
-	return mapResponse(await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT TC.TABLE_NAME AS tableName, TC.Constraint_Name AS constraintName,
 		CC.Column_Name AS columnName, TC.constraint_type AS constraintType, ind.type_desc AS typeDesc,
 		p.data_compression_desc AS dataCompression,
@@ -730,64 +796,75 @@ const getTableKeyConstraints = async (connectionClient, dbName, tableName, schem
 			AND ic.column_id=COLUMNPROPERTY(OBJECT_ID(${objectId}), CC.column_name, 'ColumnId')
 		INNER JOIN sys.partitions p ON p.object_id = OBJECT_ID(${objectId}) AND p.index_id = ind.index_id
 		ORDER BY TC.Constraint_Name
-	`);
+	`,
+	);
 };
 
 const getTableMaskedColumns = async (connectionClient, dbName, tableName, schemaName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting masked columns',
-		objects: [
-			'sys.masked_columns'
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting masked columns',
+			objects: ['sys.masked_columns'],
+			skip: true,
+		},
+		logger,
+	);
 
 	logger.log('info', { message: `Get '${tableName}' table masked columns.` }, 'Reverse Engineering');
 
 	const objectId = `${schemaName}.${tableName}`;
-	return mapResponse(await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT name, masking_function FROM sys.masked_columns
 		WHERE object_id=OBJECT_ID(${objectId})
-	`);
+	`,
+	);
 };
 
 const getDatabaseXmlSchemaCollection = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting xml schema collections',
-		objects: [
-			'sys.column_xml_schema_collection_usages',
-			'sys.xml_schema_collections'
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting xml schema collections',
+			objects: ['sys.column_xml_schema_collection_usages', 'sys.xml_schema_collections'],
+			skip: true,
+		},
+		logger,
+	);
 
-	logger.log('info', { message: `Get '${dbName}' database xml schema collection.`}, 'Reverse Engineering');
+	logger.log('info', { message: `Get '${dbName}' database xml schema collection.` }, 'Reverse Engineering');
 
-	return mapResponse( await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 		SELECT xsc.name AS collectionName,
 				SCHEMA_NAME(xsc.schema_id) AS schemaName,
 				OBJECT_NAME(xcu.object_id) AS tableName,
 				COL_NAME(xcu.object_id, xcu.column_id) AS columnName
 		FROM sys.column_xml_schema_collection_usages xcu
 		LEFT JOIN sys.xml_schema_collections xsc ON xsc.xml_collection_id=xcu.xml_collection_id
-	`);
+	`,
+	);
 };
 
 const getTableDefaultConstraintNames = async (connectionClient, dbName, tableName, schemaName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting default cosntraint names',
-		objects: [
-			'sys.all_columns',
-			'sys.tables',
-			'sys.schemas',
-			'sys.default_constraints',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting default cosntraint names',
+			objects: ['sys.all_columns', 'sys.tables', 'sys.schemas', 'sys.default_constraints'],
+			skip: true,
+		},
+		logger,
+	);
 
 	logger.log('info', { message: `Get '${tableName}' table default constraint names.` }, 'Reverse Engineering');
 
-	return mapResponse(await currentDbConnectionClient.query`
+	return mapResponse(
+		await currentDbConnectionClient.query`
 	SELECT
 		ac.name AS columnName,
 		dc.name
@@ -805,105 +882,113 @@ const getTableDefaultConstraintNames = async (connectionClient, dbName, tableNam
 	WHERE 
 			schemas.name = ${schemaName}
 		AND tables.name = ${tableName}
-	`);
+	`,
+	);
 };
 
 const getDatabaseUserDefinedTypes = async (connectionClient, dbName, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'getting user defined types',
-		objects: [
-			'sys.types',
-		],
-		skip: true
-	}, logger);
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting user defined types',
+			objects: ['sys.types'],
+			skip: true,
+		},
+		logger,
+	);
 
-	logger.log('info', { message: `Get '${dbName}' database UDTs.`}, 'Reverse Engineering');
+	logger.log('info', { message: `Get '${dbName}' database UDTs.` }, 'Reverse Engineering');
 
 	return mapResponse(currentDbConnectionClient.query`
 		SELECT * FROM sys.types
 		WHERE is_user_defined = 1
 	`);
-}
+};
 
 const getDatabaseCollationOption = async (connectionClient, dbName, logger) => {
-    const currentDbConnectionClient = await getClient(
-        connectionClient,
-        dbName,
-        {
-            action: 'getting database collation',
-            objects: [],
-            skip: true,
-        },
-        logger
-    );
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'getting database collation',
+			objects: [],
+			skip: true,
+		},
+		logger,
+	);
 
-    return mapResponse(
-        currentDbConnectionClient.query(`SELECT CONVERT (varchar(256), DATABASEPROPERTYEX('${dbName}','collation'));`)
-    );
+	return mapResponse(
+		currentDbConnectionClient.query(`SELECT CONVERT (varchar(256), DATABASEPROPERTYEX('${dbName}','collation'));`),
+	);
 };
 
 const mapResponse = async (response = {}) => {
 	const resp = await response;
 
 	return resp.recordset ? resp.recordset : resp;
-}
-
+};
 
 const getTokenByMSAL = async ({ connectionInfo, redirectUri, clientId, tenantId, logger }) => {
 	try {
-
 		const pca = new msal.PublicClientApplication(getAuthConfig(clientId, tenantId, logger.log));
 		const tokenRequest = {
 			code: connectionInfo?.externalBrowserQuery?.code || '',
-			scopes: ["https://database.windows.net//.default"],
+			scopes: ['https://database.windows.net//.default'],
 			redirectUri,
-			codeVerifier: connectionInfo?.proofKey, 
-			clientInfo: connectionInfo?.externalBrowserQuery?.client_info || ''
+			codeVerifier: connectionInfo?.proofKey,
+			clientInfo: connectionInfo?.externalBrowserQuery?.client_info || '',
 		};
-	
+
 		const responseData = await pca.acquireTokenByCode(tokenRequest);
 
 		return responseData.accessToken;
-	} catch(error){
+	} catch (error) {
 		logger.log('error', { message: error.message, stack: error.stack, error }, 'MFA MSAL auth error');
 		return '';
 	}
 };
 
 const getAgent = (reject, cert, key) => {
-	return new https.Agent({ cert,key, rejectUnauthorized: !!reject });
+	return new https.Agent({ cert, key, rejectUnauthorized: !!reject });
 };
 
 const getTokenByAxios = async ({ connectionInfo, tenantId, redirectUri, clientId, logger, agent }) => {
 	try {
-		const params = new URLSearchParams()
+		const params = new URLSearchParams();
 		params.append('code', connectionInfo?.externalBrowserQuery?.code || '');
-		params.append('client_id',clientId);
-		params.append('redirect_uri',redirectUri);
-		params.append('grant_type',"authorization_code");
+		params.append('client_id', clientId);
+		params.append('redirect_uri', redirectUri);
+		params.append('grant_type', 'authorization_code');
 		params.append('code_verifier', connectionInfo?.proofKey);
-		params.append('resource',"https://database.windows.net/");
+		params.append('resource', 'https://database.windows.net/');
 
 		const responseData = await axios.post(`https://login.microsoftonline.com/${tenantId}/oauth2/token`, params, {
 			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
+				'Content-Type': 'application/x-www-form-urlencoded',
 			},
-			...(agent && { httpsAgent: agent })
-		})
+			...(agent && { httpsAgent: agent }),
+		});
 
 		return responseData?.data?.access_token || '';
-	} catch(error) {
+	} catch (error) {
 		logger.log('error', { message: error.message, stack: error.stack, error }, 'MFA Axios auth error');
 		return '';
 	}
 };
 
-const getTokenByAxiosExtended = (params) => {
-	return getTokenByAxios({ ...params, agent: getAgent()})
+const getTokenByAxiosExtended = params => {
+	return getTokenByAxios({ ...params, agent: getAgent() });
 };
 
 const getToken = async ({ connectionInfo, tenantId, clientId, redirectUri, logger }) => {
-	const axiosExtendedToken = await getTokenByAxiosExtended({ connectionInfo, clientId, redirectUri, tenantId, logger});
+	const axiosExtendedToken = await getTokenByAxiosExtended({
+		connectionInfo,
+		clientId,
+		redirectUri,
+		tenantId,
+		logger,
+	});
 	if (axiosExtendedToken) {
 		return axiosExtendedToken;
 	}
@@ -919,47 +1004,56 @@ const getToken = async ({ connectionInfo, tenantId, clientId, redirectUri, logge
 	}
 
 	return;
-}
+};
 
 const getAuthConfig = (clientId, tenantId, logger) => ({
-    system: {
-        loggerOptions: {
-            loggerCallback(loglevel, message) {
-                logger(message);
-            },
-            piiLoggingEnabled: false,
-            logLevel: msal.LogLevel.Verbose,
-        }
-    },
+	system: {
+		loggerOptions: {
+			loggerCallback(loglevel, message) {
+				logger(message);
+			},
+			piiLoggingEnabled: false,
+			logLevel: msal.LogLevel.Verbose,
+		},
+	},
 	auth: {
 		clientId,
-		authority: `https://login.microsoftonline.com/${tenantId}`
-	}
+		authority: `https://login.microsoftonline.com/${tenantId}`,
+	},
 });
 
-const getDescriptionComments = async (connectionClient, dbName, {schema, entity}, logger) => {
-	const currentDbConnectionClient = await getClient(connectionClient, dbName, {
-		action: 'MS_Description query',
-		objects: []
-	}, logger);
+const getDescriptionComments = async (connectionClient, dbName, { schema, entity }, logger) => {
+	const currentDbConnectionClient = await getClient(
+		connectionClient,
+		dbName,
+		{
+			action: 'MS_Description query',
+			objects: [],
+		},
+		logger,
+	);
 
 	logger.log('info', { message: `Get description comments for '${entity?.name}'.` }, 'Reverse Engineering');
 
-	const commentsRequestResponse = await currentDbConnectionClient.query(buildDescriptionCommentsRetrieveQuery({schema, entity}))
+	const commentsRequestResponse = await currentDbConnectionClient.query(
+		buildDescriptionCommentsRetrieveQuery({ schema, entity }),
+	);
 
-	return {...commentsRequestResponse.recordset[0], schema, entityName: entity?.name}
-}
+	return { ...commentsRequestResponse.recordset[0], schema, entityName: entity?.name };
+};
 
-const buildDescriptionCommentsRetrieveQuery = ({schema, entity}) => {
-	const schemaTemplate = schema ? `'schema', '${schema}'` : `'schema', default`
+const buildDescriptionCommentsRetrieveQuery = ({ schema, entity }) => {
+	const schemaTemplate = schema ? `'schema', '${schema}'` : `'schema', default`;
 
 	if (!entity?.type) {
-		return `SELECT objtype, objname, value FROM fn_listextendedproperty ('MS_Description', ${schemaTemplate}, NULL, NULL, NULL, NULL);`
+		return `SELECT objtype, objname, value FROM fn_listextendedproperty ('MS_Description', ${schemaTemplate}, NULL, NULL, NULL, NULL);`;
 	}
 
-	const entityTemplate = entity?.name ? `'${entity.type}', '${entity.name}', 'column', default` : `'${entity.type}', default, NULL, NULL`
-	return `SELECT objtype, objname, value FROM fn_listextendedproperty ('MS_Description', ${schemaTemplate}, ${entityTemplate});`
-}
+	const entityTemplate = entity?.name
+		? `'${entity.type}', '${entity.name}', 'column', default`
+		: `'${entity.type}', default, NULL, NULL`;
+	return `SELECT objtype, objname, value FROM fn_listextendedproperty ('MS_Description', ${schemaTemplate}, ${entityTemplate});`;
+};
 
 module.exports = {
 	getConnectionClient,
@@ -987,7 +1081,7 @@ module.exports = {
 	getTableSystemTime,
 	getVersionInfo,
 	getDescriptionComments,
-}
+};
 
 async function getTableRowCount(tableSchema, tableName, currentDbConnectionClient) {
 	const rowCountQuery = `SELECT COUNT(*) as rowsCount FROM [${tableSchema}].[${tableName}]`;

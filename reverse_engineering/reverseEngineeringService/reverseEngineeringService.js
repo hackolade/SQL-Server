@@ -38,17 +38,21 @@ const {
 	getUserDefinedTypes,
 	reorderTableRows,
 	containsJson,
-	getPeriodForSystemTime
+	getPeriodForSystemTime,
 } = require('./helpers');
 const pipe = require('../helpers/pipe');
 
 const mergeCollectionsWithViews = jsonSchemas =>
 	jsonSchemas.reduce((structuredJSONSchemas, jsonSchema) => {
 		if (jsonSchema.relatedTables) {
-			const currentIndex = structuredJSONSchemas.findIndex(structuredSchema =>
-				jsonSchema.collectionName === structuredSchema.collectionName && jsonSchema.dbName);
+			const currentIndex = structuredJSONSchemas.findIndex(
+				structuredSchema => jsonSchema.collectionName === structuredSchema.collectionName && jsonSchema.dbName,
+			);
 			const relatedTableSchemaIndex = structuredJSONSchemas.findIndex(({ collectionName, dbName }) =>
-				jsonSchema.relatedTables.find(({ tableName, schemaName }) => tableName === collectionName && schemaName === dbName));
+				jsonSchema.relatedTables.find(
+					({ tableName, schemaName }) => tableName === collectionName && schemaName === dbName,
+				),
+			);
 
 			if (relatedTableSchemaIndex !== -1 && doesViewHaveRelatedTables(jsonSchema, structuredJSONSchemas)) {
 				structuredJSONSchemas[relatedTableSchemaIndex].views.push(jsonSchema);
@@ -61,7 +65,7 @@ const mergeCollectionsWithViews = jsonSchemas =>
 		return structuredJSONSchemas;
 	}, jsonSchemas);
 
-const getCollectionsRelationships = logger => async (dbConnectionClient) => {
+const getCollectionsRelationships = logger => async dbConnectionClient => {
 	const dbName = dbConnectionClient.config.database;
 	logger.log('info', { message: `Fetching tables relationships.` }, 'Reverse Engineering');
 	logger.progress({ message: 'Fetching tables relationships', containerName: dbName, entityName: '' });
@@ -70,16 +74,16 @@ const getCollectionsRelationships = logger => async (dbConnectionClient) => {
 	return reverseTableForeignKeys(tableForeignKeys, dbName);
 };
 
-const getStandardDocumentByJsonSchema = (jsonSchema) => {
+const getStandardDocumentByJsonSchema = jsonSchema => {
 	return Object.keys(jsonSchema.properties).reduce((result, key) => {
 		return {
 			...result,
-			[key]: ""
+			[key]: '',
 		};
 	}, {});
 };
 
-const isViewPartitioned = (viewStatement) => {
+const isViewPartitioned = viewStatement => {
 	viewStatement = cleanComments(String(viewStatement).trim());
 	const viewContentRegexp = /CREATE[\s\S]+?VIEW[\s\S]+?AS\s+(?:WITH[\s\S]+AS\s+\([\s\S]+\))?([\s\S]+)/i;
 
@@ -94,47 +98,60 @@ const isViewPartitioned = (viewStatement) => {
 };
 
 const getPartitionedJsonSchema = (viewInfo, viewColumnRelations) => {
-	const aliasToName = viewInfo.reduce((aliasToName, item) => ({
-		...aliasToName,
-		[item.ColumnName]: item.ReferencedColumnName
-	}), {});
+	const aliasToName = viewInfo.reduce(
+		(aliasToName, item) => ({
+			...aliasToName,
+			[item.ColumnName]: item.ReferencedColumnName,
+		}),
+		{},
+	);
 	const tableName = viewInfo[0]['ReferencedTableName'];
 
-	const properties = viewColumnRelations.reduce((properties, column) => ({
-		...properties,
-		[column.name]: {
-			$ref: `#collection/definitions/${tableName}/${aliasToName[column.name]}`,
-			bucketName: column['source_schema'] || '',
-		}
-	}), {});
+	const properties = viewColumnRelations.reduce(
+		(properties, column) => ({
+			...properties,
+			[column.name]: {
+				$ref: `#collection/definitions/${tableName}/${aliasToName[column.name]}`,
+				bucketName: column['source_schema'] || '',
+			},
+		}),
+		{},
+	);
 
 	return {
-		properties
+		properties,
 	};
 };
 
-const getPartitionedTables = (viewInfo) => {
-	const hasTable = (tables, item) => tables.some(
-		table => table.table[0] === item.ReferencedSchemaName && table.table[1] === item.ReferencedTableName
-	);
-	
+const getPartitionedTables = viewInfo => {
+	const hasTable = (tables, item) =>
+		tables.some(
+			table => table.table[0] === item.ReferencedSchemaName && table.table[1] === item.ReferencedTableName,
+		);
+
 	return viewInfo.reduce((tables, item) => {
 		if (!hasTable(tables, item)) {
-			return tables.concat([{
-				table: [ item.ReferencedSchemaName, item.ReferencedTableName ]
-			}]);
+			return tables.concat([
+				{
+					table: [item.ReferencedSchemaName, item.ReferencedTableName],
+				},
+			]);
 		} else {
 			return tables;
 		}
 	}, []);
 };
 
-const cleanComments = (definition) => {
-	return definition.split('\n').filter(line => !/^--/.test(line.trim())).join('\n');
+const cleanComments = definition => {
+	return definition
+		.split('\n')
+		.filter(line => !/^--/.test(line.trim()))
+		.join('\n');
 };
 
-const getSelectStatementFromDefinition = (definition) => {
-	const regExp = /CREATE[\s]+VIEW[\s\S]+?(?:WITH[\s]+(?:ENCRYPTION,?|SCHEMABINDING,?|VIEW_METADATA,?)+[\s]+)?AS\s+((?:WITH|SELECT)[\s\S]+?)(WITH\s+CHECK\s+OPTION|$)/i;
+const getSelectStatementFromDefinition = definition => {
+	const regExp =
+		/CREATE[\s]+VIEW[\s\S]+?(?:WITH[\s]+(?:ENCRYPTION,?|SCHEMABINDING,?|VIEW_METADATA,?)+[\s]+)?AS\s+((?:WITH|SELECT)[\s\S]+?)(WITH\s+CHECK\s+OPTION|$)/i;
 
 	if (!regExp.test(definition.trim())) {
 		return '';
@@ -145,7 +162,9 @@ const getSelectStatementFromDefinition = (definition) => {
 
 const getPartitionedSelectStatement = (definition, table, dbName) => {
 	const tableRef = new RegExp(`(\\[?${dbName}\\]?\\.)?(\\[?${table[0]}\\]?\\.)?\\[?${table[1]}\\]?`, 'i');
-	const statement = getSelectStatementFromDefinition(definition).split(/UNION\s+ALL/i).find(item => tableRef.test(item));
+	const statement = getSelectStatementFromDefinition(definition)
+		.split(/UNION\s+ALL/i)
+		.find(item => tableRef.test(item));
 
 	if (!statement) {
 		return '';
@@ -154,18 +173,18 @@ const getPartitionedSelectStatement = (definition, table, dbName) => {
 	return statement.replace(tableRef, '${tableName}').trim();
 };
 
-const getViewProperties = (viewData) => {
+const getViewProperties = viewData => {
 	if (!viewData) {
 		return {};
 	}
 
 	const isSchemaBound = viewData.is_schema_bound;
 	const withCheckOption = viewData.with_check_option;
-	
+
 	return {
 		viewAttrbute: isSchemaBound ? 'SCHEMABINDING' : '',
 		withCheckOption,
-	}; 
+	};
 };
 
 const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName, logger) => async jsonSchema => {
@@ -175,10 +194,7 @@ const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName, logge
 		await getViewStatement(dbConnectionClient, dbName, viewName, schemaName, logger),
 	]);
 	if (isViewPartitioned(viewStatement[0].definition)) {
-		const partitionedSchema = getPartitionedJsonSchema(
-			viewInfo,
-			viewColumnRelations
-		);
+		const partitionedSchema = getPartitionedJsonSchema(viewInfo, viewColumnRelations);
 		const partitionedTables = getPartitionedTables(viewInfo);
 
 		return {
@@ -187,19 +203,25 @@ const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName, logge
 				properties: {
 					...(jsonSchema.properties || {}),
 					...partitionedSchema.properties,
-				}
+				},
 			}),
 			data: {
 				...getViewProperties(viewStatement[0]),
-				selectStatement: getPartitionedSelectStatement(cleanComments(String(viewStatement[0].definition)), (partitionedTables[0] || {}).table, dbName),
+				selectStatement: getPartitionedSelectStatement(
+					cleanComments(String(viewStatement[0].definition)),
+					(partitionedTables[0] || {}).table,
+					dbName,
+				),
 				partitioned: true,
 				partitionedTables,
 			},
 			name: viewName,
-			relatedTables: [{
-				tableName: viewInfo[0]['ReferencedTableName'],
-				schemaName: viewInfo[0]['ReferencedSchemaName'],
-			}],
+			relatedTables: [
+				{
+					tableName: viewInfo[0]['ReferencedTableName'],
+					schemaName: viewInfo[0]['ReferencedSchemaName'],
+				},
+			],
 		};
 	} else {
 		return {
@@ -207,30 +229,36 @@ const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName, logge
 			name: viewName,
 			data: {
 				...getViewProperties(viewStatement[0]),
-				selectStatement: getSelectStatementFromDefinition(cleanComments(String(viewStatement[0].definition)))
+				selectStatement: getSelectStatementFromDefinition(cleanComments(String(viewStatement[0].definition))),
 			},
-			relatedTables: viewInfo.map((columnInfo => ({
+			relatedTables: viewInfo.map(columnInfo => ({
 				tableName: columnInfo['ReferencedTableName'],
 				schemaName: columnInfo['ReferencedSchemaName'],
-			}))),
+			})),
 		};
 	}
 };
 
-const cleanNull = doc => Object.entries(doc).filter(([ key, value ]) => value !== null).reduce((result, [key, value]) => ({
-	...result,
-	[key]: value,
-}), {});
+const cleanNull = doc =>
+	Object.entries(doc)
+		.filter(([key, value]) => value !== null)
+		.reduce(
+			(result, [key, value]) => ({
+				...result,
+				[key]: value,
+			}),
+			{},
+		);
 
-const cleanDocuments = (documents) => {
+const cleanDocuments = documents => {
 	if (!Array.isArray(documents)) {
 		return documents;
 	}
 
 	return documents.map(cleanNull);
-}
+};
 
-const getMemoryOptimizedOptions = (options) => {
+const getMemoryOptimizedOptions = options => {
 	if (!options) {
 		return {};
 	}
@@ -240,7 +268,9 @@ const getMemoryOptimizedOptions = (options) => {
 		memory_optimized,
 		systemVersioning,
 		temporal: !memory_optimized && systemVersioning,
-		durability: ['SCHEMA_ONLY', 'SCHEMA_AND_DATA'].includes(String(options.durability_desc).toUpperCase()) ? String(options.durability_desc).toUpperCase() : '',
+		durability: ['SCHEMA_ONLY', 'SCHEMA_AND_DATA'].includes(String(options.durability_desc).toUpperCase())
+			? String(options.durability_desc).toUpperCase()
+			: '',
 		historyTable: options.history_table ? `${options.history_schema}.${options.history_table}` : '',
 	};
 };
@@ -261,8 +291,14 @@ const addTotalBucketCountToDatabaseIndexes = (databaseIndexes, indexesBucketCoun
 const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo, reverseEngineeringOptions) => {
 	const dbName = dbConnectionClient.config.database;
 	const [
-		rawDatabaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints, xmlSchemaCollections, databaseUDT, viewsIndexes, fullTextIndexes,
-		spatialIndexes
+		rawDatabaseIndexes,
+		databaseMemoryOptimizedTables,
+		databaseCheckConstraints,
+		xmlSchemaCollections,
+		databaseUDT,
+		viewsIndexes,
+		fullTextIndexes,
+		spatialIndexes,
 	] = await Promise.all([
 		getDatabaseIndexes(dbConnectionClient, dbName, logger),
 		getDatabaseMemoryOptimizedTables(dbConnectionClient, dbName, logger),
@@ -273,47 +309,90 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 		getFullTextIndexes(dbConnectionClient, dbName, logger),
 		getSpatialIndexes(dbConnectionClient, dbName, logger),
 	]);
-	const indexesBucketCount = await getIndexesBucketCount(dbConnectionClient, dbName, rawDatabaseIndexes.map(i => i.index_id), logger);
+	const indexesBucketCount = await getIndexesBucketCount(
+		dbConnectionClient,
+		dbName,
+		rawDatabaseIndexes.map(i => i.index_id),
+		logger,
+	);
 	const databaseIndexes = addTotalBucketCountToDatabaseIndexes(rawDatabaseIndexes, indexesBucketCount);
 
 	return await Object.entries(tablesInfo).reduce(async (jsonSchemas, [schemaName, tableNames]) => {
-		logger.log('info', { message: `Fetching '${dbName}' database information`}, 'Reverse Engineering');
+		logger.log('info', { message: `Fetching '${dbName}' database information` }, 'Reverse Engineering');
 		logger.progress({ message: 'Fetching database information', containerName: dbName, entityName: '' });
 		const tablesInfo = await Promise.all(
 			tableNames.map(async untrimmedTableName => {
 				const tableName = untrimmedTableName.replace(/ \(v\)$/, '');
-				const tableIndexes = databaseIndexes.concat(fullTextIndexes).concat(spatialIndexes).filter(
-					index => index.TableName === tableName && index.schemaName === schemaName
+				const tableIndexes = databaseIndexes
+					.concat(fullTextIndexes)
+					.concat(spatialIndexes)
+					.filter(index => index.TableName === tableName && index.schemaName === schemaName);
+				const tableXmlSchemas = xmlSchemaCollections.filter(
+					collection => collection.tableName === tableName && collection.schemaName === schemaName,
 				);
-				const tableXmlSchemas = xmlSchemaCollections.filter(collection =>
-					collection.tableName === tableName && collection.schemaName === schemaName);
 				const tableCheckConstraints = databaseCheckConstraints.filter(cc => cc.table === tableName);
-				logger.log('info', { message: `Fetching '${tableName}' table information from '${dbName}' database`}, 'Reverse Engineering');
-				logger.progress({ message: 'Fetching table information', containerName: dbName, entityName: tableName });
+				logger.log(
+					'info',
+					{ message: `Fetching '${tableName}' table information from '${dbName}' database` },
+					'Reverse Engineering',
+				);
+				logger.progress({
+					message: 'Fetching table information',
+					containerName: dbName,
+					entityName: tableName,
+				});
 				const tableInfo = await getTableInfo(dbConnectionClient, dbName, tableName, schemaName, logger);
 
 				const [tableRows, fieldsKeyConstraints] = await Promise.all([
-					containsJson(tableInfo) ? await getTableRow(dbConnectionClient, dbName, tableName, schemaName, reverseEngineeringOptions.recordSamplingSettings, logger) : Promise.resolve([]),
-					await getTableKeyConstraints(dbConnectionClient, dbName, tableName, schemaName, logger)
+					containsJson(tableInfo)
+						? await getTableRow(
+								dbConnectionClient,
+								dbName,
+								tableName,
+								schemaName,
+								reverseEngineeringOptions.recordSamplingSettings,
+								logger,
+							)
+						: Promise.resolve([]),
+					await getTableKeyConstraints(dbConnectionClient, dbName, tableName, schemaName, logger),
 				]);
 				const tableType = tableInfo[0]['TABLE_TYPE'];
 				const isView = tableType && tableType.trim() === 'V';
 				const jsonSchema = pipe(
 					transformDatabaseTableInfoToJSON(tableInfo),
 					defineRequiredFields,
-					defineFieldsDescription(await getTableColumnsDescription(dbConnectionClient, dbName, tableName, schemaName, logger)),
+					defineFieldsDescription(
+						await getTableColumnsDescription(dbConnectionClient, dbName, tableName, schemaName, logger),
+					),
 					defineFieldsKeyConstraints(fieldsKeyConstraints),
-					defineMaskedColumns(await getTableMaskedColumns(dbConnectionClient, dbName, tableName, schemaName, logger)),
+					defineMaskedColumns(
+						await getTableMaskedColumns(dbConnectionClient, dbName, tableName, schemaName, logger),
+					),
 					defineJSONTypes(tableRows),
 					defineXmlFieldsCollections(tableXmlSchemas),
-					defineFieldsDefaultConstraintNames(await getTableDefaultConstraintNames(dbConnectionClient, dbName, tableName, schemaName, logger)),
+					defineFieldsDefaultConstraintNames(
+						await getTableDefaultConstraintNames(dbConnectionClient, dbName, tableName, schemaName, logger),
+					),
 				)({ required: [], properties: {} });
 
-				const reorderedTableRows = reorderTableRows(tableRows, reverseEngineeringOptions.isFieldOrderAlphabetic);
-				const standardDoc = Array.isArray(reorderedTableRows) && reorderedTableRows.length
-					? reorderedTableRows
-					: reorderTableRows([getStandardDocumentByJsonSchema(jsonSchema)], reverseEngineeringOptions.isFieldOrderAlphabetic);
-				const periodForSystemTime = await getPeriodForSystemTime(dbConnectionClient, dbName, tableName, schemaName, logger);
+				const reorderedTableRows = reorderTableRows(
+					tableRows,
+					reverseEngineeringOptions.isFieldOrderAlphabetic,
+				);
+				const standardDoc =
+					Array.isArray(reorderedTableRows) && reorderedTableRows.length
+						? reorderedTableRows
+						: reorderTableRows(
+								[getStandardDocumentByJsonSchema(jsonSchema)],
+								reverseEngineeringOptions.isFieldOrderAlphabetic,
+							);
+				const periodForSystemTime = await getPeriodForSystemTime(
+					dbConnectionClient,
+					dbName,
+					tableName,
+					schemaName,
+					logger,
+				);
 				let result = {
 					collectionName: tableName,
 					dbName: schemaName,
@@ -321,7 +400,9 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 						Indxs: reverseTableIndexes(tableIndexes),
 						chkConstr: reverseTableCheckConstraints(tableCheckConstraints),
 						periodForSystemTime,
-						...getMemoryOptimizedOptions(databaseMemoryOptimizedTables.find(item => item.name === tableName)),
+						...getMemoryOptimizedOptions(
+							databaseMemoryOptimizedTables.find(item => item.name === tableName),
+						),
 						...defineFieldsCompositeKeyConstraints(fieldsKeyConstraints),
 					},
 					standardDoc: standardDoc,
@@ -340,8 +421,16 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 				};
 
 				if (isView) {
-					const viewData = await prepareViewJSON(dbConnectionClient, dbName, tableName, schemaName, logger)(jsonSchema)
-					const indexes = viewsIndexes.filter(index => index.TableName === tableName && index.schemaName === schemaName);
+					const viewData = await prepareViewJSON(
+						dbConnectionClient,
+						dbName,
+						tableName,
+						schemaName,
+						logger,
+					)(jsonSchema);
+					const indexes = viewsIndexes.filter(
+						index => index.TableName === tableName && index.schemaName === schemaName,
+					);
 
 					result = {
 						...result,
@@ -349,14 +438,14 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 						data: {
 							...(viewData.data || {}),
 							Indxs: reverseTableIndexes(indexes),
-						}
+						},
 					};
 				}
 
 				return result;
-			})
+			}),
 		);
-		return [...await jsonSchemas, ...tablesInfo.filter(Boolean)];
+		return [...(await jsonSchemas), ...tablesInfo.filter(Boolean)];
 	}, Promise.resolve([]));
 };
 

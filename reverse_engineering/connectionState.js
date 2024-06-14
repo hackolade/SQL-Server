@@ -9,22 +9,28 @@ const stateInstance = {
 		if (connectionInfo.ssh && !this._sshTunnel) {
 			const sshData = await sshHelper.connectViaSsh(connectionInfo);
 			connectionInfo = sshData.info;
-			this._sshTunnel = sshData.tunnel;			
+			this._sshTunnel = sshData.tunnel;
 		}
 
 		try {
 			this._client = await getConnectionClient(connectionInfo, logger);
 		} catch (error) {
-			const encryptConnection = connectionInfo.encryptConnection === undefined || Boolean(connectionInfo.encryptConnection);
-			const isEncryptedConnectionToLocalInstance = error.message.includes('self signed certificate') && encryptConnection;
+			const encryptConnection =
+				connectionInfo.encryptConnection === undefined || Boolean(connectionInfo.encryptConnection);
+			const isEncryptedConnectionToLocalInstance =
+				error.message.includes('self signed certificate') && encryptConnection;
 
 			if (isEncryptedConnectionToLocalInstance && attempts <= 0) {
-				return stateInstance.setClient({
-					...connectionInfo,
-					encryptConnection: false,
-				}, attempts + 1, logger);
+				return stateInstance.setClient(
+					{
+						...connectionInfo,
+						encryptConnection: false,
+					},
+					attempts + 1,
+					logger,
+				);
 			}
-			
+
 			throw error;
 		}
 	},
@@ -36,6 +42,6 @@ const stateInstance = {
 			this._sshTunnel = null;
 		}
 	},
-}
+};
 
 module.exports = stateInstance;

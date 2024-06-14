@@ -52,7 +52,11 @@ module.exports = (app, options) => {
 			isFieldsModifiedWithNoSelectStatement
 		) {
 			const hydratedView = ddlProvider.hydrateView({ viewData, entityData: [viewSchema] });
-			alterView = AlterScriptDto.getInstance([ddlProvider.alterView(hydratedView, null, viewSchema.isActivated)], true, false);
+			alterView = AlterScriptDto.getInstance(
+				[ddlProvider.alterView(hydratedView, null, viewSchema.isActivated)],
+				true,
+				false,
+			);
 		}
 
 		const alterIndexesScripts = modifyGroupItems({
@@ -62,9 +66,9 @@ module.exports = (app, options) => {
 			create: (viewName, index) =>
 				index.orReplace
 					? [
-						AlterScriptDto.getInstance([ddlProvider.dropIndex(viewName, index)], true, true),
-						AlterScriptDto.getInstance([ddlProvider.createViewIndex(viewName, index)], true, true),
-					]
+							AlterScriptDto.getInstance([ddlProvider.dropIndex(viewName, index)], true, true),
+							AlterScriptDto.getInstance([ddlProvider.createViewIndex(viewName, index)], true, true),
+						]
 					: AlterScriptDto.getInstance([ddlProvider.createViewIndex(viewName, index)], true, false),
 			drop: (viewName, index) => AlterScriptDto.getInstance([ddlProvider.dropIndex(viewName, index)], true, true),
 		}).flat();
@@ -117,59 +121,61 @@ module.exports = (app, options) => {
 
 	const hydrateIndex =
 		({ idToNameHashTable, idToActivatedHashTable, schemaData }) =>
-			index => {
-				index = setIndexKeys(idToNameHashTable, idToActivatedHashTable, index);
+		index => {
+			index = setIndexKeys(idToNameHashTable, idToActivatedHashTable, index);
 
-				return ddlProvider.hydrateViewIndex(index, schemaData);
-			};
+			return ddlProvider.hydrateViewIndex(index, schemaData);
+		};
 
-	const getViewUpdateCommentScript = ({
-											schemaName,
-											viewName,
-											comment
-										}) => ddlProvider.updateViewComment({ schemaName, viewName, comment });
-	const getViewDropCommentScript = ({ schemaName, viewName }) => ddlProvider.dropViewComment({
-		schemaName,
-		viewName
-	});
+	const getViewUpdateCommentScript = ({ schemaName, viewName, comment }) =>
+		ddlProvider.updateViewComment({ schemaName, viewName, comment });
+	const getViewDropCommentScript = ({ schemaName, viewName }) =>
+		ddlProvider.dropViewComment({
+			schemaName,
+			viewName,
+		});
 
-	const getViewsDropCommentAlterScriptsDto = (views) => {
-		return Object.keys(views).map(viewName => {
-			const view = views[viewName];
+	const getViewsDropCommentAlterScriptsDto = views => {
+		return Object.keys(views)
+			.map(viewName => {
+				const view = views[viewName];
 
-			if (!view?.role?.description) {
-				return undefined;
-			}
+				if (!view?.role?.description) {
+					return undefined;
+				}
 
-			const schemaName = view.role?.compMod?.bucketProperties?.name;
-			const script = getViewDropCommentScript({ schemaName, viewName });
-
-			return AlterScriptDto.getInstance([script], true, true);
-		}).filter(Boolean);
-	};
-
-	const getViewsModifyCommentsAlterScriptsDto = (views) => {
-		return Object.keys(views).map(viewName => {
-			let script = '';
-			const viewComparison = views[viewName].role?.compMod;
-			const schemaName = viewComparison.keyspaceName;
-			const newComment = viewComparison?.description?.new;
-			const oldComment = viewComparison?.description?.old;
-			const isCommentRemoved = oldComment && !newComment;
-
-			if (isCommentRemoved) {
-				script = getViewDropCommentScript({ schemaName, viewName });
+				const schemaName = view.role?.compMod?.bucketProperties?.name;
+				const script = getViewDropCommentScript({ schemaName, viewName });
 
 				return AlterScriptDto.getInstance([script], true, true);
-			}
+			})
+			.filter(Boolean);
+	};
 
-			if (!newComment || newComment === oldComment) {
-				return undefined;
-			}
+	const getViewsModifyCommentsAlterScriptsDto = views => {
+		return Object.keys(views)
+			.map(viewName => {
+				let script = '';
+				const viewComparison = views[viewName].role?.compMod;
+				const schemaName = viewComparison.keyspaceName;
+				const newComment = viewComparison?.description?.new;
+				const oldComment = viewComparison?.description?.old;
+				const isCommentRemoved = oldComment && !newComment;
 
-			script = getViewUpdateCommentScript({ schemaName, viewName, comment: newComment });
-			return AlterScriptDto.getInstance([script], true, false);
-		}).filter(Boolean);
+				if (isCommentRemoved) {
+					script = getViewDropCommentScript({ schemaName, viewName });
+
+					return AlterScriptDto.getInstance([script], true, true);
+				}
+
+				if (!newComment || newComment === oldComment) {
+					return undefined;
+				}
+
+				script = getViewUpdateCommentScript({ schemaName, viewName, comment: newComment });
+				return AlterScriptDto.getInstance([script], true, false);
+			})
+			.filter(Boolean);
 	};
 
 	return {
@@ -177,6 +183,6 @@ module.exports = (app, options) => {
 		getDeleteViewScriptDto,
 		getModifiedViewScriptDto,
 		getViewsDropCommentAlterScriptsDto,
-		getViewsModifyCommentsAlterScriptsDto
+		getViewsModifyCommentsAlterScriptsDto,
 	};
 };

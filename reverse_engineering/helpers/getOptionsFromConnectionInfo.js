@@ -3,7 +3,7 @@ const getOptionsFromConnectionInfo = connectionInfo => ({
 	isFieldOrderAlphabetic: connectionInfo.fieldInference.active === 'alphabetical',
 	recordSamplingSettings: {
 		...connectionInfo.recordSamplingSettings,
-	}
+	},
 });
 
 module.exports = getOptionsFromConnectionInfo;

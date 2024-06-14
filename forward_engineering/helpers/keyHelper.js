@@ -129,9 +129,7 @@ module.exports = app => {
 			return [];
 		}
 
-		const primaryKey = isModifiedPK
-			? jsonSchema.compMod.primaryKey.new
-			: jsonSchema.primaryKey
+		const primaryKey = isModifiedPK ? jsonSchema.compMod.primaryKey.new : jsonSchema.primaryKey;
 
 		return primaryKey
 			.filter(primaryKey => !_.isEmpty(primaryKey.compositePrimaryKey))
@@ -192,6 +190,6 @@ module.exports = app => {
 		isInlinePrimaryKey,
 		hydratePrimaryKeyOptions,
 		hydrateUniqueOptions,
-		getCompositePrimaryKeys
+		getCompositePrimaryKeys,
 	};
 };

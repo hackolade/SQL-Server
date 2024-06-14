@@ -69,7 +69,7 @@ module.exports = app => {
 			Array.isArray(index.include) && !_.isEmpty(index.include)
 				? `\n\tINCLUDE (${_.concat(index.include, index.includedColumn).map(key =>
 						isParentActivated ? commentIfDeactivated(`[${key.name}]`, key, true) : `[${key.name}]`,
-				  )})`
+					)})`
 				: '';
 		const relationalIndexOption = getRelationOptionsIndex(index);
 
@@ -89,8 +89,8 @@ module.exports = app => {
 			keys: isParentActivated
 				? dividedKeys.activatedItems.join(', ') + commentedKeys
 				: dividedKeys.activatedItems.join(', ') +
-				  (dividedKeys.activatedItems.length ? ', ' : '') +
-				  dividedKeys.deactivatedItems.join(', '),
+					(dividedKeys.activatedItems.length ? ', ' : '') +
+					dividedKeys.deactivatedItems.join(', '),
 			columnstore: index.type === 'columnstore' ? ' COLUMNSTORE' : '',
 			relational_index_option: relationalIndexOption.length
 				? '\n\tWITH (\n\t\t' + relationalIndexOption.join(',\n\t\t') + '\n\t)'
@@ -168,10 +168,11 @@ module.exports = app => {
 
 	const getSpatialOptions = indexData => {
 		const general = getRelationOptionsIndex(indexData);
-		const createBoundingGrids = (keys, data = {}) => keys
-			.filter(key => Boolean(data[key]) || data[key] === 0)
-			.map(key => `${key} = ${data[key]}`)
-			.join(', ')
+		const createBoundingGrids = (keys, data = {}) =>
+			keys
+				.filter(key => Boolean(data[key]) || data[key] === 0)
+				.map(key => `${key} = ${data[key]}`)
+				.join(', ');
 
 		if (indexData.cellsPerObject) {
 			general.unshift(`CELLS_PER_OBJECT = ${indexData.cellsPerObject}`);
@@ -269,7 +270,7 @@ module.exports = app => {
 							isActivated: !isParentActivated,
 						},
 						true,
-				  )
+					)
 				: '';
 			index += ` HASH (${activatedKeys}${
 				activatedKeys.length && deactivatedKeys.length && !deactivatedKeys.startsWith('/*') ? ', ' : ''
@@ -291,7 +292,7 @@ module.exports = app => {
 							isActivated: !isParentActivated,
 						},
 						true,
-				  )
+					)
 				: '';
 
 			index += ` (${activatedKeys}${
@@ -369,7 +370,7 @@ module.exports = app => {
 								statisticalSemantics: properties.statisticalSemantics,
 							};
 						}
-				  })
+					})
 				: generalIndex.keys,
 			keyIndex: indexData.indxFullTextKeyIndex,
 			catalogName: indexData.indxFullTextCatalogName,
@@ -389,7 +390,7 @@ module.exports = app => {
 
 	const hydrateSpatialIndex = (indexData, schemaData) => {
 		const generalIndex = hydrateIndex(indexData, schemaData);
-		const isAllBoundingBoxValue = data => 
+		const isAllBoundingBoxValue = data =>
 			BOUNDING_BOX_LABEL.every(bounding => Boolean(data?.[bounding]) || data?.[bounding] === 0);
 
 		return {
