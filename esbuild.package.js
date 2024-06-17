@@ -11,6 +11,7 @@ const RELEASE_FOLDER_PATH = path.join(DEFAULT_RELEASE_FOLDER_PATH, `${packageDat
 esbuild
 	.build({
 		entryPoints: [
+			path.resolve(__dirname, 'api', 're.js'),
 			path.resolve(__dirname, 'forward_engineering', 'api.js'),
 			path.resolve(__dirname, 'forward_engineering', 'ddlProvider.js'),
 			path.resolve(__dirname, 'reverse_engineering', 'api.js'),
@@ -18,7 +19,7 @@ esbuild
 		bundle: true,
 		keepNames: true,
 		platform: 'node',
-		target: 'node16',
+		target: 'node18',
 		outdir: RELEASE_FOLDER_PATH,
 		minify: true,
 		logLevel: 'info',
