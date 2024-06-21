@@ -136,9 +136,9 @@ making sure that you maintain a proper JSON format.
 				"dependency": {
 					"type": "not",
 					"values": {
-							"key": "temporal",
-							"value": true
-						}
+						"key": "temporal",
+						"value": true
+					}
 				}
 			},
 			{
@@ -150,9 +150,9 @@ making sure that you maintain a proper JSON format.
 				"dependency": {
 					"type": "not",
 					"values": {
-							"key": "memory_optimized",
-							"value": true
-						}
+						"key": "memory_optimized",
+						"value": true
+					}
 				}
 			},
 			{
@@ -160,11 +160,7 @@ making sure that you maintain a proper JSON format.
 				"propertyKeyword": "durability",
 				"propertyTooltip": "Select from list of options",
 				"propertyType": "select",
-				"options": [
-					"",
-					"SCHEMA_ONLY",
-					"SCHEMA_AND_DATA"
-				],
+				"options": ["", "SCHEMA_ONLY", "SCHEMA_AND_DATA"],
 				"dependency": {
 					"key": "memory_optimized",
 					"value": true
@@ -367,33 +363,28 @@ making sure that you maintain a proper JSON format.
 				"erdIndexAbbr": "PT",
 				"propertyType": "group",
 				"propertyTooltip": "",
-				"groupItemLimit":1,
-				"structure": [{
-					"propertyName": "Start time",
-					"propertyKeyword": "startTime",
-					"propertyType": "fieldList",
-					"template": "orderedList",
-					"attributeList": [
-						"",
-						"hidden"
-					],
-					"templateOptions": {
-						"maxFields": 1
+				"groupItemLimit": 1,
+				"structure": [
+					{
+						"propertyName": "Start time",
+						"propertyKeyword": "startTime",
+						"propertyType": "fieldList",
+						"template": "orderedList",
+						"attributeList": ["", "hidden"],
+						"templateOptions": {
+							"maxFields": 1
+						}
+					},
+					{
+						"propertyName": "End time",
+						"propertyKeyword": "endTime",
+						"propertyType": "fieldList",
+						"template": "orderedList",
+						"attributeList": ["", "hidden"],
+						"templateOptions": {
+							"maxFields": 1
+						}
 					}
-				},
-				{
-					"propertyName": "End time",
-					"propertyKeyword": "endTime",
-					"propertyType": "fieldList",
-					"template": "orderedList",
-					"attributeList": [
-						"",
-						"hidden"
-					],
-					"templateOptions": {
-						"maxFields": 1
-					}
-				}
 				]
 			},
 			{
@@ -406,10 +397,7 @@ making sure that you maintain a proper JSON format.
 				"valueType": "string"
 			}
 		],
-		"columnsRatio": [
-			3.7,
-			5
-		]
+		"columnsRatio": [3.7, 5]
 	},
 	{
 		"lowerTab": "Composite keys",
@@ -441,7 +429,7 @@ making sure that you maintain a proper JSON format.
 									}
 								]
 							}
-						}, 
+						},
 						{
 							"tooltip": "Remove or update the existing composite primary key definition prior to unlock the possibility to create a new composite primary key definition for this table",
 							"dependency": {
@@ -503,10 +491,7 @@ making sure that you maintain a proper JSON format.
 						"propertyKeyword": "compositePrimaryKey",
 						"propertyType": "primaryKeySetter",
 						"abbr": "pk",
-						"attributeList": [
-							"ascending",
-							"descending"
-						]
+						"attributeList": ["ascending", "descending"]
 					},
 					{
 						"propertyName": "Partition name",
@@ -566,13 +551,7 @@ making sure that you maintain a proper JSON format.
 						"propertyName": "Data compression",
 						"propertyKeyword": "dataCompression",
 						"propertyType": "select",
-						"options": [
-							"NONE",
-							"ROW",
-							"PAGE",
-							"COLUMNSTORE",
-							"COLUMNSTORE_ARCHIVE"
-						]
+						"options": ["NONE", "ROW", "PAGE", "COLUMNSTORE", "COLUMNSTORE_ARCHIVE"]
 					}
 				]
 			},
@@ -597,10 +576,7 @@ making sure that you maintain a proper JSON format.
 						"template": "collectiontree",
 						"isCompositeKey": true,
 						"abbr": " ",
-						"attributeList": [
-							"ascending",
-							"descending"
-						]
+						"attributeList": ["ascending", "descending"]
 					},
 					{
 						"propertyName": "Alternate key",
@@ -667,13 +643,7 @@ making sure that you maintain a proper JSON format.
 						"propertyName": "Data compression",
 						"propertyKeyword": "dataCompression",
 						"propertyType": "select",
-						"options": [
-							"NONE",
-							"ROW",
-							"PAGE",
-							"COLUMNSTORE",
-							"COLUMNSTORE_ARCHIVE"
-						]
+						"options": ["NONE", "ROW", "PAGE", "COLUMNSTORE", "COLUMNSTORE_ARCHIVE"]
 					}
 				]
 			}
@@ -710,10 +680,7 @@ making sure that you maintain a proper JSON format.
 						"propertyKeyword": "indxKey",
 						"propertyType": "fieldList",
 						"template": "orderedList",
-						"attributeList": [
-							"ascending",
-							"descending"
-						]
+						"attributeList": ["ascending", "descending"]
 					},
 					{
 						"propertyName": "Clustered",
@@ -855,12 +822,7 @@ making sure that you maintain a proper JSON format.
 						"propertyName": "Type",
 						"propertyKeyword": "indxType",
 						"propertyType": "select",
-						"options": [
-							"Index",
-							"Columnstore",
-							"FullText",
-							"Spatial"
-						]
+						"options": ["Index", "Columnstore", "FullText", "Spatial"]
 					},
 					{
 						"propertyName": "Unique",
@@ -894,10 +856,7 @@ making sure that you maintain a proper JSON format.
 						"propertyKeyword": "indxKey",
 						"propertyType": "fieldList",
 						"template": "orderedList",
-						"attributeList": [
-							"ascending",
-							"descending"
-						],
+						"attributeList": ["ascending", "descending"],
 						"dependency": {
 							"type": "or",
 							"values": [
@@ -977,12 +936,7 @@ making sure that you maintain a proper JSON format.
 						"propertyName": "Using",
 						"propertyKeyword": "indxUsing",
 						"propertyType": "select",
-						"options": [
-							"GEOMETRY_GRID",
-							"GEOGRAPHY_GRID",
-							"GEOMETRY_AUTO_GRID",
-							"GEOGRAPHY_AUTO_GRID"
-						],
+						"options": ["GEOMETRY_GRID", "GEOGRAPHY_GRID", "GEOMETRY_AUTO_GRID", "GEOGRAPHY_AUTO_GRID"],
 						"dependency": {
 							"key": "indxType",
 							"value": "Spatial"
@@ -1080,45 +1034,25 @@ making sure that you maintain a proper JSON format.
 								"propertyName": "LEVEL_1",
 								"propertyKeyword": "LEVEL_1",
 								"propertyType": "select",
-								"options": [
-									"",
-									"LOW",
-									"MEDIUM",
-									"HIGH"
-								]
+								"options": ["", "LOW", "MEDIUM", "HIGH"]
 							},
 							{
 								"propertyName": "LEVEL_2",
 								"propertyKeyword": "LEVEL_2",
 								"propertyType": "select",
-								"options": [
-									"",
-									"LOW",
-									"MEDIUM",
-									"HIGH"
-								]
+								"options": ["", "LOW", "MEDIUM", "HIGH"]
 							},
 							{
 								"propertyName": "LEVEL_3",
 								"propertyKeyword": "LEVEL_3",
 								"propertyType": "select",
-								"options": [
-									"",
-									"LOW",
-									"MEDIUM",
-									"HIGH"
-								]
+								"options": ["", "LOW", "MEDIUM", "HIGH"]
 							},
 							{
 								"propertyName": "LEVEL_4",
 								"propertyKeyword": "LEVEL_4",
 								"propertyType": "select",
-								"options": [
-									"",
-									"LOW",
-									"MEDIUM",
-									"HIGH"
-								]
+								"options": ["", "LOW", "MEDIUM", "HIGH"]
 							}
 						]
 					},
@@ -1236,10 +1170,7 @@ making sure that you maintain a proper JSON format.
 						"propertyKeyword": "indxIncludedColumn",
 						"propertyType": "fieldList",
 						"template": "orderedList",
-						"attributeList": [
-							"ascending",
-							"descending"
-						],
+						"attributeList": ["ascending", "descending"],
 						"dependency": {
 							"type": "or",
 							"values": [
@@ -1380,13 +1311,7 @@ making sure that you maintain a proper JSON format.
 						"propertyName": "Data compression",
 						"propertyKeyword": "DATA_COMPRESSION",
 						"propertyType": "select",
-						"options": [
-							"NONE",
-							"ROW",
-							"PAGE",
-							"COLUMNSTORE",
-							"COLUMNSTORE_ARCHIVE"
-						],
+						"options": ["NONE", "ROW", "PAGE", "COLUMNSTORE", "COLUMNSTORE_ARCHIVE"],
 						"dependency": {
 							"type": "or",
 							"values": [
@@ -1478,12 +1403,7 @@ making sure that you maintain a proper JSON format.
 							"key": "indxType",
 							"value": "FullText"
 						},
-						"options": [
-							"",
-							"MANUAL",
-							"AUTO",
-							"OFF"
-						]
+						"options": ["", "MANUAL", "AUTO", "OFF"]
 					},
 					{
 						"propertyName": "No population",
@@ -1511,12 +1431,7 @@ making sure that you maintain a proper JSON format.
 							"key": "indxType",
 							"value": "FullText"
 						},
-						"options": [
-							"",
-							"OFF",
-							"SYSTEM",
-							"Stoplist name"
-						]
+						"options": ["", "OFF", "SYSTEM", "Stoplist name"]
 					},
 					{
 						"propertyName": "Stoplist name",

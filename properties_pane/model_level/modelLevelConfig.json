@@ -62,9 +62,7 @@ making sure that you maintain a proper JSON format.
 				"shouldValidate": false,
 				"propertyTooltip": "DB vendor",
 				"propertyType": "select",
-				"options": [
-					"MSSQLServer"
-				],
+				"options": ["MSSQLServer"],
 				"disabledOption": true
 			},
 			{
@@ -73,15 +71,7 @@ making sure that you maintain a proper JSON format.
 				"shouldValidate": false,
 				"propertyTooltip": "DB version",
 				"propertyType": "select",
-				"options": [
-                "2008",
-				"2012",
-				"2014",
-				"2016",
-                "2017",
-                "2019",
-				"2022"
-				],
+				"options": ["2008", "2012", "2014", "2016", "2017", "2019", "2022"],
 				"disabledOption": false
 			},
 			{
@@ -102,25 +92,13 @@ making sure that you maintain a proper JSON format.
 				"propertyName": "On Delete",
 				"propertyKeyword": "relationshipOnDelete",
 				"propertyType": "select",
-				"options": [
-					"",
-					"NO ACTION",
-					"CASCADE",
-					"SET NULL",
-					"SET DEFAULT"
-				]
+				"options": ["", "NO ACTION", "CASCADE", "SET NULL", "SET DEFAULT"]
 			},
 			{
 				"propertyName": "On Update",
 				"propertyKeyword": "relationshipOnUpdate",
 				"propertyType": "select",
-				"options": [
-					"",
-					"NO ACTION",
-					"CASCADE",
-					"SET NULL",
-					"SET DEFAULT"
-				]
+				"options": ["", "NO ACTION", "CASCADE", "SET NULL", "SET DEFAULT"]
 			}
 		]
 	}
