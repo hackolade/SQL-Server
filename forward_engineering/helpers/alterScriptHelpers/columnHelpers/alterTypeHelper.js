@@ -25,6 +25,6 @@ module.exports = (app, ddlProvider) => {
 	};
 
 	return {
-		getChangeTypeScriptsDto
+		getChangeTypeScriptsDto,
 	};
 };

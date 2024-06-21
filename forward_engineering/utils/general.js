@@ -49,7 +49,7 @@ module.exports = _ => {
 		return chain;
 	};
 
-	const isEscaped = (name) => /`[\s\S]*`/.test(name);
+	const isEscaped = name => /`[\s\S]*`/.test(name);
 
 	const prepareName = (name = '') => {
 		const containSpaces = /[\s-]/g;
@@ -68,7 +68,7 @@ module.exports = _ => {
 		return name.replace(/\s/g, '_');
 	};
 
-	const getFullTableName = (collection) => {
+	const getFullTableName = collection => {
 		const collectionSchema = { ...collection, ...(_.omit(collection?.role, 'properties') || {}) };
 		const tableName = getEntityName(collectionSchema);
 		const schemaName = collectionSchema.compMod?.keyspaceName;
@@ -76,21 +76,25 @@ module.exports = _ => {
 		return getNamePrefixedWithSchemaName(tableName, schemaName);
 	};
 
-	const getFullCollectionName = (collectionSchema) => {
+	const getFullCollectionName = collectionSchema => {
 		const collectionName = getEntityName(collectionSchema);
 		const bucketName = collectionSchema.compMod?.keyspaceName;
 		return getNamePrefixedWithSchemaName(collectionName, bucketName);
 	};
 
-	const getName = (entity) => entity.code || entity.collectionName || entity.name || '';
+	const getName = entity => entity.code || entity.collectionName || entity.name || '';
 
-	const getRelationshipName = (relationship) => relationship.name || '';
+	const getRelationshipName = relationship => relationship.name || '';
 
-	const getTab = (tabNum, configData) => Array.isArray(configData) ? (configData[tabNum] || {}) : {};
-	const indentString = (str, tab = 4) => (str || '').split('\n').map(s => ' '.repeat(tab) + s).join('\n');
+	const getTab = (tabNum, configData) => (Array.isArray(configData) ? configData[tabNum] || {} : {});
+	const indentString = (str, tab = 4) =>
+		(str || '')
+			.split('\n')
+			.map(s => ' '.repeat(tab) + s)
+			.join('\n');
 
 	const descriptors = {};
-	const getTypeDescriptor = (typeName) => {
+	const getTypeDescriptor = typeName => {
 		if (descriptors[typeName]) {
 			return descriptors[typeName];
 		}
@@ -124,7 +128,7 @@ module.exports = _ => {
 		const insertBeforeEachLine = (statement, insertValue) =>
 			statement
 				.split('\n')
-				.map((line) => `${insertValue}${line}`)
+				.map(line => `${insertValue}${line}`)
 				.join('\n');
 
 		return insertBeforeEachLine(statement, '-- ');
@@ -133,11 +137,7 @@ module.exports = _ => {
 	const commentDeactivatedInlineKeys = (keys, deactivatedKeyNames) => {
 		const [activatedKeys, deactivatedKeys] = _.partition(
 			keys,
-			(key) =>
-				!(
-					deactivatedKeyNames.has(key) ||
-					deactivatedKeyNames.has(key.slice(1, -1))
-				)
+			key => !(deactivatedKeyNames.has(key) || deactivatedKeyNames.has(key.slice(1, -1))),
 		);
 		if (activatedKeys.length === 0) {
 			return { isAllKeysDeactivated: true, keysString: deactivatedKeys.join(', ') };
@@ -148,7 +148,7 @@ module.exports = _ => {
 
 		return {
 			isAllKeysDeactivated: false,
-			keysString: `${activatedKeys.join(', ')} /*, ${deactivatedKeys.join(', ')} */`
+			keysString: `${activatedKeys.join(', ')} /*, ${deactivatedKeys.join(', ')} */`,
 		};
 	};
 
@@ -156,18 +156,17 @@ module.exports = _ => {
 		return `[${name}]`;
 	};
 
-	const buildScript = (statements) => {
-		const formattedScripts = statements.filter(Boolean).map(
-			script => sqlFormatter.format(script, { indent: '    ' })
-				.replace(/\{ \{ (.+?) } }/g, '{{$1}}')
-		);
+	const buildScript = statements => {
+		const formattedScripts = statements
+			.filter(Boolean)
+			.map(script => sqlFormatter.format(script, { indent: '    ' }).replace(/\{ \{ (.+?) } }/g, '{{$1}}'));
 
 		return formattedScripts.join('\n\n') + '\n\n';
 	};
 
 	const getContainerName = compMod => compMod.keyspaceName;
 
-	const getFullEntityName = (dbName, entityName) => dbName ? `${dbName}.${entityName}` : entityName;
+	const getFullEntityName = (dbName, entityName) => (dbName ? `${dbName}.${entityName}` : entityName);
 
 	const getEntityName = entityData => {
 		return (entityData && (entityData.code || entityData.collectionName)) || '';
@@ -178,14 +177,16 @@ module.exports = _ => {
 	 * */
 	const filterEmptyScripts = (...scripts) => scripts.filter(Boolean);
 
-	const compareProperties = (_) => ({ new: newProperty, old: oldProperty }) => {
-		if (!newProperty && !oldProperty) {
-			return;
-		}
-		return !_.isEqual(newProperty, oldProperty);
-	};
+	const compareProperties =
+		_ =>
+		({ new: newProperty, old: oldProperty }) => {
+			if (!newProperty && !oldProperty) {
+				return;
+			}
+			return !_.isEqual(newProperty, oldProperty);
+		};
 
-	const getSchemaOfAlterCollection = (collection) => {
+	const getSchemaOfAlterCollection = collection => {
 		return { ...collection, ...(_.omit(collection?.role, 'properties') || {}) };
 	};
 
@@ -216,6 +217,6 @@ module.exports = _ => {
 		filterEmptyScripts,
 		getSchemaOfAlterCollection,
 		getNamePrefixedWithSchemaName,
-		buildDefaultPKName
+		buildDefaultPKName,
 	};
 };

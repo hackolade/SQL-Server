@@ -19,23 +19,25 @@ module.exports = (app, options) => {
 		return AlterScriptDto.getInstance([ddlProvider.dropSchema(containerName)], true, true);
 	};
 
-	const getUpdateSchemaCommentScript = ({ schemaName, comment }) => ddlProvider.updateSchemaComment({
-		schemaName,
-		comment
-	});
+	const getUpdateSchemaCommentScript = ({ schemaName, comment }) =>
+		ddlProvider.updateSchemaComment({
+			schemaName,
+			comment,
+		});
 	const getDropSchemaCommentScript = ({ schemaName }) => ddlProvider.dropSchemaComment({ schemaName });
 
-	const getSchemasDropCommentsAlterScriptsDto = (schemas) => Object.keys(schemas).map(schemaName => {
-		if (!schemas[schemaName]?.role?.description) {
-			return undefined;
-		}
+	const getSchemasDropCommentsAlterScriptsDto = schemas =>
+		Object.keys(schemas).map(schemaName => {
+			if (!schemas[schemaName]?.role?.description) {
+				return undefined;
+			}
 
-		const script = getDropSchemaCommentScript({ schemaName });
+			const script = getDropSchemaCommentScript({ schemaName });
 
-		return AlterScriptDto.getInstance([script], true, true);
-	});
+			return AlterScriptDto.getInstance([script], true, true);
+		});
 
-	const getSchemasModifyCommentsAlterScriptsDto = (schemas) => {
+	const getSchemasModifyCommentsAlterScriptsDto = schemas => {
 		return Object.keys(schemas).map(schemaName => {
 			let script = '';
 			const schemaComparison = schemas[schemaName].role?.compMod;

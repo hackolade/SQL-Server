@@ -122,7 +122,7 @@ module.exports = app => {
 						tableName: viewData.tables.join(', '),
 						keys: columnsAsString,
 						terminator: viewTerminator,
-				  }),
+					}),
 			terminator: viewTerminator,
 		};
 	};

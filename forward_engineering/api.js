@@ -5,7 +5,7 @@ const { logDatabaseVersion } = require('../reverse_engineering/reverseEngineerin
 const applyToInstanceHelper = require('./helpers/applyToInstanceHelper');
 const {
 	buildEntityLevelAlterScript,
-	parseDataForEntityLevelScript
+	parseDataForEntityLevelScript,
 } = require('./helpers/alterScriptHelpers/alterScriptBuilder');
 
 /**

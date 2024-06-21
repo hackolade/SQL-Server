@@ -61,5 +61,5 @@ const getModifyNonNullColumnsScriptDtos = (_, ddlProvider) => (collection, colle
 };
 
 module.exports = {
-	getModifyNonNullColumnsScriptDtos
+	getModifyNonNullColumnsScriptDtos,
 };

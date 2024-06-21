@@ -21,5 +21,5 @@ const queryIsDeactivated = (query = '') => query.startsWith(BEFORE_DEACTIVATED_S
 module.exports = {
 	commentIfDeactivated,
 	filterDeactivatedQuery,
-	queryIsDeactivated
+	queryIsDeactivated,
 };

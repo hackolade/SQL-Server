@@ -10,13 +10,8 @@ module.exports = (baseProvider, options, app) => {
 		app.require('@hackolade/ddl-fe-utils').general;
 	const { wrapInBrackets } = require('./utils/general')(_);
 
-	const {
-		decorateType,
-		getIdentity,
-		getEncryptedWith,
-		getColumnsComments,
-		canHaveIdentity,
-	} = require('./helpers/columnDefinitionHelper')(app);
+	const { decorateType, getIdentity, getEncryptedWith, getColumnsComments, canHaveIdentity } =
+		require('./helpers/columnDefinitionHelper')(app);
 	const {
 		createIndex,
 		hydrateIndex,
@@ -52,16 +47,18 @@ module.exports = (baseProvider, options, app) => {
 		createSchema({ schemaName, databaseName, ifNotExist, comment }) {
 			const schemaTerminator = ifNotExist ? ';' : terminator;
 
-			const schemaComment = comment ? this.createSchemaComment({
-				schemaName,
-				comment,
-				customTerminator: schemaTerminator
-			}) : '';
+			const schemaComment = comment
+				? this.createSchemaComment({
+						schemaName,
+						comment,
+						customTerminator: schemaTerminator,
+					})
+				: '';
 
 			let schemaStatement = assignTemplates(templates.createSchema, {
 				name: schemaName,
 				terminator: schemaTerminator,
-				comment: schemaComment ? `\n\n${schemaComment}` : ''
+				comment: schemaComment ? `\n\n${schemaComment}` : '',
 			});
 
 			if (!databaseName) {
@@ -118,12 +115,15 @@ module.exports = (baseProvider, options, app) => {
 		) {
 			const tableTerminator = ifNotExist ? ';' : terminator;
 			const tableName = getTableName(name, schemaData.schemaName);
-			const tableComment = comment && !options.memory_optimized ? this.createTableComment({
-				schemaName: schemaData.schemaName,
-				tableName: name,
-				customTerminator: tableTerminator,
-				comment
-			}) : '';
+			const tableComment =
+				comment && !options.memory_optimized
+					? this.createTableComment({
+							schemaName: schemaData.schemaName,
+							tableName: name,
+							customTerminator: tableTerminator,
+							comment,
+						})
+					: '';
 			const columnComments = getColumnsComments(name, tableTerminator, columnDefinitions);
 			const dividedKeysConstraints = divideIntoActivatedAndDeactivated(
 				keyConstraints.map(createKeyConstraint(templates, tableTerminator, isActivated)),
@@ -147,14 +147,14 @@ module.exports = (baseProvider, options, app) => {
 				keyConstraints: keyConstraintsString,
 				memoryOptimizedIndexes: memoryOptimizedIndexes.length
 					? ',\n\t' +
-					memoryOptimizedIndexes
-						.map(createMemoryOptimizedIndex(isActivated))
-						.map(index => commentIfDeactivated(index.statement, index))
-						.join(',\n\t')
+						memoryOptimizedIndexes
+							.map(createMemoryOptimizedIndex(isActivated))
+							.map(index => commentIfDeactivated(index.statement, index))
+							.join(',\n\t')
 					: '',
 				terminator: tableTerminator,
 				comment: tableComment ? `\n${tableComment}` : '',
-				columnComments: columnComments ? `${tableAndColumnCommentsSeparator}${columnComments}\n` : ''
+				columnComments: columnComments ? `${tableAndColumnCommentsSeparator}${columnComments}\n` : '',
 			});
 			const defaultConstraintsStatements = defaultConstraints
 				.map(data => createDefaultConstraint(templates, tableTerminator)(data, tableName))
@@ -164,11 +164,11 @@ module.exports = (baseProvider, options, app) => {
 
 			return ifNotExist
 				? wrapIfNotExistTable({
-					tableStatement: fullTableStatement,
-					templates,
-					tableName: getTableName(name, schemaData.schemaName, false),
-					terminator,
-				})
+						tableStatement: fullTableStatement,
+						templates,
+						tableName: getTableName(name, schemaData.schemaName, false),
+						terminator,
+					})
 				: fullTableStatement;
 		},
 
@@ -189,7 +189,7 @@ module.exports = (baseProvider, options, app) => {
 			const maskedWithFunction = columnDefinition.maskedWithFunction
 				? ` MASKED WITH (FUNCTION='${columnDefinition.maskedWithFunction}')`
 				: '';
-			const identityContainer = columnDefinition.identity && {identity: getIdentity(columnDefinition.identity)}
+			const identityContainer = columnDefinition.identity && { identity: getIdentity(columnDefinition.identity) };
 			const encryptedWith = !_.isEmpty(columnDefinition.encryption)
 				? getEncryptedWith(columnDefinition.encryption[0])
 				: '';
@@ -213,7 +213,7 @@ module.exports = (baseProvider, options, app) => {
 				encryptedWith,
 				terminator,
 				temporalTableTime,
-				...(identityContainer)
+				...identityContainer,
 			});
 		},
 
@@ -321,7 +321,7 @@ module.exports = (baseProvider, options, app) => {
 				selectStatement,
 				schemaData,
 				ifNotExist,
-				comment
+				comment,
 			},
 			dbData,
 			isActivated,
@@ -344,12 +344,14 @@ module.exports = (baseProvider, options, app) => {
 				return '';
 			}
 
-			const viewComment = comment ? this.createViewComment({
-				schemaName: schemaData.schemaName,
-				viewName: name,
-				comment,
-				customTerminator: viewData.terminator
-			}) : '';
+			const viewComment = comment
+				? this.createViewComment({
+						schemaName: schemaData.schemaName,
+						viewName: name,
+						comment,
+						customTerminator: viewData.terminator,
+					})
+				: '';
 
 			const viewStatement = assignTemplates(templates.createView, {
 				name: viewData.viewName,
@@ -357,7 +359,7 @@ module.exports = (baseProvider, options, app) => {
 				check_option: viewData.checkOption,
 				select_statement: viewData.selectStatement,
 				terminator: viewData.terminator,
-				comment: viewComment ? `\n${viewComment}` : ''
+				comment: viewComment ? `\n${viewComment}` : '',
 			});
 
 			return ifNotExist
@@ -456,10 +458,10 @@ module.exports = (baseProvider, options, app) => {
 				hasMaxLength: columnDefinition.hasMaxLength || jsonSchema.type === 'jsonObject',
 				comment: jsonSchema.description,
 				...(canHaveIdentity(jsonSchema.mode) && {
-						identity: {
+					identity: {
 						seed: Number(_.get(jsonSchema, 'identity.identitySeed', 0)),
 						increment: Number(_.get(jsonSchema, 'identity.identityIncrement', 0)),
-					}
+					},
 				}),
 			});
 		},
@@ -493,7 +495,7 @@ module.exports = (baseProvider, options, app) => {
 				schemaName: containerData.name,
 				databaseName: containerData.databaseName,
 				ifNotExist: containerData.ifNotExist,
-				comment: containerData.role?.description ?? containerData.description
+				comment: containerData.role?.description ?? containerData.description,
 			};
 		},
 
@@ -564,10 +566,10 @@ module.exports = (baseProvider, options, app) => {
 				comment,
 				partitionedTables: isPartitioned
 					? getPartitionedTables(
-						_.get(entityData, '[0].partitionedTables', []),
-						relatedSchemas,
-						relatedContainers,
-					)
+							_.get(entityData, '[0].partitionedTables', []),
+							relatedSchemas,
+							relatedContainers,
+						)
 					: [],
 			};
 		},
@@ -769,7 +771,7 @@ module.exports = (baseProvider, options, app) => {
 			return assignTemplates(templates.createSchemaComment, {
 				value: comment,
 				schemaName: wrapInBrackets(schemaName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -781,7 +783,7 @@ module.exports = (baseProvider, options, app) => {
 				value: comment,
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -794,7 +796,7 @@ module.exports = (baseProvider, options, app) => {
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
 				columnName: wrapInBrackets(columnName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -806,14 +808,14 @@ module.exports = (baseProvider, options, app) => {
 				value: comment,
 				schemaName: wrapInBrackets(schemaName),
 				viewName: wrapInBrackets(viewName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
 		dropSchemaComment({ schemaName, customTerminator }) {
 			return assignTemplates(templates.dropSchemaComment, {
 				schemaName: wrapInBrackets(schemaName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -824,7 +826,7 @@ module.exports = (baseProvider, options, app) => {
 			return assignTemplates(templates.dropTableComment, {
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -836,7 +838,7 @@ module.exports = (baseProvider, options, app) => {
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
 				columnName: wrapInBrackets(columnName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -847,7 +849,7 @@ module.exports = (baseProvider, options, app) => {
 			return assignTemplates(templates.dropViewComment, {
 				schemaName: wrapInBrackets(schemaName),
 				viewName: wrapInBrackets(viewName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -855,7 +857,7 @@ module.exports = (baseProvider, options, app) => {
 			return assignTemplates(templates.updateSchemaComment, {
 				value: comment,
 				schemaName: wrapInBrackets(schemaName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -867,7 +869,7 @@ module.exports = (baseProvider, options, app) => {
 				value: comment,
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -880,7 +882,7 @@ module.exports = (baseProvider, options, app) => {
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
 				columnName: wrapInBrackets(columnName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -892,7 +894,7 @@ module.exports = (baseProvider, options, app) => {
 				value: comment,
 				schemaName: wrapInBrackets(schemaName),
 				viewName: wrapInBrackets(viewName),
-				terminator: customTerminator ?? terminator
+				terminator: customTerminator ?? terminator,
 			});
 		},
 
@@ -901,7 +903,7 @@ module.exports = (baseProvider, options, app) => {
 				tableName,
 				constraintName,
 				expression,
-				terminator
+				terminator,
 			};
 			return assignTemplates(templates.addCheckConstraint, templateConfig);
 		},
@@ -915,7 +917,7 @@ module.exports = (baseProvider, options, app) => {
 				tableName,
 				columnName,
 				columnType: decorateType(type, columnDefinition),
-				terminator
+				terminator,
 			});
 		},
 
@@ -928,20 +930,26 @@ module.exports = (baseProvider, options, app) => {
 				tableName,
 				columnName,
 				columnType: decorateType(type, columnDefinition),
-				terminator
+				terminator,
 			});
 		},
 
 		addPKConstraint(tableName, isParentActivated, keyData, isPKWithOptions, isAlterScript) {
-			const constraintStatementDto = createKeyConstraint(templates, terminator, isParentActivated, isPKWithOptions, isAlterScript)(keyData);
+			const constraintStatementDto = createKeyConstraint(
+				templates,
+				terminator,
+				isParentActivated,
+				isPKWithOptions,
+				isAlterScript,
+			)(keyData);
 
 			return {
 				statement: assignTemplates(templates.addConstraint, {
 					tableName,
 					constraintStatement: (constraintStatementDto.statement || '').trim(),
-					terminator
+					terminator,
 				}),
-				isActivated: constraintStatementDto.isActivated
+				isActivated: constraintStatementDto.isActivated,
 			};
 		},
 
@@ -949,7 +957,7 @@ module.exports = (baseProvider, options, app) => {
 			return assignTemplates(templates.dropConstraint, {
 				tableName,
 				constraintName,
-				terminator
+				terminator,
 			});
 		},
 
@@ -957,7 +965,7 @@ module.exports = (baseProvider, options, app) => {
 			const templateConfig = {
 				tableName,
 				constraintName,
-				terminator
+				terminator,
 			};
 			return assignTemplates(templates.dropConstraint, templateConfig);
 		},

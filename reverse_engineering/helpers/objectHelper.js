@@ -1,8 +1,8 @@
 /**
- * 
- * @param {object} data 
- * @param {string} keyChain 
- * @param {any} value 
+ *
+ * @param {object} data
+ * @param {string} keyChain
+ * @param {any} value
  * @returns {object}
  */
 const setProperty = (data, key, value) => {
@@ -20,5 +20,5 @@ const set = (data, key, value) => {
 };
 
 module.exports = {
-    set
-}
+	set,
+};

@@ -14,7 +14,7 @@ const defineXmlFieldsCollections = xmlCollections => jsonSchema =>
 					xml_schema_collection: xmlCollection.collectionName,
 				},
 			},
-		}
+		};
 	}, jsonSchema);
 
 module.exports = defineXmlFieldsCollections;

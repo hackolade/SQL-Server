@@ -18,7 +18,7 @@ const reverseTableColumn = require('./reverseTableColumn');
 const reorderTableRows = require('./reorderTableRows');
 const getUserDefinedTypes = require('./getUserDefinedTypes');
 const containsJson = require('./containsJson');
-const getPeriodForSystemTime = require('./getPeriodForSystemTime')
+const getPeriodForSystemTime = require('./getPeriodForSystemTime');
 
 module.exports = {
 	transformDatabaseTableInfoToJSON,
@@ -41,5 +41,5 @@ module.exports = {
 	reorderTableRows,
 	getUserDefinedTypes,
 	containsJson,
-	getPeriodForSystemTime
-}
+	getPeriodForSystemTime,
+};

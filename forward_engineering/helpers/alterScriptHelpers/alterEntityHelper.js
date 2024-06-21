@@ -19,7 +19,8 @@ module.exports = (app, options) => {
 	 * @param {Collection} collection
 	 * @return Array<AlterScriptDto>
 	 * */
-	const getAddCollectionScriptDto = collection => { //done but need clean up
+	const getAddCollectionScriptDto = collection => {
+		//done but need clean up
 		const schemaName = collection.compMod.keyspaceName;
 		const schemaData = { schemaName };
 		const jsonSchema = { ...collection, ...(collection?.role || {}) };
@@ -57,7 +58,11 @@ module.exports = (app, options) => {
 			jsonSchema,
 			idToNameHashTable,
 		});
-		const tableScriptDto = AlterScriptDto.getInstance([ddlProvider.createTable(hydratedTable, jsonSchema.isActivated)], true, false);
+		const tableScriptDto = AlterScriptDto.getInstance(
+			[ddlProvider.createTable(hydratedTable, jsonSchema.isActivated)],
+			true,
+			false,
+		);
 		const indexesScriptsDto = indexesScripts
 			.map(indexScript => AlterScriptDto.getInstance([indexScript], true, false))
 			.filter(Boolean);
@@ -101,18 +106,15 @@ module.exports = (app, options) => {
 			create: (tableName, index) =>
 				index.orReplace
 					? [
-						AlterScriptDto.getInstance([ddlProvider.dropIndex(tableName, index)], true, true),
-						AlterScriptDto.getInstance([ddlProvider.createIndex(tableName, index, null)], true, false)
-					]
+							AlterScriptDto.getInstance([ddlProvider.dropIndex(tableName, index)], true, true),
+							AlterScriptDto.getInstance([ddlProvider.createIndex(tableName, index, null)], true, false),
+						]
 					: AlterScriptDto.getInstance([ddlProvider.createIndex(tableName, index, schemaData)], true, false),
-			drop: (tableName, index) => AlterScriptDto.getInstance([ddlProvider.dropIndex(tableName, index)], true, true),
+			drop: (tableName, index) =>
+				AlterScriptDto.getInstance([ddlProvider.dropIndex(tableName, index)], true, true),
 		}).flat();
 
-		return [
-			...modifyCheckConstraintScriptDtos,
-			...modifyPKConstraintDtos,
-			...indexesScriptsDtos
-		].filter(Boolean);
+		return [...modifyCheckConstraintScriptDtos, ...modifyPKConstraintDtos, ...indexesScriptsDtos].filter(Boolean);
 	};
 
 	/**
@@ -160,7 +162,8 @@ module.exports = (app, options) => {
 				const script = ddlProvider.dropColumn(fullName, name);
 
 				return AlterScriptDto.getInstance([script], true, true);
-			}).filter(Boolean);
+			})
+			.filter(Boolean);
 	};
 
 	/**
@@ -174,174 +177,182 @@ module.exports = (app, options) => {
 		const fullName = getTableName(tableName, schemaName);
 
 		const renameColumnScriptsDtos = getRenameColumnScriptsDto(collection.properties, fullName);
-		const changeTypeScriptsDtos = getChangeTypeScriptsDto(collection.properties, fullName, collectionSchema, schemaName);
-		const modifyNotNullScriptDtos = getModifyNonNullColumnsScriptDtos(_, ddlProvider)(collection, collectionSchema, schemaName);
+		const changeTypeScriptsDtos = getChangeTypeScriptsDto(
+			collection.properties,
+			fullName,
+			collectionSchema,
+			schemaName,
+		);
+		const modifyNotNullScriptDtos = getModifyNonNullColumnsScriptDtos(_, ddlProvider)(
+			collection,
+			collectionSchema,
+			schemaName,
+		);
 
 		return [...renameColumnScriptsDtos, ...changeTypeScriptsDtos, ...modifyNotNullScriptDtos].filter(Boolean);
 	};
 
 	const hydrateIndex =
 		({ idToNameHashTable, idToActivatedHashTable, ddlProvider, tableData, schemaData }) =>
-			index => {
-				index = setIndexKeys(idToNameHashTable, idToActivatedHashTable, index);
+		index => {
+			index = setIndexKeys(idToNameHashTable, idToActivatedHashTable, index);
 
-				return ddlProvider.hydrateIndex(index, tableData, schemaData);
-			};
+			return ddlProvider.hydrateIndex(index, tableData, schemaData);
+		};
 
-	const getTableUpdateCommentScript = ({
-											 schemaName,
-											 tableName,
-											 comment
-										 }) => ddlProvider.updateTableComment({ schemaName, tableName, comment });
-	const getTableDropCommentScript = ({ schemaName, tableName }) => ddlProvider.dropTableComment({
-		schemaName,
-		tableName
-	});
+	const getTableUpdateCommentScript = ({ schemaName, tableName, comment }) =>
+		ddlProvider.updateTableComment({ schemaName, tableName, comment });
+	const getTableDropCommentScript = ({ schemaName, tableName }) =>
+		ddlProvider.dropTableComment({
+			schemaName,
+			tableName,
+		});
 
-	const getTablesDropCommentAlterScriptsDto = (tables) => {
-		return Object.keys(tables).map(tableName => {
-			const table = tables[tableName];
+	const getTablesDropCommentAlterScriptsDto = tables => {
+		return Object.keys(tables)
+			.map(tableName => {
+				const table = tables[tableName];
 
-			if (!table?.compMod?.deleted || !table?.role?.description) {
-				return undefined;
-			}
-
-			const schemaName = table.role?.compMod.keyspaceName;
-			const script = getTableDropCommentScript({ schemaName, tableName });
-
-			return AlterScriptDto.getInstance([script], true, true);
-		}).filter(Boolean);
-	};
-
-	const getTablesModifyCommentsAlterScriptsDto = (tables) => {
-		return Object.keys(tables).map(tableName => {
-			let script = '';
-
-			const tableComparison = tables[tableName].role?.compMod;
-			const schemaName = tableComparison.keyspaceName;
-
-			const newComment = tableComparison?.description?.new;
-			const oldComment = tableComparison?.description?.old;
-
-			const isCommentRemoved = oldComment && !newComment;
-
-			if (isCommentRemoved) {
-				script = getTableDropCommentScript({ schemaName, tableName });
-
-				return AlterScriptDto.getInstance([script], true, true);
-			}
-
-			if (!newComment || newComment === oldComment) {
-				return undefined;
-			}
-
-			script = getTableUpdateCommentScript({ schemaName, tableName, comment: newComment });
-
-			return AlterScriptDto.getInstance([script], true, false);
-
-		}).filter(Boolean);
-	};
-
-	const getColumnCreateCommentScript = ({
-											  schemaName,
-											  tableName,
-											  columnName,
-											  comment
-										  }) => ddlProvider.createColumnComment({
-		schemaName,
-		tableName,
-		columnName,
-		comment
-	});
-	const getColumnUpdateCommentScript = ({
-											  schemaName,
-											  tableName,
-											  columnName,
-											  comment
-										  }) => ddlProvider.updateColumnComment({
-		schemaName,
-		tableName,
-		columnName,
-		comment
-	});
-	const getColumnDropCommentScript = ({
-											schemaName,
-											tableName,
-											columnName
-										}) => ddlProvider.dropColumnComment({ schemaName, tableName, columnName });
-
-	const getColumnsCreateCommentAlterScriptsDto = (tables) => {
-		return Object.keys(tables).map(tableName => {
-			const columns = tables[tableName].properties;
-			if (!columns) {
-				return [];
-			}
-			const schemaName = tables[tableName].role?.compMod.keyspaceName;
-			return Object.keys(columns).map(columnName => {
-				const column = columns[columnName];
-				const isColumnRenamed = column?.compMod?.oldField?.name !== column?.compMod?.newField?.name;
-				const columnNameToSearchComment = isColumnRenamed ? column?.compMod?.oldField?.name : columnName;
-				const comment = column.description;
-				const oldComment = tables[tableName].role?.properties[columnNameToSearchComment]?.description;
-
-				if (comment || !oldComment) {
+				if (!table?.compMod?.deleted || !table?.role?.description) {
 					return undefined;
 				}
 
-				const script = getColumnCreateCommentScript({ schemaName, tableName, columnName, comment });
+				const schemaName = table.role?.compMod.keyspaceName;
+				const script = getTableDropCommentScript({ schemaName, tableName });
 
-				return AlterScriptDto.getInstance([script], true, false);
-			});
-		}).flat().filter(Boolean);
+				return AlterScriptDto.getInstance([script], true, true);
+			})
+			.filter(Boolean);
 	};
 
-	const getColumnsDropCommentAlterScriptsDto = (tables) => {
-		return Object.keys(tables).map(tableName => {
-			const columns = tables[tableName].properties;
-
-			if (!columns) {
-				return [];
-			}
-
-			const schemaName = tables[tableName].role?.compMod.keyspaceName;
-
-			return Object.keys(columns)
-				.filter(columnName => Boolean(columns[columnName].description))
-				.map(columnName => {
-					const script = getColumnDropCommentScript({ schemaName, tableName, columnName });
-
-					return AlterScriptDto.getInstance([script], true, true);
-				});
-		}).flat().filter(Boolean);
-	};
-
-	const getColumnsModifyCommentAlterScriptsDto = (tables) => {
-		return Object.keys(tables).map(tableName => {
-			const columns = tables[tableName].properties;
-			if (!columns) {
-				return undefined;
-			}
-			const schemaName = tables[tableName].role?.compMod.keyspaceName;
-			return Object.keys(columns).map(columnName => {
+	const getTablesModifyCommentsAlterScriptsDto = tables => {
+		return Object.keys(tables)
+			.map(tableName => {
 				let script = '';
-				const newComment = columns[columnName]?.description;
-				const oldComment = tables[tableName].role?.properties[columnName]?.description;
+
+				const tableComparison = tables[tableName].role?.compMod;
+				const schemaName = tableComparison.keyspaceName;
+
+				const newComment = tableComparison?.description?.new;
+				const oldComment = tableComparison?.description?.old;
+
 				const isCommentRemoved = oldComment && !newComment;
 
 				if (isCommentRemoved) {
-					script = getColumnDropCommentScript({ schemaName, tableName, columnName });
+					script = getTableDropCommentScript({ schemaName, tableName });
 
 					return AlterScriptDto.getInstance([script], true, true);
 				}
 
-				if (!newComment || !oldComment || newComment === oldComment) {
+				if (!newComment || newComment === oldComment) {
 					return undefined;
 				}
 
-				script = getColumnUpdateCommentScript({ schemaName, tableName, columnName, comment: newComment });
+				script = getTableUpdateCommentScript({ schemaName, tableName, comment: newComment });
+
 				return AlterScriptDto.getInstance([script], true, false);
-			});
-		}).flat().filter(Boolean);
+			})
+			.filter(Boolean);
+	};
+
+	const getColumnCreateCommentScript = ({ schemaName, tableName, columnName, comment }) =>
+		ddlProvider.createColumnComment({
+			schemaName,
+			tableName,
+			columnName,
+			comment,
+		});
+	const getColumnUpdateCommentScript = ({ schemaName, tableName, columnName, comment }) =>
+		ddlProvider.updateColumnComment({
+			schemaName,
+			tableName,
+			columnName,
+			comment,
+		});
+	const getColumnDropCommentScript = ({ schemaName, tableName, columnName }) =>
+		ddlProvider.dropColumnComment({ schemaName, tableName, columnName });
+
+	const getColumnsCreateCommentAlterScriptsDto = tables => {
+		return Object.keys(tables)
+			.map(tableName => {
+				const columns = tables[tableName].properties;
+				if (!columns) {
+					return [];
+				}
+				const schemaName = tables[tableName].role?.compMod.keyspaceName;
+				return Object.keys(columns).map(columnName => {
+					const column = columns[columnName];
+					const isColumnRenamed = column?.compMod?.oldField?.name !== column?.compMod?.newField?.name;
+					const columnNameToSearchComment = isColumnRenamed ? column?.compMod?.oldField?.name : columnName;
+					const comment = column.description;
+					const oldComment = tables[tableName].role?.properties[columnNameToSearchComment]?.description;
+
+					if (comment || !oldComment) {
+						return undefined;
+					}
+
+					const script = getColumnCreateCommentScript({ schemaName, tableName, columnName, comment });
+
+					return AlterScriptDto.getInstance([script], true, false);
+				});
+			})
+			.flat()
+			.filter(Boolean);
+	};
+
+	const getColumnsDropCommentAlterScriptsDto = tables => {
+		return Object.keys(tables)
+			.map(tableName => {
+				const columns = tables[tableName].properties;
+
+				if (!columns) {
+					return [];
+				}
+
+				const schemaName = tables[tableName].role?.compMod.keyspaceName;
+
+				return Object.keys(columns)
+					.filter(columnName => Boolean(columns[columnName].description))
+					.map(columnName => {
+						const script = getColumnDropCommentScript({ schemaName, tableName, columnName });
+
+						return AlterScriptDto.getInstance([script], true, true);
+					});
+			})
+			.flat()
+			.filter(Boolean);
+	};
+
+	const getColumnsModifyCommentAlterScriptsDto = tables => {
+		return Object.keys(tables)
+			.map(tableName => {
+				const columns = tables[tableName].properties;
+				if (!columns) {
+					return undefined;
+				}
+				const schemaName = tables[tableName].role?.compMod.keyspaceName;
+				return Object.keys(columns).map(columnName => {
+					let script = '';
+					const newComment = columns[columnName]?.description;
+					const oldComment = tables[tableName].role?.properties[columnName]?.description;
+					const isCommentRemoved = oldComment && !newComment;
+
+					if (isCommentRemoved) {
+						script = getColumnDropCommentScript({ schemaName, tableName, columnName });
+
+						return AlterScriptDto.getInstance([script], true, true);
+					}
+
+					if (!newComment || !oldComment || newComment === oldComment) {
+						return undefined;
+					}
+
+					script = getColumnUpdateCommentScript({ schemaName, tableName, columnName, comment: newComment });
+					return AlterScriptDto.getInstance([script], true, false);
+				});
+			})
+			.flat()
+			.filter(Boolean);
 	};
 
 	return {

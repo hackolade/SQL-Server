@@ -1,4 +1,4 @@
-const templates = require('../configs/templates')
+const templates = require('../configs/templates');
 
 module.exports = app => {
 	const { assignTemplates } = app.require('@hackolade/ddl-fe-utils');
@@ -112,33 +112,33 @@ module.exports = app => {
 
 	const getColumnsComments = (tableName, terminator, columnDefinitions) => {
 		return columnDefinitions
-		.filter(({comment}) => Boolean(comment))
-		.map(({comment, schemaName, name}) => {
-			if (!schemaName || !tableName) {
-				return ''
-			}
-			const commentStatement = assignTemplates(templates.createColumnComment, {
-				value: comment,
-				schemaName: `[${schemaName}]`,
-				tableName: `[${tableName}]`,
-				columnName: `[${name}]`,
-				terminator
-			});
+			.filter(({ comment }) => Boolean(comment))
+			.map(({ comment, schemaName, name }) => {
+				if (!schemaName || !tableName) {
+					return '';
+				}
+				const commentStatement = assignTemplates(templates.createColumnComment, {
+					value: comment,
+					schemaName: `[${schemaName}]`,
+					tableName: `[${tableName}]`,
+					columnName: `[${name}]`,
+					terminator,
+				});
 
-			return commentStatement;
-		})
-		.join('\n')
+				return commentStatement;
+			})
+			.join('\n');
 	};
 
 	/**
-	 * 
-	 * @param {string} type 
+	 *
+	 * @param {string} type
 	 * @returns {boolean}
 	 */
-	const canHaveIdentity = (type) => {
-		const typesAllowedToHaveAutoIncrement = ["tinyint", "smallint", "int", "bigint"]
-		return typesAllowedToHaveAutoIncrement.includes(type)
-	}
+	const canHaveIdentity = type => {
+		const typesAllowedToHaveAutoIncrement = ['tinyint', 'smallint', 'int', 'bigint'];
+		return typesAllowedToHaveAutoIncrement.includes(type);
+	};
 
 	return {
 		decorateType,
@@ -147,6 +147,6 @@ module.exports = app => {
 		getEncryptedWith,
 		addClustered,
 		getColumnsComments,
-		canHaveIdentity
+		canHaveIdentity,
 	};
 };
