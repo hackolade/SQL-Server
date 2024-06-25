@@ -21,8 +21,9 @@ const base64url = require('base64url');
 module.exports = {
 	async connect(connectionInfo, logger, callback, app) {
 		const client = getClient();
+		const sshService = app.require('@hackolade/ssh-service');
 		if (!client) {
-			await setClient(connectionInfo, 0, logger);
+			await setClient(connectionInfo, sshService, 0, logger);
 			return getClient();
 		}
 
@@ -30,7 +31,8 @@ module.exports = {
 	},
 
 	disconnect(connectionInfo, logger, callback, app) {
-		clearClient();
+		const sshService = app.require('@hackolade/ssh-service');
+		clearClient(sshService);
 		callback();
 	},
 
@@ -40,7 +42,7 @@ module.exports = {
 			if (connectionInfo.authMethod === 'Azure Active Directory (MFA)') {
 				await this.getExternalBrowserUrl(connectionInfo, logger, callback, app);
 			} else {
-				const client = await this.connect(connectionInfo, logger);
+				const client = await this.connect(connectionInfo, logger, () => {}, app);
 				await logDatabaseVersion(client, logger);
 			}
 			callback(null);
@@ -76,7 +78,7 @@ module.exports = {
 	async getDbCollectionsNames(connectionInfo, logger, callback, app) {
 		try {
 			logInfo('Retrieving databases and tables information', connectionInfo, logger);
-			const client = await this.connect(connectionInfo, logger);
+			const client = await this.connect(connectionInfo, logger, () => {}, app);
 			if (!client.config.database) {
 				throw new Error('No database specified');
 			}

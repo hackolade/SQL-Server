@@ -106,7 +106,7 @@ module.exports = {
 			if (connectionInfo.authMethod === 'Azure Active Directory (MFA)') {
 				await getExternalBrowserUrl(connectionInfo, logger, callback, app);
 			} else {
-				const client = await connect(connectionInfo, logger);
+				const client = await connect(connectionInfo, logger, () => {}, app);
 				await logDatabaseVersion(client, logger);
 			}
 			callback(null);
