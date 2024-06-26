@@ -1,4 +1,3 @@
-const ssh = require('tunnel-ssh');
 const fs = require('fs');
 
 const getSshConfig = info => {
