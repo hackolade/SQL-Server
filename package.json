@@ -1,6 +1,6 @@
 {
     "name": "SQLServer",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "author": "hackolade",
     "engines": {
         "hackolade": "6.7.1",
@@ -56,16 +56,15 @@
     "icon_url": "logo.jpg",
     "disabled": false,
     "dependencies": {
-        "@azure/msal-node": "1.3.1",
-        "axios": "0.21.1",
+        "@azure/msal-node": "1.18.4",
+        "axios": "1.7.2",
         "base64url": "3.0.1",
         "crypto": "1.0.1",
         "lodash": "4.17.21",
-        "mssql": "7.2.1",
-        "qs": "6.9.1",
+        "mssql": "11.0.0",
+        "qs": "6.12.1",
         "randomstring": "1.2.1",
-        "sql-formatter": "2.3.3",
-        "tunnel-ssh": "4.1.6"
+        "sql-formatter": "2.3.3"
     },
     "lint-staged": {
         "*.{js,json}": "prettier --write"
@@ -93,12 +92,6 @@
         "lint-staged": "14.0.1",
         "prettier": "3.2.5",
         "simple-git-hooks": "2.11.1"
-    },
-    "overrides": {
-        "tunnel-ssh": {
-            "cpu-features": "npm:-@0.0.1",
-            "ssh2": "npm:-@0.0.1"
-        }
     },
     "release": true
 }
