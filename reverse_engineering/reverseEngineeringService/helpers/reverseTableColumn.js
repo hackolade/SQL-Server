@@ -52,8 +52,8 @@ const handleDefault = (typeObject, value) => {
 
 	const validValue = {
 		numeric: Number(value.replace(/(^\(\()|(\)\)$)/g, '')),
-		char: value.replace(/(^\(\')|(\'\))$/g, ''),
-		xml: value.replace(/(^\(N\')|(\'\))$/g, ''),
+		char: value.replace(/(^\(')$|('\))$/g, ''),
+		xml: value.replace(/(^\(N')$|('\))$/g, ''),
 	}[typeObject.type];
 
 	return { default: validValue !== undefined ? validValue : value };

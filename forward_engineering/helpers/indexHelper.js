@@ -223,7 +223,7 @@ module.exports = app => {
 
 	const createTableIndex = (terminator, tableName, index, isParentActivated) => {
 		if (index.type === 'spatial') {
-			return createSpatialIndex(terminator, tableName, index, isParentActivated);
+			return createSpatialIndex(terminator, tableName, index);
 		} else if (index.type === 'fulltext') {
 			return createFullTextIndex(terminator, tableName, index);
 		} else {
