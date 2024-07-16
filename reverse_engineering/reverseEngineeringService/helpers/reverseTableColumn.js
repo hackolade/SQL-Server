@@ -52,8 +52,8 @@ const handleDefault = (typeObject, value) => {
 
 	const validValue = {
 		numeric: Number(value.replace(/(^\(\()|(\)\)$)/g, '')),
-		char: value.replace(/(^\(')$|('\))$/g, ''),
-		xml: value.replace(/(^\(N')$|('\))$/g, ''),
+		char: value.replace(/(^\(')|(('\))$)/g, ''),
+		xml: value.replace(/(^\(N')|(('\))$)/g, ''),
 	}[typeObject.type];
 
 	return { default: validValue !== undefined ? validValue : value };
@@ -102,7 +102,7 @@ const handleColumnProperty = (column, propertyName, value) => {
 		case 'COLUMN_DEFAULT':
 			return handleDefault(handleType(column['DATA_TYPE']), value);
 		case 'IS_NULLABLE':
-			return { required: value === 'NO' ? true : false };
+			return { required: value === 'NO' };
 		case 'DATETIME_PRECISION':
 			return { fractSecPrecision: !isNaN(value) ? value : '' };
 		case 'NUMERIC_SCALE':
