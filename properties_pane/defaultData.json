@@ -1,15 +1,15 @@
 {
 	"model": {
-		"modelName": "New model",
+		"modelName": "new_model",
 		"dbVersion": "2019",
 		"dbVendor": "MSSQLServer"
 	},
 	"container": {
-		"name": "New schema",
+		"name": "new_schema",
 		"indexes": []
 	},
 	"collection": {
-		"collectionName": "New table",
+		"collectionName": "new_table",
 		"memory_optimized": false,
 		"collectionUsers": [],
 		"collation": {},
@@ -25,7 +25,7 @@
 		}
 	},
 	"field": {
-		"name": "New column",
+		"name": "new_column",
 		"primaryKey": false,
 		"unique": false,
 		"hasMaxLength": {
@@ -68,21 +68,21 @@
 		"pipeline": ""
 	},
 	"UDFs": {
-		"name": "New UDF",
+		"name": "new_udf",
 		"udfID": "",
 		"udfDescription": "",
 		"udfFunction": "",
 		"udfComments": ""
 	},
 	"UDAs": {
-		"name": "New UDA",
+		"name": "new_uda",
 		"udfID": "",
 		"udfDescription": "",
 		"udfFunction": "",
 		"udfComments": ""
 	},
 	"SecIdxs": {
-		"name": "New Secondary Index",
+		"name": "new_secondary_index",
 		"SecIndxKey": "",
 		"SecIndxID": "",
 		"SecIndxDescription": "",
