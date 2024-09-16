@@ -8,16 +8,29 @@ module.exports = (app, options) => {
 	const { AlterScriptDto } = require('./types/AlterScriptDto');
 
 	const getAddViewScriptDto = view => {
+		const viewName = getTableName(view.code || view.name, view?.role?.compMod?.keyspaceName);
 		const viewSchema = { ...view, ...(view.role ?? {}) };
+		const idToNameHashTable = generateRefToNameHashTable(viewSchema);
+		const idToActivatedHashTable = generateRefToActivatedHashTable(viewSchema);
+		const schemaData = { schemaName: viewSchema.compMod.keyspaceName };
 
 		const viewData = {
-			name: viewSchema.code || viewSchema.name,
+			name: view.code || view.name,
 			keys: getKeys(viewSchema, viewSchema.compMod?.collectionData?.collectionRefsDefinitionsMap ?? {}),
-			schemaData: { schemaName: viewSchema.compMod.keyspaceName },
+			schemaData,
 		};
 		const hydratedView = ddlProvider.hydrateView({ viewData, entityData: [view] });
 
-		return AlterScriptDto.getInstance([ddlProvider.createView(hydratedView, {}, view.isActivated)], true, false);
+		const viewScript = AlterScriptDto.getInstance(
+			[ddlProvider.createView(hydratedView, {}, view.isActivated)],
+			true,
+			false,
+		);
+		const indexesSCripts = (viewSchema.Indxs || [])
+			.map(hydrateIndex({ idToNameHashTable, idToActivatedHashTable, schemaData }))
+			.map(index => AlterScriptDto.getInstance([ddlProvider.createViewIndex(viewName, index)], true, false));
+
+		return [viewScript, ...indexesSCripts].filter(Boolean);
 	};
 
 	const getDeleteViewScriptDto = view => {
@@ -176,6 +189,26 @@ module.exports = (app, options) => {
 				return AlterScriptDto.getInstance([script], true, false);
 			})
 			.filter(Boolean);
+	};
+
+	const generateRefToNameHashTable = view => {
+		const refToNameHashTable = {};
+
+		mapProperties(view, (propertyName, schema) => {
+			refToNameHashTable[schema.ref] = propertyName;
+		});
+
+		return refToNameHashTable;
+	};
+
+	const generateRefToActivatedHashTable = view => {
+		const refToActivatedHashTable = {};
+
+		mapProperties(view, (propertyName, schema) => {
+			refToActivatedHashTable[schema.ref] = schema.isActivated;
+		});
+
+		return refToActivatedHashTable;
 	};
 
 	return {
