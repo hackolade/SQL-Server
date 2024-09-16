@@ -15,7 +15,7 @@ module.exports = (app, options) => {
 		const schemaData = { schemaName: viewSchema.compMod.keyspaceName };
 
 		const viewData = {
-			name: view.code || view.name,
+			name: viewSchema.code || viewSchema.name,
 			keys: getKeys(viewSchema, viewSchema.compMod?.collectionData?.collectionRefsDefinitionsMap ?? {}),
 			schemaData,
 		};
