@@ -2,6 +2,7 @@ const defaultTypes = require('./configs/defaultTypes');
 const types = require('./configs/types');
 const templates = require('./configs/templates');
 const { commentIfDeactivated } = require('./helpers/commentIfDeactivated');
+const { joinActivatedAndDeactivatedStatements } = require('./utils/joinActivatedAndDeactivatedStatements');
 
 module.exports = (baseProvider, options, app) => {
 	const _ = app.require('lodash');
@@ -137,9 +138,10 @@ module.exports = (baseProvider, options, app) => {
 			const dividedForeignKeys = divideIntoActivatedAndDeactivated(foreignKeyConstraints, key => key.statement);
 			const foreignKeyConstraintsString = generateConstraintsString(dividedForeignKeys, isActivated);
 			const tableAndColumnCommentsSeparator = tableComment ? '\n\n' : '';
+			const columnStatements = joinActivatedAndDeactivatedStatements({ statements: columns, indent: '\n\t' });
 			const tableStatement = assignTemplates(templates.createTable, {
 				name: tableName,
-				column_definitions: columns.join(',\n\t'),
+				column_definitions: columnStatements,
 				temporalTableTime: temporalTableTimeStatement,
 				checkConstraints: checkConstraints.length ? ',\n\t' + checkConstraints.join(',\n\t') : '',
 				foreignKeyConstraints: foreignKeyConstraintsString,
@@ -202,7 +204,7 @@ module.exports = (baseProvider, options, app) => {
 				columnDefinition.isHidden,
 			);
 
-			return assignTemplates(templates.columnDefinition, {
+			const statement = assignTemplates(templates.columnDefinition, {
 				name: columnDefinition.name,
 				type: decorateType(type, columnDefinition),
 				primary_key: primaryKey + unique,
@@ -215,6 +217,8 @@ module.exports = (baseProvider, options, app) => {
 				temporalTableTime,
 				...identityContainer,
 			});
+
+			return commentIfDeactivated(statement, { isActivated: columnDefinition.isActivated });
 		},
 
 		createIndex(tableName, index, dbData, isParentActivated = true) {
