@@ -51,6 +51,8 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			: connectionInfo.userName;
 	const tenantId = connectionInfo.connectionTenantId || connectionInfo.tenantId || 'common';
 	const sslOptions = getSslConfig(connectionInfo);
+	const clientId = '0dc36597-bc44-49f8-a4a7-ae5401959b85';
+	const redirectUri = 'http://localhost:8080';
 
 	if (connectionInfo.authMethod === 'Username / Password') {
 		return await sql.connect({
@@ -88,8 +90,6 @@ const getConnectionClient = async (connectionInfo, logger) => {
 			requestTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
 		});
 	} else if (connectionInfo.authMethod === 'Azure Active Directory (MFA)') {
-		const clientId = '0dc36597-bc44-49f8-a4a7-ae5401959b85';
-		const redirectUri = 'http://localhost:8080';
 		const token = await getToken({ connectionInfo, tenantId, clientId, redirectUri, logger });
 
 		return await sql.connect({
@@ -127,6 +127,8 @@ const getConnectionClient = async (connectionInfo, logger) => {
 				options: {
 					userName: connectionInfo.userName,
 					password: connectionInfo.userPassword,
+					tenantId,
+					clientId,
 				},
 			},
 			connectTimeout: Number(connectionInfo.queryRequestTimeout) || 60000,
