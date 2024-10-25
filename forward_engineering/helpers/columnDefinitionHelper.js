@@ -3,6 +3,7 @@ const templates = require('../configs/templates');
 module.exports = app => {
 	const { assignTemplates } = app.require('@hackolade/ddl-fe-utils');
 	const _ = app.require('lodash');
+	const { wrapInBrackets, escapeSpecialCharacters } = require('../utils/general')(_);
 
 	const addLength = (type, length) => {
 		return `${type}(${length})`;
@@ -15,9 +16,9 @@ module.exports = app => {
 	const addScalePrecision = (type, precision, scale) => {
 		if (_.isNumber(scale)) {
 			return `${type}(${precision},${scale})`;
-		} else {
-			return `${type}(${precision})`;
 		}
+
+		return `${type}(${precision})`;
 	};
 
 	const addPrecision = (type, precision) => {
@@ -69,17 +70,17 @@ module.exports = app => {
 			return `'${escapeQuotes(defaultValue)}'`;
 		} else if (type === 'XML') {
 			return `CAST(N'${defaultValue}' AS xml)`;
-		} else {
-			return defaultValue;
 		}
+
+		return defaultValue;
 	};
 
 	const getIdentity = identity => {
 		if (!identity.seed || !identity.increment) {
 			return '';
-		} else {
-			return ` IDENTITY(${identity.seed}, ${identity.increment})`;
 		}
+
+		return ` IDENTITY(${identity.seed}, ${identity.increment})`;
 	};
 
 	const addClustered = (statement, columnDefinition) => {
@@ -89,9 +90,9 @@ module.exports = app => {
 
 		if (!columnDefinition.clustered) {
 			return statement + ' NONCLUSTERED';
-		} else {
-			return statement + ' CLUSTERED';
 		}
+
+		return statement + ' CLUSTERED';
 	};
 
 	const getEncryptedWith = encryption => {
@@ -118,10 +119,10 @@ module.exports = app => {
 					return '';
 				}
 				const commentStatement = assignTemplates(templates.createColumnComment, {
-					value: comment,
-					schemaName: `[${schemaName}]`,
-					tableName: `[${tableName}]`,
-					columnName: `[${name}]`,
+					value: escapeSpecialCharacters(comment),
+					schemaName: wrapInBrackets(schemaName),
+					tableName: wrapInBrackets(tableName),
+					columnName: wrapInBrackets(name),
 					terminator,
 				});
 

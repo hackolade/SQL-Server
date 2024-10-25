@@ -66,7 +66,7 @@ module.exports = app => {
 
 		const cleaned = clean(_.omit(keyData, 'keyType', 'indexOption', 'columns'));
 
-		return !_.isEmpty(cleaned) || keyData.columns?.length > 0;
+		return !_.isEmpty(cleaned) || keyData.columns?.length;
 	};
 
 	const adaptIndexOptions = indexOption => {
