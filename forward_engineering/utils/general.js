@@ -158,7 +158,7 @@ module.exports = _ => {
 		return `[${name}]`;
 	};
 
-	const escapeSpecialCharacters = name => {
+	const escapeSpecialCharacters = (name = '') => {
 		return name.replace(/'/g, "''");
 	};
 
