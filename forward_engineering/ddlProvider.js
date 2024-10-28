@@ -40,7 +40,7 @@ module.exports = (baseProvider, options, app) => {
 	const { wrapIfNotExistSchema, wrapIfNotExistDatabase, wrapIfNotExistTable, wrapIfNotExistView } =
 		require('./helpers/ifNotExistStatementHelper')(app);
 	const { getPartitionedTables, getCreateViewData } = require('./helpers/viewHelper')(app);
-	const { getFullTableName } = require('./utils/general')(_);
+	const { getFullTableName, escapeSpecialCharacters } = require('./utils/general')(_);
 
 	const terminator = getTerminator(options);
 
@@ -773,7 +773,7 @@ module.exports = (baseProvider, options, app) => {
 
 		createSchemaComment({ schemaName, comment, customTerminator }) {
 			return assignTemplates(templates.createSchemaComment, {
-				value: comment,
+				value: escapeSpecialCharacters(comment),
 				schemaName: wrapInBrackets(schemaName),
 				terminator: customTerminator ?? terminator,
 			});
@@ -783,8 +783,9 @@ module.exports = (baseProvider, options, app) => {
 			if (!schemaName) {
 				return '';
 			}
+
 			return assignTemplates(templates.createTableComment, {
-				value: comment,
+				value: escapeSpecialCharacters(comment),
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
 				terminator: customTerminator ?? terminator,
@@ -795,8 +796,9 @@ module.exports = (baseProvider, options, app) => {
 			if (!tableName || !columnName) {
 				return '';
 			}
+
 			return assignTemplates(templates.createColumnComment, {
-				value: comment,
+				value: escapeSpecialCharacters(comment),
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
 				columnName: wrapInBrackets(columnName),
@@ -808,8 +810,9 @@ module.exports = (baseProvider, options, app) => {
 			if (!schemaName) {
 				return '';
 			}
+
 			return assignTemplates(templates.createViewComment, {
-				value: comment,
+				value: escapeSpecialCharacters(comment),
 				schemaName: wrapInBrackets(schemaName),
 				viewName: wrapInBrackets(viewName),
 				terminator: customTerminator ?? terminator,
@@ -827,6 +830,7 @@ module.exports = (baseProvider, options, app) => {
 			if (!schemaName) {
 				return '';
 			}
+
 			return assignTemplates(templates.dropTableComment, {
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
@@ -838,6 +842,7 @@ module.exports = (baseProvider, options, app) => {
 			if (!schemaName || !tableName) {
 				return '';
 			}
+
 			return assignTemplates(templates.dropColumnComment, {
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
@@ -850,6 +855,7 @@ module.exports = (baseProvider, options, app) => {
 			if (!schemaName) {
 				return '';
 			}
+
 			return assignTemplates(templates.dropViewComment, {
 				schemaName: wrapInBrackets(schemaName),
 				viewName: wrapInBrackets(viewName),
@@ -859,7 +865,7 @@ module.exports = (baseProvider, options, app) => {
 
 		updateSchemaComment({ schemaName, comment, customTerminator }) {
 			return assignTemplates(templates.updateSchemaComment, {
-				value: comment,
+				value: escapeSpecialCharacters(comment),
 				schemaName: wrapInBrackets(schemaName),
 				terminator: customTerminator ?? terminator,
 			});
@@ -869,8 +875,9 @@ module.exports = (baseProvider, options, app) => {
 			if (!schemaName) {
 				return '';
 			}
+
 			return assignTemplates(templates.updateTableComment, {
-				value: comment,
+				value: escapeSpecialCharacters(comment),
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
 				terminator: customTerminator ?? terminator,
@@ -881,8 +888,9 @@ module.exports = (baseProvider, options, app) => {
 			if (!schemaName || !tableName) {
 				return '';
 			}
+
 			return assignTemplates(templates.updateColumnComment, {
-				value: comment,
+				value: escapeSpecialCharacters(comment),
 				schemaName: wrapInBrackets(schemaName),
 				tableName: wrapInBrackets(tableName),
 				columnName: wrapInBrackets(columnName),
@@ -894,8 +902,9 @@ module.exports = (baseProvider, options, app) => {
 			if (!schemaName) {
 				return '';
 			}
+
 			return assignTemplates(templates.updateViewComment, {
-				value: comment,
+				value: escapeSpecialCharacters(comment),
 				schemaName: wrapInBrackets(schemaName),
 				viewName: wrapInBrackets(viewName),
 				terminator: customTerminator ?? terminator,
