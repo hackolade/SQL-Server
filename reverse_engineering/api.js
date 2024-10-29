@@ -1,6 +1,6 @@
 'use strict';
 
-const { BasePool } = require('mssql');
+const { ConnectionPool } = require('mssql');
 const { getClient, setClient, clearClient } = require('./connectionState');
 const { getObjectsFromDatabase, getDatabaseCollationOption } = require('./databaseService/databaseService');
 const {
@@ -141,7 +141,7 @@ module.exports = {
 
 	parseConnectionString({ connectionString = '' }, logger, callback) {
 		try {
-			const parsedConnectionStringData = BasePool.parseConnectionString(connectionString);
+			const parsedConnectionStringData = ConnectionPool.parseConnectionString(connectionString);
 			const parsedData = {
 				databaseName: parsedConnectionStringData.database,
 				host: parsedConnectionStringData.server,
