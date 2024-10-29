@@ -62,6 +62,7 @@ module.exports = _ => {
 		} else if (!isNaN(name)) {
 			return `\`${name}\``;
 		}
+
 		return name;
 	};
 	const replaceSpaceWithUnderscore = (name = '') => {
@@ -79,6 +80,7 @@ module.exports = _ => {
 	const getFullCollectionName = collectionSchema => {
 		const collectionName = getEntityName(collectionSchema);
 		const bucketName = collectionSchema.compMod?.keyspaceName;
+
 		return getNamePrefixedWithSchemaName(collectionName, bucketName);
 	};
 
@@ -156,6 +158,10 @@ module.exports = _ => {
 		return `[${name}]`;
 	};
 
+	const escapeSpecialCharacters = (name = '') => {
+		return name.replace(/'/g, "''");
+	};
+
 	const buildScript = statements => {
 		const formattedScripts = statements
 			.filter(Boolean)
@@ -183,6 +189,7 @@ module.exports = _ => {
 			if (!newProperty && !oldProperty) {
 				return;
 			}
+
 			return !_.isEqual(newProperty, oldProperty);
 		};
 
@@ -209,6 +216,7 @@ module.exports = _ => {
 		commentDeactivatedInlineKeys,
 		buildScript,
 		wrapInBrackets,
+		escapeSpecialCharacters,
 		getFullEntityName,
 		getFullTableName,
 		getFullCollectionName,
