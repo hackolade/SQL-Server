@@ -1,6 +1,9 @@
 'use strict';
 
-const { BasePool } = require('mssql');
+const { ConnectionPool } = require('mssql');
+const crypto = require('crypto');
+const randomstring = require('randomstring');
+const base64url = require('base64url');
 const { getClient, setClient, clearClient } = require('./connectionState');
 const { getObjectsFromDatabase, getDatabaseCollationOption } = require('./databaseService/databaseService');
 const {
@@ -14,9 +17,6 @@ const { getJsonSchemasWithInjectedDescriptionComments } = require('./helpers/com
 const filterRelationships = require('./helpers/filterRelationships');
 const getOptionsFromConnectionInfo = require('./helpers/getOptionsFromConnectionInfo');
 const { adaptJsonSchema } = require('./helpers/adaptJsonSchema');
-const crypto = require('crypto');
-const randomstring = require('randomstring');
-const base64url = require('base64url');
 
 module.exports = {
 	async connect(connectionInfo, logger, callback, app) {
@@ -141,7 +141,7 @@ module.exports = {
 
 	parseConnectionString({ connectionString = '' }, logger, callback) {
 		try {
-			const parsedConnectionStringData = BasePool.parseConnectionString(connectionString);
+			const parsedConnectionStringData = ConnectionPool.parseConnectionString(connectionString);
 			const parsedData = {
 				databaseName: parsedConnectionStringData.database,
 				host: parsedConnectionStringData.server,
