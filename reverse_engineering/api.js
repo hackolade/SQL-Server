@@ -1,6 +1,5 @@
 'use strict';
 
-const { ConnectionPool } = require('mssql');
 const crypto = require('crypto');
 const randomstring = require('randomstring');
 const base64url = require('base64url');
@@ -17,6 +16,7 @@ const { getJsonSchemasWithInjectedDescriptionComments } = require('./helpers/com
 const filterRelationships = require('./helpers/filterRelationships');
 const getOptionsFromConnectionInfo = require('./helpers/getOptionsFromConnectionInfo');
 const { adaptJsonSchema } = require('./helpers/adaptJsonSchema');
+const { parseConnectionString } = require('./helpers/parseConnectionString');
 
 module.exports = {
 	async connect(connectionInfo, logger, callback, app) {
@@ -141,16 +141,13 @@ module.exports = {
 
 	parseConnectionString({ connectionString = '' }, logger, callback) {
 		try {
-			const parsedConnectionStringData = ConnectionPool.parseConnectionString(connectionString);
-			const parsedData = {
-				databaseName: parsedConnectionStringData.database,
-				host: parsedConnectionStringData.server,
-				port: parsedConnectionStringData.port,
-				authMethod: 'Username / Password',
-				userName: parsedConnectionStringData.user,
-				userPassword: parsedConnectionStringData.password,
-			};
-			callback(null, { parsedData });
+			const authMethod = 'Username / Password';
+			const parsedData = parseConnectionString({ string: connectionString });
+
+			callback(null, {
+				authMethod,
+				...parsedData,
+			});
 		} catch (err) {
 			logger.log('error', { message: err.message, stack: err.stack, err }, 'Parsing connection string failed');
 			callback({ message: err.message, stack: err.stack });
