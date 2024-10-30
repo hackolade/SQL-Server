@@ -17,6 +17,7 @@ const filterRelationships = require('./helpers/filterRelationships');
 const getOptionsFromConnectionInfo = require('./helpers/getOptionsFromConnectionInfo');
 const { adaptJsonSchema } = require('./helpers/adaptJsonSchema');
 const { parseConnectionString } = require('./helpers/parseConnectionString');
+const { prepareError } = require('./databaseService/helpers/errorService');
 
 module.exports = {
 	async connect(connectionInfo, logger, callback, app) {
@@ -47,8 +48,17 @@ module.exports = {
 			}
 			callback(null);
 		} catch (error) {
-			logger.log('error', { message: error.message, stack: error.stack, error }, 'Test connection');
-			callback({ message: error.message, stack: error.stack });
+			const errorWithUpdatedInfo = prepareError({ error });
+			logger.log(
+				'error',
+				{
+					message: errorWithUpdatedInfo.message,
+					stack: errorWithUpdatedInfo.stack,
+					error: errorWithUpdatedInfo,
+				},
+				'Test connection',
+			);
+			callback({ message: errorWithUpdatedInfo.message, stack: errorWithUpdatedInfo.stack });
 		}
 	},
 
@@ -91,12 +101,17 @@ module.exports = {
 			logger.log('info', { collation: collationData[0] }, 'Database collation');
 			callback(null, objects);
 		} catch (error) {
+			const errorWithUpdatedInfo = prepareError({ error });
 			logger.log(
 				'error',
-				{ message: error.message, stack: error.stack, error },
+				{
+					message: errorWithUpdatedInfo.message,
+					stack: errorWithUpdatedInfo.stack,
+					error: errorWithUpdatedInfo,
+				},
 				'Retrieving databases and tables information',
 			);
-			callback({ message: error.message, stack: error.stack });
+			callback({ message: errorWithUpdatedInfo.message, stack: errorWithUpdatedInfo.stack });
 		}
 	},
 
