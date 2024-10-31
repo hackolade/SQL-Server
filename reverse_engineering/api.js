@@ -160,8 +160,10 @@ module.exports = {
 			const parsedData = parseConnectionString({ string: connectionString });
 
 			callback(null, {
-				authMethod,
-				...parsedData,
+				parsedData: {
+					authMethod,
+					...parsedData,
+				},
 			});
 		} catch (err) {
 			logger.log('error', { message: err.message, stack: err.stack, err }, 'Parsing connection string failed');
