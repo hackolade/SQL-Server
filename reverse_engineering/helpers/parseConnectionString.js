@@ -2,6 +2,7 @@ const { URL } = require('url');
 const { ConnectionPool } = require('mssql');
 
 const mssqlPrefix = 'mssql://';
+const sqlserverPrefix = 'jdbc:sqlserver://';
 
 // example: mssql://username:password@host:1433/DatabaseName
 const parseMssqlUrl = ({ url = '' }) => {
@@ -15,12 +16,40 @@ const parseMssqlUrl = ({ url = '' }) => {
 	};
 };
 
+// example: jdbc:sqlserver://synapseworkspace.sql.azuresynapse.net:1433;databaseName=SampleDB;user=myusername@mytenant.onmicrosoft.com;password=myStrongPassword123;encrypt=true;trustServerCertificate=false;authentication=ActiveDirectoryPassword;loginTimeout=30;
+const parseSqlServerUrl = ({ url = '' }) => {
+	const [_protocol, params] = url.split(sqlserverPrefix);
+	const [server, ...paramParts] = params.split(';');
+	const [host, port] = server.split(':');
+
+	const parsedParams = paramParts.reduce((acc, part) => {
+		const [key, value] = part.split('=');
+		if (key && value) {
+			acc[key] = value;
+		}
+		return acc;
+	}, {});
+
+	return {
+		server: host,
+		port: port ? Number(port) : null,
+		database: parsedParams.databaseName,
+		user: parsedParams.user,
+		password: parsedParams.password,
+	};
+};
+
 // Default connection string example:
 // Server=host,1433;Database=DatabaseName;User Id=username;Password=password;
 const parseConnectionString = ({ string = '' }) => {
-	const params = string.startsWith(mssqlPrefix)
-		? parseMssqlUrl({ url: string })
-		: ConnectionPool.parseConnectionString(string);
+	let params;
+	if (string.startsWith(sqlserverPrefix)) {
+		params = parseSqlServerUrl({ url: string });
+	} else if (string.startsWith(mssqlPrefix)) {
+		params = parseMssqlUrl({ url: string });
+	} else {
+		params = ConnectionPool.parseConnectionString(string);
+	}
 
 	return {
 		databaseName: params.database,
