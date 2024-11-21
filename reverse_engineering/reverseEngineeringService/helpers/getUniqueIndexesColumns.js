@@ -6,7 +6,7 @@ const getUniqueIndexesColumns = ({ indexesColumns }) => {
 
 	for (const indexesColumn of indexesColumns) {
 		const columnKey = getColumnUniqueKey(indexesColumn);
-		const isColumnUnique = !Boolean(uniqueKeysToColumns[columnKey]);
+		const isColumnUnique = !uniqueKeysToColumns[columnKey];
 
 		if (!isColumnUnique) {
 			continue;
