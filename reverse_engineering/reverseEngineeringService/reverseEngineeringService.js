@@ -92,9 +92,7 @@ const isViewPartitioned = viewStatement => {
 	}
 
 	const content = viewStatement.match(viewContentRegexp)[1] || '';
-	const hasUnionAll = content.toLowerCase().split(/union[\s\S]+?all/i).length > 1;
-
-	return hasUnionAll;
+	return content.toLowerCase().split(/union[\s\S]+?all/i).length > 1;
 };
 
 const getPartitionedJsonSchema = (viewInfo, viewColumnRelations) => {
@@ -145,7 +143,7 @@ const getPartitionedTables = viewInfo => {
 const cleanComments = definition => {
 	return definition
 		.split('\n')
-		.filter(line => !/^--/.test(line.trim()))
+		.filter(line => !line.trim().startsWith('--'))
 		.join('\n');
 };
 
@@ -209,7 +207,7 @@ const prepareViewJSON = (dbConnectionClient, dbName, viewName, schemaName, logge
 				...getViewProperties(viewStatement[0]),
 				selectStatement: getPartitionedSelectStatement(
 					cleanComments(String(viewStatement[0].definition)),
-					(partitionedTables[0] || {}).table,
+					partitionedTables[0]?.table,
 					dbName,
 				),
 				partitioned: true,
@@ -277,13 +275,13 @@ const getMemoryOptimizedOptions = options => {
 
 const addTotalBucketCountToDatabaseIndexes = (databaseIndexes, indexesBucketCount) => {
 	const hash = indexesBucketCount.reduce((hash, i) => {
-		return Object.assign({}, hash, { [i.index_id]: i.total_bucket_count });
+		return { ...hash, [i.index_id]: i.total_bucket_count };
 	}, {});
 	return databaseIndexes.map(i => {
 		if (hash[i.index_id] === undefined) {
 			return i;
 		} else {
-			return Object.assign({}, i, { total_bucket_count: hash[i.index_id] });
+			return { ...i, total_bucket_count: hash[i.index_id] };
 		}
 	});
 };
@@ -317,135 +315,148 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 	);
 	const databaseIndexes = addTotalBucketCountToDatabaseIndexes(rawDatabaseIndexes, indexesBucketCount);
 
-	return await Object.entries(tablesInfo).reduce(async (jsonSchemas, [schemaName, tableNames]) => {
-		logger.log('info', { message: `Fetching '${dbName}' database information` }, 'Reverse Engineering');
-		logger.progress({ message: 'Fetching database information', containerName: dbName, entityName: '' });
-		const tablesInfo = await Promise.all(
-			tableNames.map(async untrimmedTableName => {
-				const tableName = untrimmedTableName.replace(/ \(v\)$/, '');
-				const tableIndexes = databaseIndexes
-					.concat(fullTextIndexes)
-					.concat(spatialIndexes)
-					.filter(index => index.TableName === tableName && index.schemaName === schemaName);
-				const tableXmlSchemas = xmlSchemaCollections.filter(
-					collection => collection.tableName === tableName && collection.schemaName === schemaName,
-				);
-				const tableCheckConstraints = databaseCheckConstraints.filter(cc => cc.table === tableName);
-				logger.log(
-					'info',
-					{ message: `Fetching '${tableName}' table information from '${dbName}' database` },
-					'Reverse Engineering',
-				);
-				logger.progress({
-					message: 'Fetching table information',
-					containerName: dbName,
-					entityName: tableName,
-				});
-				const tableInfo = await getTableInfo(dbConnectionClient, dbName, tableName, schemaName, logger);
+	return Object.entries(tablesInfo).reduce((jsonSchemasPromise, [schemaName, tableNames]) => {
+		return jsonSchemasPromise.then(async jsonSchemas => {
+			logger.log('info', { message: `Fetching '${dbName}' database information` }, 'Reverse Engineering');
+			logger.progress({ message: 'Fetching database information', containerName: dbName, entityName: '' });
 
-				const [tableRows, fieldsKeyConstraints] = await Promise.all([
-					containsJson(tableInfo)
-						? await getTableRow(
+			const tablesInfo = await Promise.all(
+				tableNames.map(async untrimmedTableName => {
+					const tableName = untrimmedTableName.replace(/ \(v\)$/, '');
+					const tableIndexes = databaseIndexes
+						.concat(fullTextIndexes)
+						.concat(spatialIndexes)
+						.filter(index => index.TableName === tableName && index.schemaName === schemaName);
+					const tableXmlSchemas = xmlSchemaCollections.filter(
+						collection => collection.tableName === tableName && collection.schemaName === schemaName,
+					);
+					const tableCheckConstraints = databaseCheckConstraints.filter(cc => cc.table === tableName);
+					logger.log(
+						'info',
+						{ message: `Fetching '${tableName}' table information from '${dbName}' database` },
+						'Reverse Engineering',
+					);
+					logger.progress({
+						message: 'Fetching table information',
+						containerName: dbName,
+						entityName: tableName,
+					});
+					const tableInfo = await getTableInfo(dbConnectionClient, dbName, tableName, schemaName, logger);
+
+					const [tableRows, fieldsKeyConstraints] = await Promise.all([
+						containsJson(tableInfo)
+							? getTableRow(
+									dbConnectionClient,
+									dbName,
+									tableName,
+									schemaName,
+									reverseEngineeringOptions.recordSamplingSettings,
+									logger,
+								)
+							: Promise.resolve([]),
+						getTableKeyConstraints(dbConnectionClient, dbName, tableName, schemaName, logger),
+					]);
+
+					const tableType = tableInfo[0]['TABLE_TYPE'];
+					const isView = tableType && tableType.trim() === 'V';
+					const jsonSchema = pipe(
+						transformDatabaseTableInfoToJSON(tableInfo),
+						defineRequiredFields,
+						defineFieldsDescription(
+							await getTableColumnsDescription(dbConnectionClient, dbName, tableName, schemaName, logger),
+						),
+						defineFieldsKeyConstraints(fieldsKeyConstraints),
+						defineMaskedColumns(
+							await getTableMaskedColumns(dbConnectionClient, dbName, tableName, schemaName, logger),
+						),
+						defineJSONTypes(tableRows),
+						defineXmlFieldsCollections(tableXmlSchemas),
+						defineFieldsDefaultConstraintNames(
+							await getTableDefaultConstraintNames(
 								dbConnectionClient,
 								dbName,
 								tableName,
 								schemaName,
-								reverseEngineeringOptions.recordSamplingSettings,
 								logger,
-							)
-						: Promise.resolve([]),
-					await getTableKeyConstraints(dbConnectionClient, dbName, tableName, schemaName, logger),
-				]);
-				const tableType = tableInfo[0]['TABLE_TYPE'];
-				const isView = tableType && tableType.trim() === 'V';
-				const jsonSchema = pipe(
-					transformDatabaseTableInfoToJSON(tableInfo),
-					defineRequiredFields,
-					defineFieldsDescription(
-						await getTableColumnsDescription(dbConnectionClient, dbName, tableName, schemaName, logger),
-					),
-					defineFieldsKeyConstraints(fieldsKeyConstraints),
-					defineMaskedColumns(
-						await getTableMaskedColumns(dbConnectionClient, dbName, tableName, schemaName, logger),
-					),
-					defineJSONTypes(tableRows),
-					defineXmlFieldsCollections(tableXmlSchemas),
-					defineFieldsDefaultConstraintNames(
-						await getTableDefaultConstraintNames(dbConnectionClient, dbName, tableName, schemaName, logger),
-					),
-				)({ required: [], properties: {} });
-
-				const reorderedTableRows = reorderTableRows(
-					tableRows,
-					reverseEngineeringOptions.isFieldOrderAlphabetic,
-				);
-				const standardDoc =
-					Array.isArray(reorderedTableRows) && reorderedTableRows.length
-						? reorderedTableRows
-						: reorderTableRows(
-								[getStandardDocumentByJsonSchema(jsonSchema)],
-								reverseEngineeringOptions.isFieldOrderAlphabetic,
-							);
-				const periodForSystemTime = await getPeriodForSystemTime(
-					dbConnectionClient,
-					dbName,
-					tableName,
-					schemaName,
-					logger,
-				);
-				let result = {
-					collectionName: tableName,
-					dbName: schemaName,
-					entityLevel: {
-						Indxs: reverseTableIndexes(tableIndexes),
-						chkConstr: reverseTableCheckConstraints(tableCheckConstraints),
-						periodForSystemTime,
-						...getMemoryOptimizedOptions(
-							databaseMemoryOptimizedTables.find(item => item.name === tableName),
+							),
 						),
-						...defineFieldsCompositeKeyConstraints(fieldsKeyConstraints),
-					},
-					standardDoc: standardDoc,
-					documentTemplate: standardDoc,
-					collectionDocs: reorderedTableRows,
-					documents: cleanDocuments(reorderedTableRows),
-					bucketInfo: {
-						databaseName: dbName,
-					},
-					modelDefinitions: {
-						definitions: getUserDefinedTypes(tableInfo, databaseUDT),
-					},
-					emptyBucket: false,
-					validation: { jsonSchema },
-					views: [],
-				};
+					)({ required: [], properties: {} });
 
-				if (isView) {
-					const viewData = await prepareViewJSON(
+					const reorderedTableRows = reorderTableRows(
+						tableRows,
+						reverseEngineeringOptions.isFieldOrderAlphabetic,
+					);
+					const standardDoc =
+						Array.isArray(reorderedTableRows) && reorderedTableRows.length
+							? reorderedTableRows
+							: reorderTableRows(
+									[getStandardDocumentByJsonSchema(jsonSchema)],
+									reverseEngineeringOptions.isFieldOrderAlphabetic,
+								);
+
+					const periodForSystemTime = await getPeriodForSystemTime(
 						dbConnectionClient,
 						dbName,
 						tableName,
 						schemaName,
 						logger,
-					)(jsonSchema);
-					const indexes = viewsIndexes.filter(
-						index => index.TableName === tableName && index.schemaName === schemaName,
 					);
 
-					result = {
-						...result,
-						...viewData,
-						data: {
-							...(viewData.data || {}),
-							Indxs: reverseTableIndexes(indexes),
+					let result = {
+						collectionName: tableName,
+						dbName: schemaName,
+						entityLevel: {
+							Indxs: reverseTableIndexes(tableIndexes),
+							chkConstr: reverseTableCheckConstraints(tableCheckConstraints),
+							periodForSystemTime,
+							...getMemoryOptimizedOptions(
+								databaseMemoryOptimizedTables.find(item => item.name === tableName),
+							),
+							...defineFieldsCompositeKeyConstraints(fieldsKeyConstraints),
 						},
+						standardDoc: standardDoc,
+						documentTemplate: standardDoc,
+						collectionDocs: reorderedTableRows,
+						documents: cleanDocuments(reorderedTableRows),
+						bucketInfo: {
+							databaseName: dbName,
+						},
+						modelDefinitions: {
+							definitions: getUserDefinedTypes(tableInfo, databaseUDT),
+						},
+						emptyBucket: false,
+						validation: { jsonSchema },
+						views: [],
 					};
-				}
 
-				return result;
-			}),
-		);
-		return [...(await jsonSchemas), ...tablesInfo.filter(Boolean)];
+					if (isView) {
+						const viewData = await prepareViewJSON(
+							dbConnectionClient,
+							dbName,
+							tableName,
+							schemaName,
+							logger,
+						)(jsonSchema);
+						const indexes = viewsIndexes.filter(
+							index => index.TableName === tableName && index.schemaName === schemaName,
+						);
+
+						result = {
+							...result,
+							...viewData,
+							data: {
+								...(viewData.data || {}),
+								Indxs: reverseTableIndexes(indexes),
+							},
+						};
+					}
+
+					return result;
+				}),
+			);
+
+			return [...jsonSchemas, ...tablesInfo.filter(Boolean)];
+		});
 	}, Promise.resolve([]));
 };
 

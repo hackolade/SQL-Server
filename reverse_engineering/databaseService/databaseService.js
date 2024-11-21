@@ -9,8 +9,6 @@ const getSampleDocSize = require('../helpers/getSampleDocSize');
 const QUERY_REQUEST_TIMEOUT = 60000;
 
 const getSslConfig = connectionInfo => {
-	const encrypt = connectionInfo.encryptConnection === undefined ? true : Boolean(connectionInfo.encryptConnection);
-
 	if (connectionInfo.sslType === 'SYSTEMCA') {
 		return {};
 	}
@@ -233,21 +231,21 @@ const getTableInfo = async (connectionClient, dbName, tableName, tableSchema, lo
 		logger,
 	);
 	const objectId = `${tableSchema}.${tableName}`;
-	return mapResponse(
-		await currentDbConnectionClient.query`
-		SELECT c.*,
-				ic.SEED_VALUE,
-				ic.INCREMENT_VALUE,
-				COLUMNPROPERTY(OBJECT_ID(${objectId}), c.column_name, 'IsSparse') AS IS_SPARSE,
-				COLUMNPROPERTY(OBJECT_ID(${objectId}), c.column_name, 'IsIdentity') AS IS_IDENTITY,
-				o.type AS TABLE_TYPE
-		FROM INFORMATION_SCHEMA.COLUMNS AS c
-		LEFT JOIN sys.identity_columns ic ON ic.object_id=OBJECT_ID(${objectId})
-		LEFT JOIN sys.objects o ON o.object_id=OBJECT_ID(${objectId})
-		WHERE c.table_name = ${tableName}
-		AND c.table_schema = ${tableSchema}
-	;`,
-	);
+
+	const result = await currentDbConnectionClient.query`
+	SELECT c.*,
+			ic.SEED_VALUE,
+			ic.INCREMENT_VALUE,
+			COLUMNPROPERTY(OBJECT_ID(${objectId}), c.column_name, 'IsSparse') AS IS_SPARSE,
+			COLUMNPROPERTY(OBJECT_ID(${objectId}), c.column_name, 'IsIdentity') AS IS_IDENTITY,
+			o.type AS TABLE_TYPE
+	FROM INFORMATION_SCHEMA.COLUMNS AS c
+	LEFT JOIN sys.identity_columns ic ON ic.object_id=OBJECT_ID(${objectId})
+	LEFT JOIN sys.objects o ON o.object_id=OBJECT_ID(${objectId})
+	WHERE c.table_name = ${tableName}
+	AND c.table_schema = ${tableSchema};`;
+
+	return mapResponse(result);
 };
 
 const getTableSystemTime = async (connectionClient, dbName, tableName, tableSchema, logger) => {
@@ -273,6 +271,12 @@ const getTableSystemTime = async (connectionClient, dbName, tableName, tableSche
 		AND p.period_type = 1;
 	;`,
 	);
+};
+
+const getTableRowCount = async (tableSchema, tableName, currentDbConnectionClient) => {
+	const rowCountQuery = `SELECT COUNT(*) as rowsCount FROM [${tableSchema}].[${tableName}]`;
+	const rowCountResponse = await currentDbConnectionClient.query(rowCountQuery);
+	return rowCountResponse?.recordset[0]?.rowsCount;
 };
 
 const getTableRow = async (connectionClient, dbName, tableName, tableSchema, recordSamplingSettings, logger) => {
@@ -870,18 +874,18 @@ const getTableDefaultConstraintNames = async (connectionClient, dbName, tableNam
 	SELECT
 		ac.name AS columnName,
 		dc.name
-	FROM 
+	FROM
 		sys.all_columns AS ac
 			INNER JOIN
 		sys.tables
 			ON ac.object_id = tables.object_id
-			INNER JOIN 
+			INNER JOIN
 		sys.schemas
 			ON tables.schema_id = schemas.schema_id
 			INNER JOIN
 		sys.default_constraints AS dc
 			ON ac.default_object_id = dc.object_id
-	WHERE 
+	WHERE
 			schemas.name = ${schemaName}
 		AND tables.name = ${tableName}
 	`,
@@ -1004,8 +1008,6 @@ const getToken = async ({ connectionInfo, tenantId, clientId, redirectUri, logge
 	if (axiosToken) {
 		return axiosToken;
 	}
-
-	return;
 };
 
 const getAuthConfig = (clientId, tenantId, logger) => ({
@@ -1084,11 +1086,3 @@ module.exports = {
 	getVersionInfo,
 	getDescriptionComments,
 };
-
-async function getTableRowCount(tableSchema, tableName, currentDbConnectionClient) {
-	const rowCountQuery = `SELECT COUNT(*) as rowsCount FROM [${tableSchema}].[${tableName}]`;
-	const rowCountResponse = await currentDbConnectionClient.query(rowCountQuery);
-	const rowCount = rowCountResponse?.recordset[0]?.rowsCount;
-
-	return rowCount;
-}
