@@ -3,7 +3,7 @@ const getColumnInfoByName = (columnsInfo, columnName, propertyName) => {
 	return relatedColumn[propertyName];
 };
 
-const changeViewPropertiesToReferences = (jsonSchema, viewInfo, viewColumnRelations) => {
+const changeViewPropertiesToReferences = ({ jsonSchema, viewInfo, viewColumnRelations }) => {
 	return viewColumnRelations.reduce((jsonSchemaAcc, column) => {
 		const columnName = column['name'];
 		const referenceTable =

@@ -1,4 +1,4 @@
-const reorderTableRows = (tableRows, isFieldOrderAlphabetic) => {
+const reorderTableRows = ({ tableRows, isFieldOrderAlphabetic }) => {
 	if (!isFieldOrderAlphabetic) {
 		return tableRows;
 	}

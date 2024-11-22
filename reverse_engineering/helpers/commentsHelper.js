@@ -67,8 +67,8 @@ const getJsonSchemasWithInjectedDescriptionComments = async ({ client, dbName, j
 
 	const descriptionComments = (
 		await Promise.all(
-			[...schemas, ...schemasWithViews, ...schemasWithTables, ...entities].map(commentParams =>
-				getDescriptionComments(client, dbName, commentParams, logger),
+			[...schemas, ...schemasWithViews, ...schemasWithTables, ...entities].map(({ schema, entity }) =>
+				getDescriptionComments({ client, dbName, schema, entity, logger }),
 			),
 		)
 	).flat();

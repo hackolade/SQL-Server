@@ -47,7 +47,7 @@ module.exports = {
 				await this.getExternalBrowserUrl(connectionInfo, logger, callback, app);
 			} else {
 				const client = await this.connect(connectionInfo, logger, () => {}, app);
-				await logDatabaseVersion(client, logger);
+				await logDatabaseVersion({ client, logger });
 			}
 			callback();
 		} catch (error) {
@@ -97,11 +97,11 @@ module.exports = {
 				throw new Error('No database specified');
 			}
 
-			await logDatabaseVersion(client, logger);
+			await logDatabaseVersion({ client, logger });
 
 			const objects = await getObjectsFromDatabase(client);
 			const dbName = client.config.database;
-			const collationData = (await getDatabaseCollationOption(client, dbName, logger)) || [];
+			const collationData = (await getDatabaseCollationOption({ client, dbName, logger })) || [];
 			logger.log('info', { collation: collationData[0] }, 'Database collation');
 			callback(null, objects);
 		} catch (error) {
@@ -132,8 +132,8 @@ module.exports = {
 
 			const reverseEngineeringOptions = getOptionsFromConnectionInfo(collectionsInfo);
 			const [jsonSchemas, relationships] = await Promise.all([
-				await reverseCollectionsToJSON(logger)(client, collections, reverseEngineeringOptions),
-				await getCollectionsRelationships(logger)(client, collections),
+				await reverseCollectionsToJSON({ client, tablesInfo: collections, reverseEngineeringOptions, logger }),
+				await getCollectionsRelationships({ client, logger }),
 			]);
 
 			const jsonSchemasWithDescriptionComments = await getJsonSchemasWithInjectedDescriptionComments({

@@ -33,7 +33,7 @@ class ClientManager {
 		}
 
 		try {
-			this.#client = await getConnectionClient(connectionParams, logger);
+			this.#client = await getConnectionClient({ connectionInfo: connectionParams, logger });
 		} catch (error) {
 			const encryptConnection =
 				connectionParams.encryptConnection === undefined || Boolean(connectionParams.encryptConnection);
