@@ -42,6 +42,7 @@ const {
 	getPeriodForSystemTime,
 } = require('./helpers');
 const pipe = require('../helpers/pipe');
+const { getUniqueIndexesColumns } = require('./helpers/getUniqueIndexesColumns');
 
 const mergeCollectionsWithViews = ({ jsonSchemas }) => {
 	const [viewSchemas, collectionSchemas] = partition(jsonSchemas, jsonSchema => jsonSchema.relatedTables);
@@ -309,7 +310,8 @@ const reverseCollectionsToJSON = logger => async (dbConnectionClient, tablesInfo
 		rawDatabaseIndexes.map(i => i.index_id),
 		logger,
 	);
-	const databaseIndexes = addTotalBucketCountToDatabaseIndexes(rawDatabaseIndexes, indexesBucketCount);
+	const uniqueDatabaseIndexesColumns = getUniqueIndexesColumns({ indexesColumns: rawDatabaseIndexes });
+	const databaseIndexes = addTotalBucketCountToDatabaseIndexes(uniqueDatabaseIndexesColumns, indexesBucketCount);
 
 	return await Object.entries(tablesInfo).reduce(async (jsonSchemas, [schemaName, tableNames]) => {
 		logger.log('info', { message: `Fetching '${dbName}' database information` }, 'Reverse Engineering');
