@@ -234,18 +234,19 @@ const getTableInfo = async ({ client, dbName, tableName, tableSchema, logger }) 
 	});
 	const objectId = `${tableSchema}.${tableName}`;
 
-	const result = await currentDbConnectionClient.query`
+	const result = await currentDbConnectionClient.query(`
 	SELECT c.*,
-			ic.SEED_VALUE,
-			ic.INCREMENT_VALUE,
-			COLUMNPROPERTY(OBJECT_ID(${objectId}), c.column_name, 'IsSparse') AS IS_SPARSE,
-			COLUMNPROPERTY(OBJECT_ID(${objectId}), c.column_name, 'IsIdentity') AS IS_IDENTITY,
-			o.type AS TABLE_TYPE
+		ic.SEED_VALUE,
+		ic.INCREMENT_VALUE,
+		COLUMNPROPERTY(OBJECT_ID(${objectId}), c.column_name, 'IsSparse') AS IS_SPARSE,
+		COLUMNPROPERTY(OBJECT_ID(${objectId}), c.column_name, 'IsIdentity') AS IS_IDENTITY,
+		o.type AS TABLE_TYPE
 	FROM INFORMATION_SCHEMA.COLUMNS AS c
 	LEFT JOIN sys.identity_columns ic ON ic.object_id=OBJECT_ID(${objectId})
 	LEFT JOIN sys.objects o ON o.object_id=OBJECT_ID(${objectId})
 	WHERE c.table_name = ${tableName}
-	AND c.table_schema = ${tableSchema};`;
+		AND c.table_schema = ${tableSchema};
+	`);
 
 	return mapResponse(result);
 };
@@ -263,15 +264,16 @@ const getTableSystemTime = async ({ client, dbName, tableName, tableSchema, logg
 	});
 	const objectId = `${tableSchema}.${tableName}`;
 	return mapResponse(
-		await currentDbConnectionClient.query`
-		SELECT col_name(p.object_id, p.start_column_id)                                          as startColumn,
-		COLUMNPROPERTY(p.object_id, col_name(p.object_id, p.start_column_id), 'IsHidden') as startColumnIsHidden,
-		col_name(p.object_id, p.end_column_id)                                            as endColumn,
-		COLUMNPROPERTY(p.object_id, col_name(p.object_id, p.start_column_id), 'IsHidden') as endColumnIsHidden
+		await currentDbConnectionClient.query(`
+		SELECT
+			col_name(p.object_id, p.start_column_id) as startColumn,
+			COLUMNPROPERTY(p.object_id, col_name(p.object_id, p.start_column_id), 'IsHidden') as startColumnIsHidden,
+			col_name(p.object_id, p.end_column_id) as endColumn,
+			COLUMNPROPERTY(p.object_id, col_name(p.object_id, p.start_column_id), 'IsHidden') as endColumnIsHidden
 		FROM sys.periods p
 		WHERE p.object_id = OBJECT_ID(${objectId})
-		AND p.period_type = 1;
-	;`,
+			AND p.period_type = 1;
+		;`),
 	);
 };
 
@@ -352,15 +354,15 @@ const getTableForeignKeys = async ({ client, tablesInfo, dbName, logger }) => {
 	);
 
 	return mapResponse(
-		await currentDbConnectionClient.query`
+		await currentDbConnectionClient.query(`
 		SELECT obj.name AS FK_NAME,
-				${schemaAlias}.name AS [schema_name],
-				${table1Alias}.name AS [table],
-				col1.name AS [column],
-				tab2.name AS [referenced_table],
-				col2.name AS [referenced_column],
-				fk.delete_referential_action_desc AS on_delete,
-				fk.update_referential_action_desc AS on_update
+			${schemaAlias}.name AS [schema_name],
+			${table1Alias}.name AS [table],
+			col1.name AS [column],
+			tab2.name AS [referenced_table],
+			col2.name AS [referenced_column],
+			fk.delete_referential_action_desc AS on_delete,
+			fk.update_referential_action_desc AS on_update
 		FROM sys.foreign_key_columns fkc
 		INNER JOIN sys.objects obj
 			ON obj.object_id = fkc.constraint_object_id
@@ -377,7 +379,7 @@ const getTableForeignKeys = async ({ client, tablesInfo, dbName, logger }) => {
 		INNER JOIN sys.foreign_keys fk
 			ON fk.object_id = obj.object_id
 		WHERE ${whereClauseParts.join(' OR ')}
-		`,
+		`),
 	);
 };
 
@@ -398,11 +400,11 @@ const getDatabaseIndexes = async ({ client, dbName, tablesInfo, logger }) => {
 	const tableAlias = 't';
 	const whereClauseParts = Object.entries(tablesInfo).map(([schemaName, tableNames]) => {
 		const preparedTableNames = tableNames.map(tableName => `'${tableName}'`).join(', ');
-		return `(OBJECT_SCHEMA_NAME(${tableAlias}.object_id) = '${schemaName}' AND ${tableAlias}.name IN (${preparedTableNames})`;
+		return `(OBJECT_SCHEMA_NAME(${tableAlias}.object_id) = '${schemaName}' AND ${tableAlias}.name IN (${preparedTableNames}))`;
 	});
 
 	return mapResponse(
-		await currentDbConnectionClient.query`
+		await currentDbConnectionClient.query(`
 		SELECT
 			TableName = t.name,
 			IndexName = ind.name,
@@ -424,7 +426,7 @@ const getDatabaseIndexes = async ({ client, dbName, tablesInfo, logger }) => {
 			AND ind.is_unique_constraint = 0
 			AND t.is_ms_shipped = 0
 			AND ${whereClauseParts.join(' OR ')}
-		`,
+		`),
 	);
 };
 
@@ -606,7 +608,8 @@ const getTableColumnsDescription = async ({ client, dbName, tableName, schemaNam
 
 	logger.log('info', { message: `Get '${tableName}' table columns description.` }, 'Reverse Engineering');
 
-	return mapResponse(currentDbConnectionClient.query`
+	return mapResponse(
+		currentDbConnectionClient.query(`
 		SELECT
 			st.name [Table],
 			sc.name [Column],
@@ -614,11 +617,12 @@ const getTableColumnsDescription = async ({ client, dbName, tableName, schemaNam
 		FROM sys.tables st
 		INNER JOIN sys.columns sc ON st.object_id = sc.object_id
 		LEFT JOIN sys.extended_properties sep ON st.object_id = sep.major_id
-														AND sc.column_id = sep.minor_id
-														AND sep.name = 'MS_Description'
+			AND sc.column_id = sep.minor_id
+			AND sep.name = 'MS_Description'
 		WHERE st.name = ${tableName}
 		AND st.schema_id=SCHEMA_ID(${schemaName})
-	`);
+	`),
+	);
 };
 
 const getDatabaseMemoryOptimizedTables = async ({ client, dbName, logger }) => {
@@ -696,7 +700,8 @@ const getViewTableInfo = async ({ client, dbName, viewName, schemaName, logger }
 	logger.log('info', { message: `Get '${viewName}' view table info.` }, 'Reverse Engineering');
 
 	const objectId = `${schemaName}.${viewName}`;
-	return mapResponse(currentDbConnectionClient.query`
+	return mapResponse(
+		currentDbConnectionClient.query(`
 		SELECT
 			ViewName = O.name,
 			ColumnName = A.name,
@@ -710,29 +715,27 @@ const getViewTableInfo = async ({ client, dbName, viewName, schemaName, logger }
 			M.max_length,
 			M.precision,
 			M.scale
-		FROM
-			sys.sql_dependencies AS T
-			INNER JOIN sys.objects AS O ON T.object_id = O.object_id
-			INNER JOIN sys.objects AS X ON T.referenced_major_id = X.object_id
-			INNER JOIN sys.columns AS C ON
-				C.object_id = X.object_id AND
-				C.column_id = T.referenced_minor_id
-			INNER JOIN sys.types AS M ON
-				M.system_type_id = C.system_type_id AND
-				M.user_type_id = C.user_type_id
-			INNER JOIN sys.columns AS A ON
-				A.object_id = OBJECT_ID(${objectId}) AND
-				T.referenced_minor_id = A.column_id
+		FROM sys.sql_dependencies AS T
+		INNER JOIN sys.objects AS O
+			ON T.object_id = O.object_id
+		INNER JOIN sys.objects AS X
+			ON T.referenced_major_id = X.object_id
+		INNER JOIN sys.columns AS C
+			ON C.object_id = X.object_id AND C.column_id = T.referenced_minor_id
+		INNER JOIN sys.types AS M
+			ON M.system_type_id = C.system_type_id AND M.user_type_id = C.user_type_id
+		INNER JOIN sys.columns AS A
+			ON A.object_id = OBJECT_ID(${objectId}) AND T.referenced_minor_id = A.column_id
 		WHERE
 			O.type = 'V'
-		AND
-			O.name = ${viewName}
-		AND O.schema_id=SCHEMA_ID(${schemaName})
+			AND O.name = ${viewName}
+			AND O.schema_id=SCHEMA_ID(${schemaName})
 		ORDER BY
 			O.name,
 			X.name,
 			C.name
-	`);
+	`),
+	);
 };
 
 const getViewColumnRelations = async ({ client, dbName, viewName, schemaName, logger }) => {
@@ -805,26 +808,39 @@ const getTableKeyConstraints = async ({ client, dbName, tableName, schemaName, l
 
 	const objectId = `${schemaName}.${tableName}`;
 	return mapResponse(
-		await currentDbConnectionClient.query`
-		SELECT TC.TABLE_NAME AS tableName, TC.Constraint_Name AS constraintName,
-		CC.Column_Name AS columnName, TC.constraint_type AS constraintType, ind.type_desc AS typeDesc,
-		p.data_compression_desc AS dataCompression,
-		ds.name AS dataSpaceName,
-		st.no_recompute AS statisticNoRecompute, st.is_incremental AS statisticsIncremental,
-		ic.is_descending_key AS isDescending,
-		ind.*
+		await currentDbConnectionClient.query(`
+		SELECT
+			TC.TABLE_NAME AS tableName,
+			TC.Constraint_Name AS constraintName,
+			CC.Column_Name AS columnName,
+			TC.constraint_type AS constraintType,
+			ind.type_desc AS typeDesc,
+			p.data_compression_desc AS dataCompression,
+			ds.name AS dataSpaceName,
+			st.no_recompute AS statisticNoRecompute,
+			st.is_incremental AS statisticsIncremental,
+			ic.is_descending_key AS isDescending,
+			ind.*
 		FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS TC
-		INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE CC ON TC.Constraint_Name = CC.Constraint_Name
-			AND TC.TABLE_NAME=${tableName} AND TC.TABLE_SCHEMA=${schemaName}
-		INNER JOIN sys.indexes ind ON ind.name = TC.CONSTRAINT_NAME
-		INNER JOIN sys.stats st ON st.name = TC.CONSTRAINT_NAME
-		LEFT JOIN sys.data_spaces ds ON ds.data_space_id = ind.data_space_id
-		INNER JOIN sys.index_columns ic ON ic.object_id = OBJECT_ID(${objectId})
-			AND ind.index_id=ic.index_id
-			AND ic.column_id=COLUMNPROPERTY(OBJECT_ID(${objectId}), CC.column_name, 'ColumnId')
-		INNER JOIN sys.partitions p ON p.object_id = OBJECT_ID(${objectId}) AND p.index_id = ind.index_id
+		INNER JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE CC
+			ON TC.Constraint_Name = CC.Constraint_Name
+				AND TC.TABLE_NAME=${tableName}
+			    AND TC.TABLE_SCHEMA=${schemaName}
+		INNER JOIN sys.indexes ind
+			ON ind.name = TC.CONSTRAINT_NAME
+		INNER JOIN sys.stats st
+			ON st.name = TC.CONSTRAINT_NAME
+		LEFT JOIN sys.data_spaces ds
+			ON ds.data_space_id = ind.data_space_id
+		INNER JOIN sys.index_columns ic
+			ON ic.object_id = OBJECT_ID(${objectId})
+				AND ind.index_id=ic.index_id
+				AND ic.column_id=COLUMNPROPERTY(OBJECT_ID(${objectId}), CC.column_name, 'ColumnId')
+		INNER JOIN sys.partitions p
+			ON p.object_id = OBJECT_ID(${objectId})
+			    AND p.index_id = ind.index_id
 		ORDER BY TC.Constraint_Name
-	`,
+	`),
 	);
 };
 
@@ -844,10 +860,10 @@ const getTableMaskedColumns = async ({ client, dbName, tableName, schemaName, lo
 
 	const objectId = `${schemaName}.${tableName}`;
 	return mapResponse(
-		await currentDbConnectionClient.query`
+		await currentDbConnectionClient.query(`
 		SELECT name, masking_function FROM sys.masked_columns
 		WHERE object_id=OBJECT_ID(${objectId})
-	`,
+	`),
 	);
 };
 
@@ -892,25 +908,21 @@ const getTableDefaultConstraintNames = async ({ client, dbName, tableName, schem
 	logger.log('info', { message: `Get '${tableName}' table default constraint names.` }, 'Reverse Engineering');
 
 	return mapResponse(
-		await currentDbConnectionClient.query`
+		await currentDbConnectionClient.query(`
 	SELECT
 		ac.name AS columnName,
 		dc.name
-	FROM
-		sys.all_columns AS ac
-			INNER JOIN
-		sys.tables
-			ON ac.object_id = tables.object_id
-			INNER JOIN
-		sys.schemas
-			ON tables.schema_id = schemas.schema_id
-			INNER JOIN
-		sys.default_constraints AS dc
-			ON ac.default_object_id = dc.object_id
+	FROM sys.all_columns AS ac
+	INNER JOIN sys.tables
+		ON ac.object_id = tables.object_id
+	INNER JOIN sys.schemas
+		ON tables.schema_id = schemas.schema_id
+	INNER JOIN sys.default_constraints AS dc
+		ON ac.default_object_id = dc.object_id
 	WHERE
-			schemas.name = ${schemaName}
+		schemas.name = ${schemaName}
 		AND tables.name = ${tableName}
-	`,
+	`),
 	);
 };
 
