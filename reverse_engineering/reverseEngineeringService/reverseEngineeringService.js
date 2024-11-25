@@ -1,3 +1,4 @@
+const { groupBy, omit, partition } = require('lodash');
 const {
 	getTableInfo,
 	getTableRow,
@@ -42,28 +43,21 @@ const {
 } = require('./helpers');
 const pipe = require('../helpers/pipe');
 
-const mergeCollectionsWithViews = jsonSchemas =>
-	jsonSchemas.reduce((structuredJSONSchemas, jsonSchema) => {
-		if (jsonSchema.relatedTables) {
-			const currentIndex = structuredJSONSchemas.findIndex(
-				structuredSchema => jsonSchema.collectionName === structuredSchema.collectionName && jsonSchema.dbName,
-			);
-			const relatedTableSchemaIndex = structuredJSONSchemas.findIndex(({ collectionName, dbName }) =>
-				jsonSchema.relatedTables.find(
-					({ tableName, schemaName }) => tableName === collectionName && schemaName === dbName,
-				),
-			);
+const mergeCollectionsWithViews = ({ jsonSchemas }) => {
+	const [viewSchemas, collectionSchemas] = partition(jsonSchemas, jsonSchema => jsonSchema.relatedTables);
+	const groupedViewSchemas = groupBy(viewSchemas, 'dbName');
+	const combinedViewSchemas = Object.entries(groupedViewSchemas).map(([dbName, views]) => {
+		return {
+			dbName,
+			entityLevel: {},
+			emptyBucket: false,
+			bucketInfo: views[0].bucketInfo,
+			views: views.map(view => omit(view, ['relatedTables'])),
+		};
+	});
 
-			if (relatedTableSchemaIndex !== -1 && doesViewHaveRelatedTables(jsonSchema, structuredJSONSchemas)) {
-				structuredJSONSchemas[relatedTableSchemaIndex].views.push(jsonSchema);
-			}
-
-			delete jsonSchema.relatedTables;
-			return structuredJSONSchemas.filter((schema, i) => i !== currentIndex);
-		}
-
-		return structuredJSONSchemas;
-	}, jsonSchemas);
+	return [...collectionSchemas, ...combinedViewSchemas];
+};
 
 const getCollectionsRelationships = async ({ client, logger }) => {
 	const dbName = client.config.database;

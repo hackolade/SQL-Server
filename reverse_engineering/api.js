@@ -144,7 +144,7 @@ module.exports = {
 			});
 			callback(
 				null,
-				mergeCollectionsWithViews(jsonSchemasWithDescriptionComments),
+				mergeCollectionsWithViews({ jsonSchemas: jsonSchemasWithDescriptionComments }),
 				null,
 				filterRelationships(relationships, jsonSchemasWithDescriptionComments),
 			);
