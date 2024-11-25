@@ -42,6 +42,7 @@ const {
 	getPeriodForSystemTime,
 } = require('./helpers');
 const pipe = require('../helpers/pipe');
+const { getUniqueIndexesColumns } = require('./helpers/getUniqueIndexesColumns');
 
 const mergeCollectionsWithViews = ({ jsonSchemas }) => {
 	const [viewSchemas, collectionSchemas] = partition(jsonSchemas, jsonSchema => jsonSchema.relatedTables);
@@ -311,8 +312,9 @@ const fetchDatabaseMetadata = async ({ client, dbName, tablesInfo, logger }) => 
 		logger,
 	});
 
+	const uniqueDatabaseIndexesColumns = getUniqueIndexesColumns({ indexesColumns: rawDatabaseIndexes });
 	const databaseIndexes = addTotalBucketCountToDatabaseIndexes({
-		databaseIndexes: rawDatabaseIndexes,
+		databaseIndexes: uniqueDatabaseIndexesColumns,
 		indexesBucketCount,
 	});
 
