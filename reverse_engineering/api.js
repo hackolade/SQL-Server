@@ -133,7 +133,7 @@ module.exports = {
 			const reverseEngineeringOptions = getOptionsFromConnectionInfo(collectionsInfo);
 			const [jsonSchemas, relationships] = await Promise.all([
 				await reverseCollectionsToJSON({ client, tablesInfo: collections, reverseEngineeringOptions, logger }),
-				await getCollectionsRelationships({ client, logger }),
+				await getCollectionsRelationships({ client, tablesInfo: collections, logger }),
 			]);
 
 			const jsonSchemasWithDescriptionComments = await getJsonSchemasWithInjectedDescriptionComments({

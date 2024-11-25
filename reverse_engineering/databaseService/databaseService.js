@@ -1,9 +1,10 @@
+const { flatMap } = require('lodash');
 const axios = require('axios');
-const sql = require('mssql');
-const https = require('https');
-const { getObjectsFromDatabase, getNewConnectionClientByDb } = require('./helpers');
-const msal = require('@azure/msal-node');
 const fs = require('fs');
+const https = require('https');
+const msal = require('@azure/msal-node');
+const sql = require('mssql');
+const { getObjectsFromDatabase, getNewConnectionClientByDb } = require('./helpers');
 const getSampleDocSize = require('../helpers/getSampleDocSize');
 
 const QUERY_REQUEST_TIMEOUT = 60000;
@@ -320,7 +321,7 @@ const getTableRow = async ({ client, dbName, tableName, tableSchema, recordSampl
 	);
 };
 
-const getTableForeignKeys = async ({ client, dbName, logger }) => {
+const getTableForeignKeys = async ({ client, tablesInfo, dbName, logger }) => {
 	const currentDbConnectionClient = await getClient({
 		client,
 		dbName,
@@ -338,11 +339,23 @@ const getTableForeignKeys = async ({ client, dbName, logger }) => {
 		},
 		logger,
 	});
+
+	const schemaAlias = 'sch';
+	const table1Alias = 'tab1';
+
+	const whereClauseParts = flatMap(
+		Object.entries(tablesInfo).map(([schemaName, tableNames]) =>
+			tableNames.map(
+				tableName => `(${table1Alias}.name = '${tableName}' AND ${schemaAlias}.name = ${schemaName})`,
+			),
+		),
+	);
+
 	return mapResponse(
 		await currentDbConnectionClient.query`
 		SELECT obj.name AS FK_NAME,
-				sch.name AS [schema_name],
-				tab1.name AS [table],
+				${schemaAlias}.name AS [schema_name],
+				${table1Alias}.name AS [table],
 				col1.name AS [column],
 				tab2.name AS [referenced_table],
 				col2.name AS [referenced_column],
@@ -351,23 +364,24 @@ const getTableForeignKeys = async ({ client, dbName, logger }) => {
 		FROM sys.foreign_key_columns fkc
 		INNER JOIN sys.objects obj
 			ON obj.object_id = fkc.constraint_object_id
-		INNER JOIN sys.tables tab1
-			ON tab1.object_id = fkc.parent_object_id
-		INNER JOIN sys.schemas sch
-			ON tab1.schema_id = sch.schema_id
+		INNER JOIN sys.tables ${table1Alias}
+			ON ${table1Alias}.object_id = fkc.parent_object_id
+		INNER JOIN sys.schemas ${schemaAlias}
+			ON ${table1Alias}.schema_id = ${schemaAlias}.schema_id
 		INNER JOIN sys.columns col1
-			ON col1.column_id = parent_column_id AND col1.object_id = tab1.object_id
+			ON col1.column_id = parent_column_id AND col1.object_id = ${table1Alias}.object_id
 		INNER JOIN sys.tables tab2
 			ON tab2.object_id = fkc.referenced_object_id
 		INNER JOIN sys.columns col2
 			ON col2.column_id = referenced_column_id AND col2.object_id = tab2.object_id
 		INNER JOIN sys.foreign_keys fk
 			ON fk.object_id = obj.object_id
+		WHERE ${whereClauseParts.join(' OR ')}
 		`,
 	);
 };
 
-const getDatabaseIndexes = async ({ client, dbName, logger }) => {
+const getDatabaseIndexes = async ({ client, dbName, tablesInfo, logger }) => {
 	const currentDbConnectionClient = await getClient({
 		client,
 		dbName,
@@ -380,6 +394,12 @@ const getDatabaseIndexes = async ({ client, dbName, logger }) => {
 	});
 
 	logger.log('info', { message: `Get '${dbName}' database indexes.` }, 'Reverse Engineering');
+
+	const tableAlias = 't';
+	const whereClauseParts = Object.entries(tablesInfo).map(([schemaName, tableNames]) => {
+		const preparedTableNames = tableNames.map(tableName => `'${tableName}'`).join(', ');
+		return `(OBJECT_SCHEMA_NAME(${tableAlias}.object_id) = '${schemaName}' AND ${tableAlias}.name IN (${preparedTableNames})`;
+	});
 
 	return mapResponse(
 		await currentDbConnectionClient.query`
@@ -403,6 +423,7 @@ const getDatabaseIndexes = async ({ client, dbName, logger }) => {
 			ind.is_primary_key = 0
 			AND ind.is_unique_constraint = 0
 			AND t.is_ms_shipped = 0
+			AND ${whereClauseParts.join(' OR ')}
 		`,
 	);
 };

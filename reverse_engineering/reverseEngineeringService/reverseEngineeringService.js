@@ -59,11 +59,11 @@ const mergeCollectionsWithViews = ({ jsonSchemas }) => {
 	return [...collectionSchemas, ...combinedViewSchemas];
 };
 
-const getCollectionsRelationships = async ({ client, logger }) => {
+const getCollectionsRelationships = async ({ client, tablesInfo, logger }) => {
 	const dbName = client.config.database;
 	logger.log('info', { message: `Fetching tables relationships.` }, 'Reverse Engineering');
 	logger.progress({ message: 'Fetching tables relationships', containerName: dbName, entityName: '' });
-	const tableForeignKeys = await getTableForeignKeys({ client, dbName, logger });
+	const tableForeignKeys = await getTableForeignKeys({ client, dbName, tablesInfo, logger });
 
 	return reverseTableForeignKeys(tableForeignKeys, dbName);
 };
@@ -283,7 +283,7 @@ const addTotalBucketCountToDatabaseIndexes = ({ databaseIndexes, indexesBucketCo
 	});
 };
 
-const fetchDatabaseMetadata = async ({ client, dbName, logger }) => {
+const fetchDatabaseMetadata = async ({ client, dbName, tablesInfo, logger }) => {
 	const [
 		rawDatabaseIndexes,
 		databaseMemoryOptimizedTables,
@@ -294,7 +294,7 @@ const fetchDatabaseMetadata = async ({ client, dbName, logger }) => {
 		fullTextIndexes,
 		spatialIndexes,
 	] = await Promise.all([
-		getDatabaseIndexes({ client, dbName, logger }),
+		getDatabaseIndexes({ client, dbName, tablesInfo, logger }),
 		getDatabaseMemoryOptimizedTables({ client, dbName, logger }),
 		getDatabaseCheckConstraints({ client, dbName, logger }),
 		getDatabaseXmlSchemaCollection({ client, dbName, logger }),
@@ -522,7 +522,7 @@ const reverseCollectionsToJSON = async ({ client, tablesInfo, reverseEngineering
 		viewsIndexes,
 		fullTextIndexes,
 		spatialIndexes,
-	} = await fetchDatabaseMetadata({ client, dbName, logger });
+	} = await fetchDatabaseMetadata({ client, dbName, tablesInfo, logger });
 
 	return processSchemas({
 		tablesInfo,
