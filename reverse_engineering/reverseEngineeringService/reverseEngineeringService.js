@@ -302,7 +302,7 @@ const fetchDatabaseMetadata = async ({ client, dbName, tablesInfo, logger }) => 
 		getDatabaseCheckConstraints({ client, dbName, logger }),
 		getDatabaseXmlSchemaCollection({ client, dbName, logger }),
 		getDatabaseUserDefinedTypes({ client, dbName, logger }),
-		getViewsIndexes({ client, dbName, allUniqueSchemasAndTables, logger }),
+		getViewsIndexes({ client, dbName, logger }),
 		getFullTextIndexes({ client, dbName, allUniqueSchemasAndTables, logger }),
 		getSpatialIndexes({ client, dbName, allUniqueSchemasAndTables, logger }),
 	]);

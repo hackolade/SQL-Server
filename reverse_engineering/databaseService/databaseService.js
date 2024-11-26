@@ -581,7 +581,7 @@ const getFullTextIndexes = async ({ client, dbName, allUniqueSchemasAndTables, l
 	);
 };
 
-const getViewsIndexes = async ({ client, dbName, allUniqueSchemasAndTables, logger }) => {
+const getViewsIndexes = async ({ client, dbName, logger }) => {
 	const currentDbConnectionClient = await getClient({
 		client,
 		dbName,
@@ -596,7 +596,6 @@ const getViewsIndexes = async ({ client, dbName, allUniqueSchemasAndTables, logg
 	logger.log('info', { message: `Get '${dbName}' database views indexes.` }, 'Reverse Engineering');
 
 	const tableAlias = 'ind';
-	const whereClauseParts = getWhereClauseForUniqueSchemasAndTables({ tableAlias, allUniqueSchemasAndTables });
 
 	return mapResponse(
 		await currentDbConnectionClient.query(`
@@ -620,7 +619,6 @@ const getViewsIndexes = async ({ client, dbName, allUniqueSchemasAndTables, logg
 			${tableAlias}.is_primary_key = 0
 			AND ${tableAlias}.is_unique_constraint = 0
 			AND t.is_ms_shipped = 0
-			AND ${whereClauseParts}
 		`),
 	);
 };
