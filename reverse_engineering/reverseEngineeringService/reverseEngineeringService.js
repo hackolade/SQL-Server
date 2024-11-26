@@ -285,6 +285,8 @@ const addTotalBucketCountToDatabaseIndexes = ({ databaseIndexes, indexesBucketCo
 };
 
 const fetchDatabaseMetadata = async ({ client, dbName, tablesInfo, logger }) => {
+	const allUniqueSchemasAndTables = getAllUniqueSchemasAndTables({ tablesInfo });
+
 	const [
 		rawDatabaseIndexes,
 		databaseMemoryOptimizedTables,
@@ -300,9 +302,9 @@ const fetchDatabaseMetadata = async ({ client, dbName, tablesInfo, logger }) => 
 		getDatabaseCheckConstraints({ client, dbName, logger }),
 		getDatabaseXmlSchemaCollection({ client, dbName, logger }),
 		getDatabaseUserDefinedTypes({ client, dbName, logger }),
-		getViewsIndexes({ client, dbName, logger }),
-		getFullTextIndexes({ client, dbName, logger }),
-		getSpatialIndexes({ client, dbName, logger }),
+		getViewsIndexes({ client, dbName, allUniqueSchemasAndTables, logger }),
+		getFullTextIndexes({ client, dbName, allUniqueSchemasAndTables, logger }),
+		getSpatialIndexes({ client, dbName, allUniqueSchemasAndTables, logger }),
 	]);
 
 	const indexesBucketCount = await getIndexesBucketCount({
@@ -453,6 +455,16 @@ const getStandardDocument = ({ reorderedTableRows, jsonSchema, isFieldOrderAlpha
 	Array.isArray(reorderedTableRows) && reorderedTableRows.length
 		? reorderedTableRows
 		: reorderTableRows({ tableRows: [getStandardDocumentByJsonSchema({ jsonSchema })], isFieldOrderAlphabetic });
+
+const getAllUniqueSchemasAndTables = ({ tablesInfo }) =>
+	Object.keys(tablesInfo).reduce(
+		(acc, schemaName) => {
+			acc.schemas.add(`'${schemaName}'`);
+			tablesInfo[schemaName].forEach(tableName => acc.tables.add(`'${tableName}'`));
+			return acc;
+		},
+		{ schemas: new Set(), tables: new Set() },
+	);
 
 const createTableResult = ({
 	tableName,

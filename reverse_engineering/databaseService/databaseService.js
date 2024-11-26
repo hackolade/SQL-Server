@@ -453,13 +453,14 @@ const getIndexesBucketCount = async ({ client, dbName, indexesId, logger }) => {
 
 	return mapResponse(
 		await currentDbConnectionClient.query(`
-		SELECT hs.total_bucket_count, hs.index_id
-		FROM sys.dm_db_xtp_hash_index_stats hs
-		WHERE hs.index_id IN (${indexesId.join(', ')})`),
+			SELECT hs.total_bucket_count, hs.index_id
+			FROM sys.dm_db_xtp_hash_index_stats hs
+			WHERE hs.index_id IN (${indexesId.join(', ')})
+		`),
 	);
 };
 
-const getSpatialIndexes = async ({ client, dbName, logger }) => {
+const getSpatialIndexes = async ({ client, dbName, allUniqueSchemasAndTables, logger }) => {
 	const currentDbConnectionClient = await getClient({
 		client,
 		dbName,
@@ -479,37 +480,42 @@ const getSpatialIndexes = async ({ client, dbName, logger }) => {
 
 	logger.log('info', { message: `Get '${dbName}' database spatial indexes.` }, 'Reverse Engineering');
 
+	const tableAlias = 't';
+	const whereClauseParts = getWhereClauseForUniqueSchemasAndTables({ tableAlias, allUniqueSchemasAndTables });
+
 	return mapResponse(
-		await currentDbConnectionClient.query`
-		SELECT
-			TableName = t.name,
-			IndexName = ind.name,
-			COL_NAME(t.object_id, ic.column_id) AS columnName,
-			OBJECT_SCHEMA_NAME(t.object_id) AS schemaName,
-			sit.bounding_box_xmin AS XMIN,
-			sit.bounding_box_ymin AS YMIN,
-			sit.bounding_box_xmax AS XMAX,
-			sit.bounding_box_ymax AS YMAX,
-			sit.level_1_grid_desc AS LEVEL_1,
-			sit.level_2_grid_desc AS LEVEL_2,
-			sit.level_3_grid_desc AS LEVEL_3,
-			sit.level_4_grid_desc AS LEVEL_4,
-			sit.cells_per_object AS CELLS_PER_OBJECT,
-			p.data_compression_desc AS dataCompression,
-			ind.*
-		FROM sys.spatial_indexes ind
-		LEFT JOIN sys.tables t
-			ON ind.object_id = t.object_id
-		INNER JOIN sys.index_columns ic
-			ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
-		LEFT JOIN sys.spatial_index_tessellations sit
-			ON ind.object_id = sit.object_id AND ind.index_id = sit.index_id
-		LEFT JOIN sys.partitions p
-			ON p.object_id = t.object_id AND ind.index_id = p.index_id`,
+		await currentDbConnectionClient.query(`
+			SELECT
+				TableName = ${tableAlias}.name,
+				IndexName = ind.name,
+				COL_NAME(${tableAlias}.object_id, ic.column_id) AS columnName,
+				OBJECT_SCHEMA_NAME(${tableAlias}.object_id) AS schemaName,
+				sit.bounding_box_xmin AS XMIN,
+				sit.bounding_box_ymin AS YMIN,
+				sit.bounding_box_xmax AS XMAX,
+				sit.bounding_box_ymax AS YMAX,
+				sit.level_1_grid_desc AS LEVEL_1,
+				sit.level_2_grid_desc AS LEVEL_2,
+				sit.level_3_grid_desc AS LEVEL_3,
+				sit.level_4_grid_desc AS LEVEL_4,
+				sit.cells_per_object AS CELLS_PER_OBJECT,
+				p.data_compression_desc AS dataCompression,
+				ind.*
+			FROM sys.spatial_indexes ind
+			LEFT JOIN sys.tables ${tableAlias}
+				ON ind.object_id = ${tableAlias}.object_id
+			INNER JOIN sys.index_columns ic
+				ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
+			LEFT JOIN sys.spatial_index_tessellations sit
+				ON ind.object_id = sit.object_id AND ind.index_id = sit.index_id
+			LEFT JOIN sys.partitions p
+				ON p.object_id = ${tableAlias}.object_id AND ind.index_id = p.index_id
+			WHERE ${whereClauseParts}
+		`),
 	);
 };
 
-const getFullTextIndexes = async ({ client, dbName, logger }) => {
+const getFullTextIndexes = async ({ client, dbName, allUniqueSchemasAndTables, logger }) => {
 	const currentDbConnectionClient = await getClient({
 		client,
 		dbName,
@@ -531,35 +537,51 @@ const getFullTextIndexes = async ({ client, dbName, logger }) => {
 
 	logger.log('info', { message: `Get '${dbName}' database full text indexes.` }, 'Reverse Engineering');
 
-	const result = await currentDbConnectionClient.query`
-		SELECT
-			OBJECT_SCHEMA_NAME(F.object_id) AS schemaName,
-			OBJECT_NAME(F.object_id) AS TableName,
-			COL_NAME(FC.object_id, FC.column_id) AS columnName,
-			COL_NAME(FC.object_id, FC.type_column_id) AS columnTypeName,
-			FC.statistical_semantics AS statistical_semantics,
-			FC.language_id AS language,
-			I.name AS indexKeyName,
-			F.change_tracking_state_desc AS changeTracking,
-			CASE WHEN F.stoplist_id IS NULL THEN 'OFF' WHEN F.stoplist_id = 0 THEN 'SYSTEM' ELSE SL.name END AS stopListName,
-			SPL.name AS searchPropertyList,
-			FG.name AS fileGroup,
-			FCAT.name AS catalogName,
-			type = 'FullText',
-			IndexName = 'full_text_idx'
-		FROM sys.fulltext_indexes F
-		INNER JOIN sys.fulltext_index_columns FC ON FC.object_id = F.object_id
-		LEFT JOIN sys.indexes I ON F.unique_index_id = I.index_id AND I.object_id = F.object_id
-		LEFT JOIN sys.fulltext_stoplists SL ON SL.stoplist_id = F.stoplist_id
-		LEFT JOIN sys.registered_search_property_lists SPL ON SPL.property_list_id = F.property_list_id
-		LEFT JOIN sys.filegroups FG ON FG.data_space_id = F.data_space_id
-		LEFT JOIN sys.fulltext_catalogs FCAT ON FCAT.fulltext_catalog_id = F.fulltext_catalog_id
-		WHERE F.is_enabled = 1`;
+	const tableAlias = 'F';
+	const whereClauseParts = getWhereClauseForUniqueSchemasAndTables({ tableAlias, allUniqueSchemasAndTables });
 
-	return mapResponse(result);
+	return mapResponse(
+		await currentDbConnectionClient.query(`
+			SELECT
+				OBJECT_SCHEMA_NAME(${tableAlias}.object_id) AS schemaName,
+				OBJECT_NAME(${tableAlias}.object_id) AS TableName,
+				COL_NAME(FC.object_id, FC.column_id) AS columnName,
+				COL_NAME(FC.object_id, FC.type_column_id) AS columnTypeName,
+				FC.statistical_semantics AS statistical_semantics,
+				FC.language_id AS language,
+				I.name AS indexKeyName,
+				${tableAlias}.change_tracking_state_desc AS changeTracking,
+				CASE
+					WHEN ${tableAlias}.stoplist_id IS NULL THEN 'OFF'
+					WHEN ${tableAlias}.stoplist_id = 0 THEN 'SYSTEM'
+					ELSE SL.name
+				END AS stopListName,
+				SPL.name AS searchPropertyList,
+				FG.name AS fileGroup,
+				FCAT.name AS catalogName,
+				type = 'FullText',
+				IndexName = 'full_text_idx'
+			FROM sys.fulltext_indexes ${tableAlias}
+			INNER JOIN sys.fulltext_index_columns FC
+				ON FC.object_id = ${tableAlias}.object_id
+			LEFT JOIN sys.indexes I
+				ON ${tableAlias}.unique_index_id = I.index_id AND I.object_id = ${tableAlias}.object_id
+			LEFT JOIN sys.fulltext_stoplists SL
+				ON SL.stoplist_id = ${tableAlias}.stoplist_id
+			LEFT JOIN sys.registered_search_property_lists SPL
+				ON SPL.property_list_id = ${tableAlias}.property_list_id
+			LEFT JOIN sys.filegroups FG
+				ON FG.data_space_id = ${tableAlias}.data_space_id
+			LEFT JOIN sys.fulltext_catalogs FCAT
+				ON FCAT.fulltext_catalog_id = ${tableAlias}.fulltext_catalog_id
+			WHERE
+				${tableAlias}.is_enabled = 1
+				AND ${whereClauseParts}
+		`),
+	);
 };
 
-const getViewsIndexes = async ({ client, dbName, logger }) => {
+const getViewsIndexes = async ({ client, dbName, allUniqueSchemasAndTables, logger }) => {
 	const currentDbConnectionClient = await getClient({
 		client,
 		dbName,
@@ -573,29 +595,33 @@ const getViewsIndexes = async ({ client, dbName, logger }) => {
 
 	logger.log('info', { message: `Get '${dbName}' database views indexes.` }, 'Reverse Engineering');
 
+	const tableAlias = 'ind';
+	const whereClauseParts = getWhereClauseForUniqueSchemasAndTables({ tableAlias, allUniqueSchemasAndTables });
+
 	return mapResponse(
-		await currentDbConnectionClient.query`
+		await currentDbConnectionClient.query(`
 		SELECT
 			TableName = t.name,
-			IndexName = ind.name,
+			IndexName = ${tableAlias}.name,
 			ic.is_descending_key,
 			ic.is_included_column,
 			COL_NAME(t.object_id, ic.column_id) AS columnName,
 			OBJECT_SCHEMA_NAME(t.object_id) AS schemaName,
 			p.data_compression_desc AS dataCompression,
-			ind.*
-		FROM sys.indexes ind
+			${tableAlias}.*
+		FROM sys.indexes ${tableAlias}
 		LEFT JOIN sys.views t
-			ON ind.object_id = t.object_id
+			ON ${tableAlias}.object_id = t.object_id
 		INNER JOIN sys.index_columns ic
-			ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
+			ON ${tableAlias}.object_id = ic.object_id AND ${tableAlias}.index_id = ic.index_id
 		INNER JOIN sys.partitions p
-			ON p.object_id = t.object_id AND ind.index_id = p.index_id
+			ON p.object_id = t.object_id AND ${tableAlias}.index_id = p.index_id
 		WHERE
-			ind.is_primary_key = 0
-			AND ind.is_unique_constraint = 0
+			${tableAlias}.is_primary_key = 0
+			AND ${tableAlias}.is_unique_constraint = 0
 			AND t.is_ms_shipped = 0
-		`,
+			AND ${whereClauseParts}
+		`),
 	);
 };
 
@@ -1094,6 +1120,10 @@ const buildDescriptionCommentsRetrieveQuery = ({ schema, entity }) => {
 		: `'${entity.type}', default, NULL, NULL`;
 	return `SELECT objtype, objname, value FROM fn_listextendedproperty ('MS_Description', ${schemaTemplate}, ${entityTemplate});`;
 };
+
+const getWhereClauseForUniqueSchemasAndTables = ({ tableAlias, allUniqueSchemasAndTables: { schemas, tables } }) =>
+	`OBJECT_SCHEMA_NAME(${tableAlias}.object_id) IN (${[...schemas].join(', ')})
+	AND OBJECT_NAME(${tableAlias}.object_id) IN (${[...tables].join(', ')})`;
 
 module.exports = {
 	getConnectionClient,
