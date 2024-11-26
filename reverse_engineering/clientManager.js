@@ -2,13 +2,18 @@ const { getConnectionClient } = require('./databaseService/databaseService');
 
 class ClientManager {
 	#client = null;
+	#sshService = null;
 	#isSshTunnel = false;
 
 	getClient() {
 		return this.#client;
 	}
 
-	async setClient({ connectionInfo, sshService, attempts = 0, logger }) {
+	async initClient({ connectionInfo, sshService, attempts = 0, logger }) {
+		if (!this.#sshService) {
+			this.#sshService = sshService;
+		}
+
 		let connectionParams = { ...connectionInfo };
 
 		if (connectionInfo.ssh && !this.#isSshTunnel) {
@@ -34,6 +39,8 @@ class ClientManager {
 
 		try {
 			this.#client = await getConnectionClient({ connectionInfo: connectionParams, logger });
+
+			return this.#client;
 		} catch (error) {
 			const encryptConnection =
 				connectionParams.encryptConnection === undefined || Boolean(connectionParams.encryptConnection);
@@ -42,7 +49,7 @@ class ClientManager {
 				error.message.includes('self signed certificate') && encryptConnection;
 
 			if (isEncryptedConnectionToLocalInstance && attempts <= 0) {
-				return this.setClient({
+				return this.initClient({
 					connectionInfo: {
 						...connectionParams,
 						encryptConnection: false,
@@ -57,11 +64,11 @@ class ClientManager {
 		}
 	}
 
-	clearClient({ sshService }) {
+	clearClient() {
 		this.#client = null;
 
-		if (this.#isSshTunnel) {
-			sshService.closeConsumer();
+		if (this.#isSshTunnel && this.#sshService) {
+			this.#sshService.closeConsumer();
 			this.#isSshTunnel = false;
 		}
 	}

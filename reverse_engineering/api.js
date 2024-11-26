@@ -24,19 +24,18 @@ module.exports = {
 		const client = clientManager.getClient();
 
 		if (!client) {
-			await clientManager.setClient({
+			return await clientManager.initClient({
 				connectionInfo,
 				logger,
 				sshService: app.require('@hackolade/ssh-service'),
 			});
-			return clientManager.getClient();
 		}
 
 		return client;
 	},
 
-	disconnect(connectionInfo, logger, callback, app) {
-		clientManager.clearClient({ sshService: app.require('@hackolade/ssh-service') });
+	disconnect(connectionInfo, logger, callback) {
+		clientManager.clearClient();
 		callback();
 	},
 
@@ -93,7 +92,7 @@ module.exports = {
 			logInfo('Retrieving databases and tables information', connectionInfo, logger);
 
 			const client = await this.connect(connectionInfo, logger, () => {}, app);
-			if (!client?.config.database) {
+			if (!client.config.database) {
 				throw new Error('No database specified');
 			}
 
