@@ -299,8 +299,8 @@ const fetchDatabaseMetadata = async ({ client, dbName, tablesInfo, logger }) => 
 	] = await Promise.all([
 		getDatabaseIndexes({ client, dbName, tablesInfo, logger }),
 		getDatabaseMemoryOptimizedTables({ client, dbName, logger }),
-		getDatabaseCheckConstraints({ client, dbName, logger }),
-		getDatabaseXmlSchemaCollection({ client, dbName, logger }),
+		getDatabaseCheckConstraints({ client, dbName, allUniqueSchemasAndTables, logger }),
+		getDatabaseXmlSchemaCollection({ client, dbName, allUniqueSchemasAndTables, logger }),
 		getDatabaseUserDefinedTypes({ client, dbName, logger }),
 		getViewsIndexes({ client, dbName, logger }),
 		getFullTextIndexes({ client, dbName, allUniqueSchemasAndTables, logger }),

@@ -670,20 +670,23 @@ const getDatabaseMemoryOptimizedTables = async ({ client, dbName, logger }) => {
 
 	return mapResponse(
 		await currentDbConnectionClient.query`
-		SELECT
-			T.name,
-			T.durability,
-			T.durability_desc,
-			OBJECT_NAME(T.history_table_id) AS history_table,
-			SCHEMA_NAME(O.schema_id) AS history_schema,
-			T.temporal_type_desc,
-			T.is_memory_optimized
-		FROM sys.tables T LEFT JOIN sys.objects O ON T.history_table_id = O.object_id
-	`,
+			SELECT
+				T.name,
+				T.durability,
+				T.durability_desc,
+				OBJECT_NAME(T.history_table_id) AS history_table,
+				SCHEMA_NAME(O.schema_id) AS history_schema,
+				T.temporal_type_desc,
+				T.is_memory_optimized
+			FROM sys.tables T
+			LEFT JOIN sys.objects O
+				ON T.history_table_id = O.object_id
+			WHERE T.is_memory_optimized = 1
+		`,
 	);
 };
 
-const getDatabaseCheckConstraints = async ({ client, dbName, logger }) => {
+const getDatabaseCheckConstraints = async ({ client, dbName, allUniqueSchemasAndTables, logger }) => {
 	const currentDbConnectionClient = await getClient({
 		client,
 		dbName,
@@ -697,21 +700,27 @@ const getDatabaseCheckConstraints = async ({ client, dbName, logger }) => {
 
 	logger.log('info', { message: `Get '${dbName}' database check constraints.` }, 'Reverse Engineering');
 
-	return mapResponse(currentDbConnectionClient.query`
-		SELECT con.[name],
-			t.[name] AS [table],
-			col.[name] AS column_name,
-			con.[definition],
-			con.[is_not_trusted],
-			con.[is_disabled],
-			con.[is_not_for_replication]
-		FROM sys.check_constraints con
-		LEFT OUTER JOIN sys.objects t
-			ON con.parent_object_id = t.object_id
-		LEFT OUTER JOIN sys.all_columns col
-			ON con.parent_column_id = col.column_id
-			AND con.parent_object_id = col.object_id
-	`);
+	const tableAlias = 't';
+	const whereClauseParts = getWhereClauseForUniqueSchemasAndTables({ tableAlias, allUniqueSchemasAndTables });
+
+	return mapResponse(
+		currentDbConnectionClient.query(`
+			SELECT con.[name],
+				${tableAlias}.[name] AS [table],
+				col.[name] AS column_name,
+				con.[definition],
+				con.[is_not_trusted],
+				con.[is_disabled],
+				con.[is_not_for_replication]
+			FROM sys.check_constraints con
+			LEFT OUTER JOIN sys.objects ${tableAlias}
+				ON con.parent_object_id = ${tableAlias}.object_id
+			LEFT OUTER JOIN sys.all_columns col
+				ON con.parent_column_id = col.column_id
+				AND con.parent_object_id = col.object_id
+			WHERE ${whereClauseParts}
+		`),
+	);
 };
 
 const getViewTableInfo = async ({ client, dbName, viewName, schemaName, logger }) => {
@@ -868,6 +877,8 @@ const getTableKeyConstraints = async ({ client, dbName, tableName, schemaName, l
 			INNER JOIN sys.partitions p
 				ON p.object_id = OBJECT_ID(${objectId})
 					AND p.index_id = ind.index_id
+			WHERE TC.TABLE_SCHEMA=${schemaName}
+				AND TC.TABLE_NAME=${tableName}
 			ORDER BY TC.Constraint_Name
 		`,
 	);
@@ -896,7 +907,7 @@ const getTableMaskedColumns = async ({ client, dbName, tableName, schemaName, lo
 	);
 };
 
-const getDatabaseXmlSchemaCollection = async ({ client, dbName, logger }) => {
+const getDatabaseXmlSchemaCollection = async ({ client, dbName, allUniqueSchemasAndTables, logger }) => {
 	const currentDbConnectionClient = await getClient({
 		client,
 		dbName,
@@ -910,15 +921,26 @@ const getDatabaseXmlSchemaCollection = async ({ client, dbName, logger }) => {
 
 	logger.log('info', { message: `Get '${dbName}' database xml schema collection.` }, 'Reverse Engineering');
 
+	const schemaAlias = 'xsc';
+	const tableAlias = 'xcu';
+	const whereClauseParts = getWhereClauseForUniqueSchemasAndTables({
+		schemaAlias,
+		tableAlias,
+		allUniqueSchemasAndTables,
+	});
+
 	return mapResponse(
-		await currentDbConnectionClient.query`
-		SELECT xsc.name AS collectionName,
+		await currentDbConnectionClient.query(`
+			SELECT
+				xsc.name AS collectionName,
 				SCHEMA_NAME(xsc.schema_id) AS schemaName,
 				OBJECT_NAME(xcu.object_id) AS tableName,
 				COL_NAME(xcu.object_id, xcu.column_id) AS columnName
-		FROM sys.column_xml_schema_collection_usages xcu
-		LEFT JOIN sys.xml_schema_collections xsc ON xsc.xml_collection_id=xcu.xml_collection_id
-	`,
+			FROM sys.column_xml_schema_collection_usages xcu
+			LEFT JOIN sys.xml_schema_collections xsc
+				ON xsc.xml_collection_id=xcu.xml_collection_id
+			WHERE ${whereClauseParts}
+		`),
 	);
 };
 
@@ -1119,8 +1141,12 @@ const buildDescriptionCommentsRetrieveQuery = ({ schema, entity }) => {
 	return `SELECT objtype, objname, value FROM fn_listextendedproperty ('MS_Description', ${schemaTemplate}, ${entityTemplate});`;
 };
 
-const getWhereClauseForUniqueSchemasAndTables = ({ tableAlias, allUniqueSchemasAndTables: { schemas, tables } }) =>
-	`OBJECT_SCHEMA_NAME(${tableAlias}.object_id) IN (${[...schemas].join(', ')})
+const getWhereClauseForUniqueSchemasAndTables = ({
+	schemaAlias,
+	tableAlias,
+	allUniqueSchemasAndTables: { schemas, tables },
+}) =>
+	`OBJECT_SCHEMA_NAME(${schemaAlias || tableAlias}.object_id) IN (${[...schemas].join(', ')})
 	AND OBJECT_NAME(${tableAlias}.object_id) IN (${[...tables].join(', ')})`;
 
 module.exports = {
