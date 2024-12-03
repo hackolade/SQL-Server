@@ -4,7 +4,7 @@ const BOUNDING_BOX_LABEL = ['XMIN', 'YMIN', 'XMAX', 'YMAX'];
 
 module.exports = app => {
 	const _ = app.require('lodash');
-	const { filterColumnStoreProperties, getTableName } = require('./general')(app);
+	const { filterColumnStoreProperties, getTableName, getIndexName } = require('./general')(app);
 	const { assignTemplates } = app.require('@hackolade/ddl-fe-utils');
 	const { divideIntoActivatedAndDeactivated, checkAllKeysDeactivated } =
 		app.require('@hackolade/ddl-fe-utils').general;
@@ -82,7 +82,7 @@ module.exports = app => {
 			: '';
 
 		return assignTemplates(templates.index, {
-			name: index.name,
+			name: getIndexName({ name: index.name, schemaName: index.schemaName }),
 			unique: index.unique ? ' UNIQUE' : '',
 			clustered: index.clustered ? ' CLUSTERED' : '',
 			table: getTableName(tableName, index.schemaName),
