@@ -4,8 +4,8 @@ const getKeyConstraintsCompositionStatuses = require('./getKeyConstraintsComposi
 const UNIQUE = 'UNIQUE';
 const PRIMARY_KEY = 'PRIMARY KEY';
 
-const reverseCompositeKeys = keyConstraintsInfo => {
-	const keyCompositionStatuses = getKeyConstraintsCompositionStatuses(keyConstraintsInfo);
+const reverseCompositeKeys = ({ keyConstraintsInfo }) => {
+	const keyCompositionStatuses = getKeyConstraintsCompositionStatuses({ keyConstraintsInfo });
 	return keyConstraintsInfo.reduce((reversedKeys, keyConstraintInfo) => {
 		const { columnName, constraintName, constraintType, isDescending } = keyConstraintInfo;
 		const compositionStatus = keyCompositionStatuses[constraintName];
@@ -52,8 +52,8 @@ const reverseCompositeKeys = keyConstraintsInfo => {
 	}, {});
 };
 
-const defineFieldsCompositeKeyConstraints = keyConstraintsInfo => {
-	const reversedKeyConstraints = reverseCompositeKeys(keyConstraintsInfo);
+const defineFieldsCompositeKeyConstraints = ({ keyConstraintsInfo }) => {
+	const reversedKeyConstraints = reverseCompositeKeys({ keyConstraintsInfo });
 	return Object.values(reversedKeyConstraints).reduce(
 		(keysAcc, keyConstraintInfo) => {
 			const { _type, order, ...necessaryInfo } = keyConstraintInfo;

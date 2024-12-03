@@ -416,6 +416,7 @@ const processTable = async ({ schemaName, rawTableName, ...context }) => {
 		reorderedTableRows,
 		periodForSystemTime,
 		tableInfo,
+		fieldsKeyConstraints,
 	});
 
 	if (isView) {
@@ -467,6 +468,8 @@ const getAllUniqueSchemasAndTables = ({ tablesInfo }) =>
 	);
 
 const createTableResult = ({
+	dbName,
+	databaseUDT,
 	tableName,
 	schemaName,
 	jsonSchema,
@@ -474,11 +477,14 @@ const createTableResult = ({
 	reorderedTableRows,
 	periodForSystemTime,
 	tableInfo,
-	...context
+	fieldsKeyConstraints,
+	databaseIndexes,
+	fullTextIndexes,
+	spatialIndexes,
+	databaseCheckConstraints,
+	databaseMemoryOptimizedTables,
 }) => {
-	const { databaseIndexes, databaseMemoryOptimizedTables, databaseCheckConstraints } = context;
-
-	const tableIndexes = [...databaseIndexes, ...context.fullTextIndexes, ...context.spatialIndexes].filter(
+	const tableIndexes = [...databaseIndexes, ...fullTextIndexes, ...spatialIndexes].filter(
 		index => index.TableName === tableName && index.schemaName === schemaName,
 	);
 
@@ -492,14 +498,14 @@ const createTableResult = ({
 			chkConstr: reverseTableCheckConstraints(tableCheckConstraints),
 			periodForSystemTime,
 			...getMemoryOptimizedOptions(databaseMemoryOptimizedTables.find(item => item.name === tableName)),
-			...defineFieldsCompositeKeyConstraints([]),
+			...defineFieldsCompositeKeyConstraints({ keyConstraintsInfo: fieldsKeyConstraints }),
 		},
 		standardDoc,
 		documentTemplate: standardDoc,
 		collectionDocs: reorderedTableRows,
 		documents: cleanDocuments(reorderedTableRows),
-		bucketInfo: { databaseName: context.dbName },
-		modelDefinitions: { definitions: getUserDefinedTypes(tableInfo, context.databaseUDT) },
+		bucketInfo: { databaseName: dbName },
+		modelDefinitions: { definitions: getUserDefinedTypes(tableInfo, databaseUDT) },
 		emptyBucket: false,
 		validation: { jsonSchema },
 		views: [],

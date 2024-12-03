@@ -32,7 +32,7 @@ const handleKey = (field, keyConstraintInfo) => {
 };
 
 const defineFieldsKeyConstraints = keyConstraintsInfo => jsonSchema => {
-	const keyCompositionStatuses = getKeyConstraintsCompositionStatuses(keyConstraintsInfo);
+	const keyCompositionStatuses = getKeyConstraintsCompositionStatuses({ keyConstraintsInfo });
 	return keyConstraintsInfo.reduce((jsonSchemaAcc, keyConstraintInfo) => {
 		const { columnName, constraintName } = keyConstraintInfo;
 		const currentField = jsonSchemaAcc.properties[columnName];
