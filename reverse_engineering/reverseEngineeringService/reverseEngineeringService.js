@@ -431,24 +431,31 @@ function isViewTable({ tableInfo }) {
 	return tableType && tableType.trim() === 'V';
 }
 
-const createJsonSchema = async ({ tableInfo, tableRows, fieldsKeyConstraints, schemaName, tableName, ...context }) => {
-	const { client, dbName, logger } = context;
-
+const createJsonSchema = async ({
+	tableInfo,
+	tableRows,
+	fieldsKeyConstraints,
+	schemaName,
+	tableName,
+	xmlSchemaCollections,
+	client,
+	dbName,
+	logger,
+}) => {
+	const commonContext = { client, dbName, tableName, schemaName, logger };
 	return pipe(
 		transformDatabaseTableInfoToJSON(tableInfo),
 		defineRequiredFields,
-		defineFieldsDescription(await getTableColumnsDescription({ client, dbName, tableName, schemaName, logger })),
+		defineFieldsDescription(await getTableColumnsDescription(commonContext)),
 		defineFieldsKeyConstraints(fieldsKeyConstraints),
-		defineMaskedColumns(await getTableMaskedColumns({ client, dbName, tableName, schemaName, logger })),
+		defineMaskedColumns(await getTableMaskedColumns(commonContext)),
 		defineJSONTypes(tableRows),
 		defineXmlFieldsCollections(
-			context.xmlSchemaCollections.filter(
+			xmlSchemaCollections.filter(
 				collection => collection.tableName === tableName && collection.schemaName === schemaName,
 			),
 		),
-		defineFieldsDefaultConstraintNames(
-			await getTableDefaultConstraintNames({ client, dbName, tableName, schemaName, logger }),
-		),
+		defineFieldsDefaultConstraintNames(await getTableDefaultConstraintNames(commonContext)),
 	)({ required: [], properties: {} });
 };
 
