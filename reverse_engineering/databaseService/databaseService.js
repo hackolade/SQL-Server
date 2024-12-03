@@ -403,7 +403,7 @@ const getDatabaseIndexes = async ({ client, dbName, tablesInfo, logger }) => {
 	logger.log('info', { message: `Get '${dbName}' database indexes.` }, 'Reverse Engineering');
 
 	const tableAlias = 't';
-	const whereClauseParts = Object.entries(tablesInfo).map(([schemaName, tableNames]) => {
+	const leftJoinClauseParts = Object.entries(tablesInfo).map(([schemaName, tableNames]) => {
 		const preparedTableNames = tableNames.map(tableName => `'${tableName}'`).join(', ');
 		return `(OBJECT_SCHEMA_NAME(${tableAlias}.object_id) = '${schemaName}' AND ${tableAlias}.name IN (${preparedTableNames}))`;
 	});
@@ -422,6 +422,7 @@ const getDatabaseIndexes = async ({ client, dbName, tablesInfo, logger }) => {
 			FROM sys.indexes ind
 			LEFT JOIN sys.tables t
 				ON ind.object_id = t.object_id
+				AND (${leftJoinClauseParts.join(' OR ')})
 			INNER JOIN sys.index_columns ic
 				ON ind.object_id = ic.object_id AND ind.index_id = ic.index_id
 			INNER JOIN sys.partitions p
@@ -430,7 +431,6 @@ const getDatabaseIndexes = async ({ client, dbName, tablesInfo, logger }) => {
 				ind.is_primary_key = 0
 				AND ind.is_unique_constraint = 0
 				AND t.is_ms_shipped = 0
-				AND ${whereClauseParts.join(' OR ')}
 		`),
 	);
 };
