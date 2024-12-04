@@ -159,7 +159,7 @@ module.exports = app => {
 					return isParentActivated ? commentIfDeactivated(column, key) : column;
 				})
 				.join(',\n\t'),
-			indexName: getIndexName({ name: index.name, schemaName: index.schemaName }),
+			indexName: getIndexName({ name: index.keyIndex, schemaName: index.schemaName }),
 			catalog: catalog ? `ON ${catalog}\n` : '',
 			options: options ? `WITH (\n\t${options}\n)` : '',
 			terminator,
