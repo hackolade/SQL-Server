@@ -159,7 +159,7 @@ module.exports = app => {
 					return isParentActivated ? commentIfDeactivated(column, key) : column;
 				})
 				.join(',\n\t'),
-			indexName: index.keyIndex,
+			indexName: getIndexName({ name: index.name, schemaName: index.schemaName }),
 			catalog: catalog ? `ON ${catalog}\n` : '',
 			options: options ? `WITH (\n\t${options}\n)` : '',
 			terminator,
@@ -212,7 +212,7 @@ module.exports = app => {
 		const options = getSpatialOptions(index);
 
 		return assignTemplates(templates.spatialIndex, {
-			name: index.name,
+			name: getIndexName({ name: index.name, schemaName: index.schemaName }),
 			table: getTableName(tableName, index.schemaName),
 			column: `[${index.column.name}]`,
 			using: index.using ? `\nUSING ${index.using}` : '',
