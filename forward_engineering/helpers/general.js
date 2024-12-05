@@ -7,13 +7,18 @@ module.exports = app => {
 	const { decorateDefault } = require('./columnDefinitionHelper')(app);
 	const { checkAllKeysDeactivated } = app.require('@hackolade/ddl-fe-utils').general;
 
+	const withBrackets = (name, brackets) => (brackets ? `[${name}]` : name);
+
 	const getTableName = (tableName, schemaName, brackets = true) => {
-		const withBrackets = name => (brackets ? `[${name}]` : name);
-		if (schemaName) {
-			return `${withBrackets(schemaName)}.${withBrackets(tableName)}`;
-		} else {
-			return withBrackets(tableName);
-		}
+		const name = withBrackets(tableName, brackets);
+
+		return schemaName ? `${withBrackets(schemaName, brackets)}.${name}` : name;
+	};
+
+	const getIndexName = ({ name, schemaName, brackets = true }) => {
+		const indexName = withBrackets(name, brackets);
+
+		return schemaName ? `${withBrackets(schemaName, brackets)}.${indexName}` : indexName;
 	};
 
 	const getDefaultValue = (defaultValue, defaultConstraintName, type) => {
@@ -262,6 +267,7 @@ module.exports = app => {
 		filterColumnStoreProperties,
 		getKeyWithAlias,
 		getTableName,
+		getIndexName,
 		getTableOptions,
 		hasType,
 		getViewData,
