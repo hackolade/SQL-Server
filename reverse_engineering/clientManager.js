@@ -1,11 +1,22 @@
 const { getConnectionClient } = require('./databaseService/databaseService');
 
-const stateInstance = {
-	_client: null,
-	_isSshTunnel: false,
-	getClient: () => this._client,
-	setClient: async (connectionInfo, sshService, attempts = 0, logger) => {
-		if (connectionInfo.ssh && !this._isSshTunnel) {
+class ClientManager {
+	#client = null;
+	#sshService = null;
+	#isSshTunnel = false;
+
+	getClient() {
+		return this.#client;
+	}
+
+	async initClient({ connectionInfo, sshService, attempts = 0, logger }) {
+		if (!this.#sshService) {
+			this.#sshService = sshService;
+		}
+
+		let connectionParams = { ...connectionInfo };
+
+		if (connectionInfo.ssh && !this.#isSshTunnel) {
 			const { options } = await sshService.openTunnel({
 				sshAuthMethod: connectionInfo.ssh_method === 'privateKey' ? 'IDENTITY_FILE' : 'USER_PASSWORD',
 				sshTunnelHostname: connectionInfo.ssh_host,
@@ -18,44 +29,51 @@ const stateInstance = {
 				port: connectionInfo.port,
 			});
 
-			this._isSshTunnel = true;
-			connectionInfo = {
+			this.#isSshTunnel = true;
+
+			connectionParams = {
 				...connectionInfo,
 				...options,
 			};
 		}
 
 		try {
-			this._client = await getConnectionClient(connectionInfo, logger);
+			this.#client = await getConnectionClient({ connectionInfo: connectionParams, logger });
+
+			return this.#client;
 		} catch (error) {
 			const encryptConnection =
-				connectionInfo.encryptConnection === undefined || Boolean(connectionInfo.encryptConnection);
+				connectionParams.encryptConnection === undefined || Boolean(connectionParams.encryptConnection);
+
 			const isEncryptedConnectionToLocalInstance =
 				error.message.includes('self signed certificate') && encryptConnection;
 
 			if (isEncryptedConnectionToLocalInstance && attempts <= 0) {
-				return stateInstance.setClient(
-					{
-						...connectionInfo,
+				return this.initClient({
+					connectionInfo: {
+						...connectionParams,
 						encryptConnection: false,
 					},
 					sshService,
-					attempts + 1,
+					attempts: attempts + 1,
 					logger,
-				);
+				});
 			}
 
 			throw error;
 		}
-	},
-	clearClient: async sshService => {
-		this._client = null;
+	}
 
-		if (this._isSshTunnel) {
-			await sshService.closeConsumer();
-			this._isSshTunnel = false;
+	clearClient() {
+		this.#client = null;
+
+		if (this.#isSshTunnel && this.#sshService) {
+			this.#sshService.closeConsumer();
+			this.#isSshTunnel = false;
 		}
-	},
-};
+	}
+}
 
-module.exports = stateInstance;
+module.exports = {
+	clientManager: new ClientManager(),
+};

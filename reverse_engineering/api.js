@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const randomstring = require('randomstring');
 const base64url = require('base64url');
-const { getClient, setClient, clearClient } = require('./connectionState');
+const { clientManager } = require('./clientManager');
 const { getObjectsFromDatabase, getDatabaseCollationOption } = require('./databaseService/databaseService');
 const {
 	reverseCollectionsToJSON,
@@ -21,19 +21,21 @@ const { prepareError } = require('./databaseService/helpers/errorService');
 
 module.exports = {
 	async connect(connectionInfo, logger, callback, app) {
-		const client = getClient();
-		const sshService = app.require('@hackolade/ssh-service');
+		const client = clientManager.getClient();
+
 		if (!client) {
-			await setClient(connectionInfo, sshService, 0, logger);
-			return getClient();
+			return await clientManager.initClient({
+				connectionInfo,
+				logger,
+				sshService: app.require('@hackolade/ssh-service'),
+			});
 		}
 
 		return client;
 	},
 
-	disconnect(connectionInfo, logger, callback, app) {
-		const sshService = app.require('@hackolade/ssh-service');
-		clearClient(sshService);
+	disconnect(connectionInfo, logger, callback) {
+		clientManager.clearClient();
 		callback();
 	},
 
@@ -44,9 +46,9 @@ module.exports = {
 				await this.getExternalBrowserUrl(connectionInfo, logger, callback, app);
 			} else {
 				const client = await this.connect(connectionInfo, logger, () => {}, app);
-				await logDatabaseVersion(client, logger);
+				await logDatabaseVersion({ client, logger });
 			}
-			callback(null);
+			callback();
 		} catch (error) {
 			const errorWithUpdatedInfo = prepareError({ error });
 			logger.log(
@@ -88,16 +90,17 @@ module.exports = {
 	async getDbCollectionsNames(connectionInfo, logger, callback, app) {
 		try {
 			logInfo('Retrieving databases and tables information', connectionInfo, logger);
+
 			const client = await this.connect(connectionInfo, logger, () => {}, app);
 			if (!client.config.database) {
 				throw new Error('No database specified');
 			}
 
-			await logDatabaseVersion(client, logger);
+			await logDatabaseVersion({ client, logger });
 
 			const objects = await getObjectsFromDatabase(client);
 			const dbName = client.config.database;
-			const collationData = (await getDatabaseCollationOption(client, dbName, logger)) || [];
+			const collationData = (await getDatabaseCollationOption({ client, dbName, logger })) || [];
 			logger.log('info', { collation: collationData[0] }, 'Database collation');
 			callback(null, objects);
 		} catch (error) {
@@ -120,16 +123,16 @@ module.exports = {
 			logger.log('info', collectionsInfo, 'Retrieving schema', collectionsInfo.hiddenKeys);
 			logger.progress({ message: 'Start reverse-engineering process', containerName: '', entityName: '' });
 			const { collections } = collectionsInfo.collectionData;
-			const client = getClient();
-			const dbName = client.config.database;
-			if (!dbName) {
+			const client = clientManager.getClient();
+			const dbName = client?.config.database;
+			if (!client || !dbName) {
 				throw new Error('No database specified');
 			}
 
 			const reverseEngineeringOptions = getOptionsFromConnectionInfo(collectionsInfo);
 			const [jsonSchemas, relationships] = await Promise.all([
-				await reverseCollectionsToJSON(logger)(client, collections, reverseEngineeringOptions),
-				await getCollectionsRelationships(logger)(client, collections),
+				await reverseCollectionsToJSON({ client, tablesInfo: collections, reverseEngineeringOptions, logger }),
+				await getCollectionsRelationships({ client, tablesInfo: collections, logger }),
 			]);
 
 			const jsonSchemasWithDescriptionComments = await getJsonSchemasWithInjectedDescriptionComments({

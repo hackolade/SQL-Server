@@ -107,7 +107,7 @@ module.exports = {
 				await getExternalBrowserUrl(connectionInfo, logger, callback, app);
 			} else {
 				const client = await connect(connectionInfo, logger, () => {}, app);
-				await logDatabaseVersion(client, logger);
+				await logDatabaseVersion({ client, logger });
 			}
 			callback(null);
 		} catch (error) {

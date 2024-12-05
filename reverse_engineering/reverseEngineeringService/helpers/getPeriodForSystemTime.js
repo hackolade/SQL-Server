@@ -1,10 +1,12 @@
 const { getTableSystemTime } = require('../../databaseService/databaseService');
 
-const getPeriodForSystemTime = async (dbConnectionClient, dbName, tableName, schemaName, logger) => {
-	const tableSystemTime = await getTableSystemTime(dbConnectionClient, dbName, tableName, schemaName, logger);
+const getPeriodForSystemTime = async ({ client, dbName, tableName, schemaName, logger }) => {
+	const tableSystemTime = await getTableSystemTime({ client, dbName, tableName, tableSchema: schemaName, logger });
+
 	if (!tableSystemTime[0]) {
 		return;
 	}
+
 	const periodForSystemTime = tableSystemTime[0];
 	return [
 		{
