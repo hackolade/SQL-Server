@@ -4,7 +4,7 @@ const BOUNDING_BOX_LABEL = ['XMIN', 'YMIN', 'XMAX', 'YMAX'];
 
 module.exports = app => {
 	const _ = app.require('lodash');
-	const { filterColumnStoreProperties, getTableName, getIndexName } = require('./general')(app);
+	const { filterColumnStoreProperties, getTableName } = require('./general')(app);
 	const { assignTemplates } = app.require('@hackolade/ddl-fe-utils');
 	const { divideIntoActivatedAndDeactivated, checkAllKeysDeactivated } =
 		app.require('@hackolade/ddl-fe-utils').general;
@@ -82,7 +82,7 @@ module.exports = app => {
 			: '';
 
 		return assignTemplates(templates.index, {
-			name: getIndexName({ name: index.name, schemaName: index.schemaName }),
+			name: index.name,
 			unique: index.unique ? ' UNIQUE' : '',
 			clustered: index.clustered ? ' CLUSTERED' : '',
 			table: getTableName(tableName, index.schemaName),
@@ -159,7 +159,7 @@ module.exports = app => {
 					return isParentActivated ? commentIfDeactivated(column, key) : column;
 				})
 				.join(',\n\t'),
-			indexName: getIndexName({ name: index.keyIndex, schemaName: index.schemaName }),
+			indexName: index.keyIndex,
 			catalog: catalog ? `ON ${catalog}\n` : '',
 			options: options ? `WITH (\n\t${options}\n)` : '',
 			terminator,
@@ -212,7 +212,7 @@ module.exports = app => {
 		const options = getSpatialOptions(index);
 
 		return assignTemplates(templates.spatialIndex, {
-			name: getIndexName({ name: index.name, schemaName: index.schemaName }),
+			name: index.name,
 			table: getTableName(tableName, index.schemaName),
 			column: `[${index.column.name}]`,
 			using: index.using ? `\nUSING ${index.using}` : '',
