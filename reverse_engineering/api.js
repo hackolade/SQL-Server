@@ -1,7 +1,9 @@
 'use strict';
 
-const { BasePool } = require('mssql');
-const { getClient, setClient, clearClient } = require('./connectionState');
+const crypto = require('crypto');
+const randomstring = require('randomstring');
+const base64url = require('base64url');
+const { clientManager } = require('./clientManager');
 const { getObjectsFromDatabase, getDatabaseCollationOption } = require('./databaseService/databaseService');
 const {
 	reverseCollectionsToJSON,
@@ -14,25 +16,26 @@ const { getJsonSchemasWithInjectedDescriptionComments } = require('./helpers/com
 const filterRelationships = require('./helpers/filterRelationships');
 const getOptionsFromConnectionInfo = require('./helpers/getOptionsFromConnectionInfo');
 const { adaptJsonSchema } = require('./helpers/adaptJsonSchema');
-const crypto = require('crypto');
-const randomstring = require('randomstring');
-const base64url = require('base64url');
+const { parseConnectionString } = require('./helpers/parseConnectionString');
+const { prepareError } = require('./databaseService/helpers/errorService');
 
 module.exports = {
 	async connect(connectionInfo, logger, callback, app) {
-		const client = getClient();
-		const sshService = app.require('@hackolade/ssh-service');
+		const client = clientManager.getClient();
+
 		if (!client) {
-			await setClient(connectionInfo, sshService, 0, logger);
-			return getClient();
+			return await clientManager.initClient({
+				connectionInfo,
+				logger,
+				sshService: app.require('@hackolade/ssh-service'),
+			});
 		}
 
 		return client;
 	},
 
-	disconnect(connectionInfo, logger, callback, app) {
-		const sshService = app.require('@hackolade/ssh-service');
-		clearClient(sshService);
+	disconnect(connectionInfo, logger, callback) {
+		clientManager.clearClient();
 		callback();
 	},
 
@@ -43,12 +46,21 @@ module.exports = {
 				await this.getExternalBrowserUrl(connectionInfo, logger, callback, app);
 			} else {
 				const client = await this.connect(connectionInfo, logger, () => {}, app);
-				await logDatabaseVersion(client, logger);
+				await logDatabaseVersion({ client, logger });
 			}
-			callback(null);
+			callback();
 		} catch (error) {
-			logger.log('error', { message: error.message, stack: error.stack, error }, 'Test connection');
-			callback({ message: error.message, stack: error.stack });
+			const errorWithUpdatedInfo = prepareError({ error });
+			logger.log(
+				'error',
+				{
+					message: errorWithUpdatedInfo.message,
+					stack: errorWithUpdatedInfo.stack,
+					error: errorWithUpdatedInfo,
+				},
+				'Test connection',
+			);
+			callback({ message: errorWithUpdatedInfo.message, stack: errorWithUpdatedInfo.stack });
 		}
 	},
 
@@ -78,25 +90,31 @@ module.exports = {
 	async getDbCollectionsNames(connectionInfo, logger, callback, app) {
 		try {
 			logInfo('Retrieving databases and tables information', connectionInfo, logger);
+
 			const client = await this.connect(connectionInfo, logger, () => {}, app);
 			if (!client.config.database) {
 				throw new Error('No database specified');
 			}
 
-			await logDatabaseVersion(client, logger);
+			await logDatabaseVersion({ client, logger });
 
 			const objects = await getObjectsFromDatabase(client);
 			const dbName = client.config.database;
-			const collationData = (await getDatabaseCollationOption(client, dbName, logger)) || [];
+			const collationData = (await getDatabaseCollationOption({ client, dbName, logger })) || [];
 			logger.log('info', { collation: collationData[0] }, 'Database collation');
 			callback(null, objects);
 		} catch (error) {
+			const errorWithUpdatedInfo = prepareError({ error });
 			logger.log(
 				'error',
-				{ message: error.message, stack: error.stack, error },
+				{
+					message: errorWithUpdatedInfo.message,
+					stack: errorWithUpdatedInfo.stack,
+					error: errorWithUpdatedInfo,
+				},
 				'Retrieving databases and tables information',
 			);
-			callback({ message: error.message, stack: error.stack });
+			callback({ message: errorWithUpdatedInfo.message, stack: errorWithUpdatedInfo.stack });
 		}
 	},
 
@@ -105,16 +123,16 @@ module.exports = {
 			logger.log('info', collectionsInfo, 'Retrieving schema', collectionsInfo.hiddenKeys);
 			logger.progress({ message: 'Start reverse-engineering process', containerName: '', entityName: '' });
 			const { collections } = collectionsInfo.collectionData;
-			const client = getClient();
-			const dbName = client.config.database;
-			if (!dbName) {
+			const client = clientManager.getClient();
+			const dbName = client?.config.database;
+			if (!client || !dbName) {
 				throw new Error('No database specified');
 			}
 
 			const reverseEngineeringOptions = getOptionsFromConnectionInfo(collectionsInfo);
 			const [jsonSchemas, relationships] = await Promise.all([
-				await reverseCollectionsToJSON(logger)(client, collections, reverseEngineeringOptions),
-				await getCollectionsRelationships(logger)(client, collections),
+				await reverseCollectionsToJSON({ client, tablesInfo: collections, reverseEngineeringOptions, logger }),
+				await getCollectionsRelationships({ client, tablesInfo: collections, logger }),
 			]);
 
 			const jsonSchemasWithDescriptionComments = await getJsonSchemasWithInjectedDescriptionComments({
@@ -125,7 +143,7 @@ module.exports = {
 			});
 			callback(
 				null,
-				mergeCollectionsWithViews(jsonSchemasWithDescriptionComments),
+				mergeCollectionsWithViews({ jsonSchemas: jsonSchemasWithDescriptionComments }),
 				null,
 				filterRelationships(relationships, jsonSchemasWithDescriptionComments),
 			);
@@ -141,16 +159,15 @@ module.exports = {
 
 	parseConnectionString({ connectionString = '' }, logger, callback) {
 		try {
-			const parsedConnectionStringData = BasePool.parseConnectionString(connectionString);
-			const parsedData = {
-				databaseName: parsedConnectionStringData.database,
-				host: parsedConnectionStringData.server,
-				port: parsedConnectionStringData.port,
-				authMethod: 'Username / Password',
-				userName: parsedConnectionStringData.user,
-				userPassword: parsedConnectionStringData.password,
-			};
-			callback(null, { parsedData });
+			const authMethod = 'Username / Password';
+			const parsedData = parseConnectionString({ string: connectionString });
+
+			callback(null, {
+				parsedData: {
+					authMethod,
+					...parsedData,
+				},
+			});
 		} catch (err) {
 			logger.log('error', { message: err.message, stack: err.stack, err }, 'Parsing connection string failed');
 			callback({ message: err.message, stack: err.stack });

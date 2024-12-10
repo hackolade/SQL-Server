@@ -153,7 +153,7 @@ const addKeys = (indexData, index) => {
 	}
 };
 
-const reverseTableIndexes = tableIndexes =>
+const reverseTableIndexes = ({ tableIndexes }) =>
 	Object.values(
 		tableIndexes.reduce((indexList, index) => {
 			let existedIndex = indexList[index.IndexName];

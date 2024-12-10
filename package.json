@@ -1,9 +1,9 @@
 {
     "name": "SQLServer",
-    "version": "0.2.6",
+    "version": "0.2.15",
     "author": "hackolade",
     "engines": {
-        "hackolade": "6.7.1",
+        "hackolade": "7.7.10",
         "hackoladePlugin": "1.2.0"
     },
     "contributes": {
@@ -49,7 +49,8 @@
             },
             "FEScriptCommentsSupported": true,
             "enableFetchSystemEntitiesCheckbox": true,
-            "discoverRelationships": true
+            "discoverRelationships": true,
+            "enableKeysMultipleAbrr": true
         }
     },
     "description": "Hackolade plugin for Microsoft SQL Server and Azure SQL Database",

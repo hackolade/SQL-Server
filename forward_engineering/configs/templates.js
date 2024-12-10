@@ -91,16 +91,16 @@ module.exports = {
 	dropType: 'DROP TYPE IF EXISTS ${name}${terminator}',
 
 	createSchemaComment:
-		"EXEC sp_addextendedproperty 'MS_Description', '${value}', 'schema', ${schemaName}${terminator}",
+		"EXEC sp_addextendedproperty 'MS_Description', N'${value}', 'schema', ${schemaName}${terminator}",
 
 	createTableComment:
-		"EXEC sp_addextendedproperty 'MS_Description', '${value}', 'schema', ${schemaName}, 'table', ${tableName}${terminator}",
+		"EXEC sp_addextendedproperty 'MS_Description', N'${value}', 'schema', ${schemaName}, 'table', ${tableName}${terminator}",
 
 	createColumnComment:
-		"EXEC sp_addextendedproperty 'MS_Description', '${value}', 'schema', ${schemaName}, 'table', ${tableName}, 'column', ${columnName}${terminator}",
+		"EXEC sp_addextendedproperty 'MS_Description', N'${value}', 'schema', ${schemaName}, 'table', ${tableName}, 'column', ${columnName}${terminator}",
 
 	createViewComment:
-		"EXEC sp_addextendedproperty 'MS_Description', '${value}', 'schema', ${schemaName}, 'view', ${viewName}${terminator}",
+		"EXEC sp_addextendedproperty 'MS_Description', N'${value}', 'schema', ${schemaName}, 'view', ${viewName}${terminator}",
 
 	dropSchemaComment: "EXEC sp_dropextendedproperty 'MS_Description', 'schema', ${schemaName}${terminator}",
 
@@ -114,14 +114,14 @@ module.exports = {
 		"EXEC sp_dropextendedproperty 'MS_Description', 'schema', ${schemaName}, 'view', ${viewName}${terminator}",
 
 	updateSchemaComment:
-		"EXEC sp_updateextendedproperty 'MS_Description', '${value}', 'schema', ${schemaName}${terminator}",
+		"EXEC sp_updateextendedproperty 'MS_Description', N'${value}', 'schema', ${schemaName}${terminator}",
 
 	updateTableComment:
-		"EXEC sp_updateextendedproperty 'MS_Description', '${value}', 'schema', ${schemaName}, 'table', ${tableName}${terminator}",
+		"EXEC sp_updateextendedproperty 'MS_Description', N'${value}', 'schema', ${schemaName}, 'table', ${tableName}${terminator}",
 
 	updateColumnComment:
-		"EXEC sp_updateextendedproperty 'MS_Description', '${value}', 'schema', ${schemaName}, 'table', ${tableName}, 'column', ${columnName}${terminator}",
+		"EXEC sp_updateextendedproperty 'MS_Description', N'${value}', 'schema', ${schemaName}, 'table', ${tableName}, 'column', ${columnName}${terminator}",
 
 	updateViewComment:
-		"EXEC sp_updateextendedproperty 'MS_Description', '${value}', 'schema', ${schemaName}, 'view', ${viewName}${terminator}",
+		"EXEC sp_updateextendedproperty 'MS_Description', N'${value}', 'schema', ${schemaName}, 'view', ${viewName}${terminator}",
 };
