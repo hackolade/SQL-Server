@@ -61,7 +61,7 @@ module.exports = app => {
 	};
 
 	const createIndex = (terminator, tableName, index, isParentActivated = true) => {
-		if (_.isEmpty(index.keys)) {
+		if (_.isEmpty(index.keys) || !index.name) {
 			return '';
 		}
 
@@ -132,7 +132,7 @@ module.exports = app => {
 	};
 
 	const createFullTextIndex = (terminator, tableName, index, isParentActivated) => {
-		if (_.isEmpty(index.keys)) {
+		if (_.isEmpty(index.keys) || !index.keyIndex) {
 			return '';
 		}
 		const catalog = getFulltextCatalog(index);
@@ -206,7 +206,7 @@ module.exports = app => {
 	};
 
 	const createSpatialIndex = (terminator, tableName, index) => {
-		if (!index.column) {
+		if (!index.column || !index.name) {
 			return '';
 		}
 		const options = getSpatialOptions(index);
