@@ -15,7 +15,7 @@ module.exports = {
 
 	index:
 		'CREATE${unique}${clustered}${columnstore} INDEX ${name}\n' +
-		'\tON ${table} ( ${keys} )${include}${expression}${relational_index_option}${terminator}\n',
+		'\tON ${table}${keys}${include}${expression}${relational_index_option}${terminator}\n',
 
 	fullTextIndex:
 		'CREATE FULLTEXT INDEX ON ${table} (\n\t${keys}\n)\nKEY INDEX ${indexName}\n${catalog}${options}${terminator}\n',

@@ -863,16 +863,55 @@ making sure that you maintain a proper JSON format.
 						"propertyType": "fieldList",
 						"template": "orderedList",
 						"attributeList": ["ascending", "descending"],
+						"validation": {
+							"required": true,
+							"minLength": 1
+						},
 						"dependency": {
-							"type": "or",
+							"key": "indxType",
+							"value": "Index"
+						}
+					},
+					{
+						"propertyName": "Keys",
+						"propertyKeyword": "indxKey",
+						"propertyType": "fieldList",
+						"template": "orderedList",
+						"attributeList": ["ascending", "descending"],
+						"dependency": {
+							"type": "and",
 							"values": [
 								{
 									"key": "indxType",
-									"value": "Index"
+									"value": "Columnstore"
 								},
+								{
+									"key": "clusteredIndx",
+									"value": false
+								}
+							]
+						},
+						"validation": {
+							"required": true,
+							"minLength": 1
+						}
+					},
+					{
+						"propertyName": "Keys",
+						"propertyKeyword": "indxKey",
+						"propertyType": "fieldList",
+						"template": "orderedList",
+						"attributeList": ["ascending", "descending"],
+						"dependency": {
+							"type": "and",
+							"values": [
 								{
 									"key": "indxType",
 									"value": "Columnstore"
+								},
+								{
+									"key": "clusteredIndx",
+									"value": true
 								}
 							]
 						}
@@ -889,6 +928,10 @@ making sure that you maintain a proper JSON format.
 						},
 						"templateOptions": {
 							"maxFields": 1
+						},
+						"validation": {
+							"required": true,
+							"minLength": 1
 						}
 					},
 					{
@@ -1345,6 +1388,10 @@ making sure that you maintain a proper JSON format.
 						"dependency": {
 							"key": "indxType",
 							"value": "FullText"
+						},
+						"validation": {
+							"required": true,
+							"minLength": 1
 						}
 					},
 					{

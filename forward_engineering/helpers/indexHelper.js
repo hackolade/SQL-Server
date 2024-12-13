@@ -61,7 +61,9 @@ module.exports = app => {
 	};
 
 	const createIndex = (terminator, tableName, index, isParentActivated = true) => {
-		if (_.isEmpty(index.keys) || !index.name) {
+		const isInvalidColumnStore = index.type !== 'columnstore' || (index.type === 'columnstore' && index.clustered);
+
+		if ((_.isEmpty(index.keys) && isInvalidColumnStore) || !index.name) {
 			return '';
 		}
 
@@ -81,16 +83,18 @@ module.exports = app => {
 			? commentIfDeactivated(dividedKeys.deactivatedItems.join(', '), { isActivated: false }, true)
 			: '';
 
+		const keys = isParentActivated
+			? dividedKeys.activatedItems.join(', ') + commentedKeys
+			: dividedKeys.activatedItems.join(', ') +
+				(dividedKeys.activatedItems.length ? ', ' : '') +
+				dividedKeys.deactivatedItems.join(', ');
+
 		return assignTemplates(templates.index, {
 			name: index.name,
 			unique: index.unique ? ' UNIQUE' : '',
 			clustered: index.clustered ? ' CLUSTERED' : '',
 			table: getTableName(tableName, index.schemaName),
-			keys: isParentActivated
-				? dividedKeys.activatedItems.join(', ') + commentedKeys
-				: dividedKeys.activatedItems.join(', ') +
-					(dividedKeys.activatedItems.length ? ', ' : '') +
-					dividedKeys.deactivatedItems.join(', '),
+			keys: dividedKeys.activatedItems.length || commentedKeys.length ? ` ( ${keys} )` : '',
 			columnstore: index.type === 'columnstore' ? ' COLUMNSTORE' : '',
 			relational_index_option: relationalIndexOption.length
 				? '\n\tWITH (\n\t\t' + relationalIndexOption.join(',\n\t\t') + '\n\t)'
