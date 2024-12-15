@@ -61,7 +61,7 @@ module.exports = app => {
 	};
 
 	const createIndex = (terminator, tableName, index, isParentActivated = true) => {
-		const isInvalidColumnStore = index.type !== 'columnstore' || (index.type === 'columnstore' && index.clustered);
+		const isInvalidColumnStore = index.type !== 'columnstore' || (index.type === 'columnstore' && !index.clustered);
 
 		if ((_.isEmpty(index.keys) && isInvalidColumnStore) || !index.name) {
 			return '';
@@ -136,33 +136,35 @@ module.exports = app => {
 	};
 
 	const createFullTextIndex = (terminator, tableName, index, isParentActivated) => {
-		if (_.isEmpty(index.keys) || !index.keyIndex) {
+		if (!index.keyIndex) {
 			return '';
 		}
 		const catalog = getFulltextCatalog(index);
 		const options = getFullTextOptions(index);
 
+		const keys = index.keys
+			.map(key => {
+				let column = `[${key.name}]`;
+
+				if (key.columnType) {
+					column += ` TYPE COLUMN ${key.columnType}`;
+				}
+
+				if (key.languageTerm) {
+					column += ` LANGUAGE ${key.languageTerm}`;
+				}
+
+				if (key.statisticalSemantics) {
+					column += ` STATISTICAL_SEMANTICS`;
+				}
+
+				return isParentActivated ? commentIfDeactivated(column, key) : column;
+			})
+			.join(',\n\t');
+
 		return assignTemplates(templates.fullTextIndex, {
 			table: getTableName(tableName, index.schemaName),
-			keys: index.keys
-				.map(key => {
-					let column = `[${key.name}]`;
-
-					if (key.columnType) {
-						column += ` TYPE COLUMN ${key.columnType}`;
-					}
-
-					if (key.languageTerm) {
-						column += ` LANGUAGE ${key.languageTerm}`;
-					}
-
-					if (key.statisticalSemantics) {
-						column += ` STATISTICAL_SEMANTICS`;
-					}
-
-					return isParentActivated ? commentIfDeactivated(column, key) : column;
-				})
-				.join(',\n\t'),
+			keys: keys ? ` (\n\t${keys}\n)\n` : '',
 			indexName: index.keyIndex,
 			catalog: catalog ? `ON ${catalog}\n` : '',
 			options: options ? `WITH (\n\t${options}\n)` : '',
@@ -230,9 +232,9 @@ module.exports = app => {
 			return createSpatialIndex(terminator, tableName, index);
 		} else if (index.type === 'fulltext') {
 			return createFullTextIndex(terminator, tableName, index);
-		} else {
-			return createIndex(terminator, tableName, index, isParentActivated);
 		}
+
+		return createIndex(terminator, tableName, index, isParentActivated);
 	};
 
 	const createMemoryOptimizedClusteredIndex = indexData => {

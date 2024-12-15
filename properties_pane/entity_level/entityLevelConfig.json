@@ -886,8 +886,13 @@ making sure that you maintain a proper JSON format.
 									"value": "Columnstore"
 								},
 								{
-									"key": "clusteredIndx",
-									"value": false
+									"type": "not",
+									"values": [
+										{
+											"key": "clusteredIndx",
+											"value": true
+										}
+									]
 								}
 							]
 						},
@@ -1388,10 +1393,6 @@ making sure that you maintain a proper JSON format.
 						"dependency": {
 							"key": "indxType",
 							"value": "FullText"
-						},
-						"validation": {
-							"required": true,
-							"minLength": 1
 						}
 					},
 					{
@@ -1423,11 +1424,13 @@ making sure that you maintain a proper JSON format.
 					{
 						"propertyName": "Key index",
 						"propertyKeyword": "indxFullTextKeyIndex",
-						"requiredProperty": true,
 						"propertyType": "text",
 						"dependency": {
 							"key": "indxType",
 							"value": "FullText"
+						},
+						"validation": {
+							"required": true
 						}
 					},
 					{
