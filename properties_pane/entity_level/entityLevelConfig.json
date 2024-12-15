@@ -815,6 +815,25 @@ making sure that you maintain a proper JSON format.
 						"propertyType": "text",
 						"validation": {
 							"required": true
+						},
+						"dependency": {
+							"type": "not",
+							"values": [
+								{
+									"key": "indxType",
+									"value": "FullText"
+								}
+							]
+						}
+					},
+					{
+						"propertyName": "Name",
+						"propertyKeyword": "indxName",
+						"propertyTooltip": "",
+						"propertyType": "text",
+						"dependency": {
+							"key": "indxType",
+							"value": "FullText"
 						}
 					},
 					{
