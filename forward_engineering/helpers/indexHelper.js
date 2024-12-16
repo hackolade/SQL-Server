@@ -164,7 +164,7 @@ module.exports = app => {
 
 		return assignTemplates(templates.fullTextIndex, {
 			table: getTableName(tableName, index.schemaName),
-			keys: keys ? ` (\n\t${keys}\n)\n` : '',
+			keys: keys ? ` (\n\t${keys}\n)` : '',
 			indexName: index.keyIndex,
 			catalog: catalog ? `ON ${catalog}\n` : '',
 			options: options ? `WITH (\n\t${options}\n)` : '',

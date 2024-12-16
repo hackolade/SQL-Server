@@ -927,15 +927,24 @@ making sure that you maintain a proper JSON format.
 						"template": "orderedList",
 						"attributeList": ["ascending", "descending"],
 						"dependency": {
-							"type": "and",
+							"type": "or",
 							"values": [
 								{
 									"key": "indxType",
-									"value": "Columnstore"
+									"value": "FullText"
 								},
 								{
-									"key": "clusteredIndx",
-									"value": true
+									"type": "and",
+									"values": [
+										{
+											"key": "indxType",
+											"value": "Columnstore"
+										},
+										{
+											"key": "clusteredIndx",
+											"value": true
+										}
+									]
 								}
 							]
 						}
@@ -1401,17 +1410,6 @@ making sure that you maintain a proper JSON format.
 									"value": "Spatial"
 								}
 							]
-						}
-					},
-					{
-						"propertyName": "Keys",
-						"propertyKeyword": "indxKey",
-						"propertyType": "fieldList",
-						"template": "orderedList",
-						"attributeList": [],
-						"dependency": {
-							"key": "indxType",
-							"value": "FullText"
 						}
 					},
 					{
