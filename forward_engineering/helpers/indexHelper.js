@@ -83,11 +83,14 @@ module.exports = app => {
 			? commentIfDeactivated(dividedKeys.deactivatedItems.join(', '), { isActivated: false }, true)
 			: '';
 
-		const keys = isParentActivated
-			? dividedKeys.activatedItems.join(', ') + commentedKeys
-			: dividedKeys.activatedItems.join(', ') +
-				(dividedKeys.activatedItems.length ? ', ' : '') +
-				dividedKeys.deactivatedItems.join(', ');
+		const activatedKeys = dividedKeys.activatedItems.join(', ');
+		const deactivatedKeys = dividedKeys.deactivatedItems.join(', ');
+
+		let keys = activatedKeys + commentedKeys;
+
+		if (!isParentActivated) {
+			keys = activatedKeys + (activatedKeys && deactivatedKeys ? ', ' : '') + deactivatedKeys;
+		}
 
 		return assignTemplates(templates.index, {
 			name: index.name,
