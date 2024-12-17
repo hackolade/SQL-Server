@@ -61,7 +61,9 @@ module.exports = app => {
 	};
 
 	const createIndex = (terminator, tableName, index, isParentActivated = true) => {
-		if (_.isEmpty(index.keys)) {
+		const isInvalidColumnStore = index.type !== 'columnstore' || (index.type === 'columnstore' && !index.clustered);
+
+		if ((_.isEmpty(index.keys) && isInvalidColumnStore) || !index.name) {
 			return '';
 		}
 
@@ -81,16 +83,21 @@ module.exports = app => {
 			? commentIfDeactivated(dividedKeys.deactivatedItems.join(', '), { isActivated: false }, true)
 			: '';
 
+		const activatedKeys = dividedKeys.activatedItems.join(', ');
+		const deactivatedKeys = dividedKeys.deactivatedItems.join(', ');
+
+		let keys = activatedKeys + commentedKeys;
+
+		if (!isParentActivated) {
+			keys = activatedKeys + (activatedKeys && deactivatedKeys ? ', ' : '') + deactivatedKeys;
+		}
+
 		return assignTemplates(templates.index, {
 			name: index.name,
 			unique: index.unique ? ' UNIQUE' : '',
 			clustered: index.clustered ? ' CLUSTERED' : '',
 			table: getTableName(tableName, index.schemaName),
-			keys: isParentActivated
-				? dividedKeys.activatedItems.join(', ') + commentedKeys
-				: dividedKeys.activatedItems.join(', ') +
-					(dividedKeys.activatedItems.length ? ', ' : '') +
-					dividedKeys.deactivatedItems.join(', '),
+			keys: dividedKeys.activatedItems.length || commentedKeys.length ? ` ( ${keys} )` : '',
 			columnstore: index.type === 'columnstore' ? ' COLUMNSTORE' : '',
 			relational_index_option: relationalIndexOption.length
 				? '\n\tWITH (\n\t\t' + relationalIndexOption.join(',\n\t\t') + '\n\t)'
@@ -132,33 +139,35 @@ module.exports = app => {
 	};
 
 	const createFullTextIndex = (terminator, tableName, index, isParentActivated) => {
-		if (_.isEmpty(index.keys)) {
+		if (!index.keyIndex) {
 			return '';
 		}
 		const catalog = getFulltextCatalog(index);
 		const options = getFullTextOptions(index);
 
+		const keys = index.keys
+			.map(key => {
+				let column = `[${key.name}]`;
+
+				if (key.columnType) {
+					column += ` TYPE COLUMN ${key.columnType}`;
+				}
+
+				if (key.languageTerm) {
+					column += ` LANGUAGE ${key.languageTerm}`;
+				}
+
+				if (key.statisticalSemantics) {
+					column += ` STATISTICAL_SEMANTICS`;
+				}
+
+				return isParentActivated ? commentIfDeactivated(column, key) : column;
+			})
+			.join(',\n\t');
+
 		return assignTemplates(templates.fullTextIndex, {
 			table: getTableName(tableName, index.schemaName),
-			keys: index.keys
-				.map(key => {
-					let column = `[${key.name}]`;
-
-					if (key.columnType) {
-						column += ` TYPE COLUMN ${key.columnType}`;
-					}
-
-					if (key.languageTerm) {
-						column += ` LANGUAGE ${key.languageTerm}`;
-					}
-
-					if (key.statisticalSemantics) {
-						column += ` STATISTICAL_SEMANTICS`;
-					}
-
-					return isParentActivated ? commentIfDeactivated(column, key) : column;
-				})
-				.join(',\n\t'),
+			keys: keys ? ` (\n\t${keys}\n)` : '',
 			indexName: index.keyIndex,
 			catalog: catalog ? `ON ${catalog}\n` : '',
 			options: options ? `WITH (\n\t${options}\n)` : '',
@@ -206,7 +215,7 @@ module.exports = app => {
 	};
 
 	const createSpatialIndex = (terminator, tableName, index) => {
-		if (!index.column) {
+		if (!index.column || !index.name) {
 			return '';
 		}
 		const options = getSpatialOptions(index);
@@ -226,9 +235,9 @@ module.exports = app => {
 			return createSpatialIndex(terminator, tableName, index);
 		} else if (index.type === 'fulltext') {
 			return createFullTextIndex(terminator, tableName, index);
-		} else {
-			return createIndex(terminator, tableName, index, isParentActivated);
 		}
+
+		return createIndex(terminator, tableName, index, isParentActivated);
 	};
 
 	const createMemoryOptimizedClusteredIndex = indexData => {
