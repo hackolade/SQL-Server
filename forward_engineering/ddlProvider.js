@@ -45,7 +45,7 @@ module.exports = (baseProvider, options, app) => {
 	const terminator = getTerminator(options);
 
 	return {
-		createSchema({ schemaName, databaseName, ifNotExist, comment, isActivated }) {
+		createSchema({ schemaName, databaseName, ifNotExist, comment, isActivated = true }) {
 			const schemaTerminator = ifNotExist ? ';' : terminator;
 
 			const schemaComment = comment
