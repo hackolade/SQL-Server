@@ -313,18 +313,6 @@ making sure that you maintain a proper JSON format.
 				"template": "textarea"
 			},
 			{
-				"propertyName": "Not null",
-				"propertyKeyword": "required",
-				"enableForReference": true,
-				"propertyType": "checkbox",
-				"dependency": {
-					"key": "primaryKey",
-					"value": true
-				},
-				"disabled": true,
-				"defaultValue": true
-			},
-			{
 				"propertyName": "Computed column",
 				"propertyKeyword": "computedColumn",
 				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
@@ -344,6 +332,27 @@ making sure that you maintain a proper JSON format.
 					"key": "computedColumn",
 					"value": true
 				}
+			},
+			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
+				"propertyName": "Not null",
+				"propertyKeyword": "required",
+				"enableForReference": true,
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "primaryKey",
+					"value": true
+				},
+				"disabled": true,
+				"defaultValue": true
 			},
 			{
 				"propertyName": "Not null",
@@ -1014,6 +1023,15 @@ making sure that you maintain a proper JSON format.
 					"editorDialect": "sql"
 				},
 				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
 				"dependency": {
 					"key": "computedColumn",
 					"value": true
@@ -1704,6 +1722,15 @@ making sure that you maintain a proper JSON format.
 				}
 			},
 			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -2312,6 +2339,15 @@ making sure that you maintain a proper JSON format.
 					"editorDialect": "sql"
 				},
 				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
 				"dependency": {
 					"key": "computedColumn",
 					"value": true
@@ -2932,6 +2968,15 @@ making sure that you maintain a proper JSON format.
 				}
 			},
 			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -2984,6 +3029,15 @@ making sure that you maintain a proper JSON format.
 				}
 			},
 			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -3030,6 +3084,15 @@ making sure that you maintain a proper JSON format.
 					"editorDialect": "sql"
 				},
 				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
 				"dependency": {
 					"key": "computedColumn",
 					"value": true
@@ -3600,6 +3663,15 @@ making sure that you maintain a proper JSON format.
 				}
 			},
 			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -3658,6 +3730,15 @@ making sure that you maintain a proper JSON format.
 					"editorDialect": "sql"
 				},
 				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
 				"dependency": {
 					"key": "computedColumn",
 					"value": true
@@ -4250,6 +4331,15 @@ making sure that you maintain a proper JSON format.
 				}
 			},
 			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -4312,6 +4402,15 @@ making sure that you maintain a proper JSON format.
 					"editorDialect": "sql"
 				},
 				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
+				"propertyName": "Persisted",
+				"propertyKeyword": "persisted",
+				"propertyType": "checkbox",
 				"dependency": {
 					"key": "computedColumn",
 					"value": true

@@ -177,6 +177,14 @@ module.exports = (baseProvider, options, app) => {
 				: fullTableStatement;
 		},
 
+		createComputedColumn({ name, expression, persisted }) {
+			return assignTemplates(templates.computedColumnDefinition, {
+				name,
+				expression,
+				persisted: persisted ? ' PERSISTED' : '',
+			});
+		},
+
 		convertColumnDefinition(columnDefinition) {
 			const type = hasType(columnDefinition.type)
 				? _.toUpper(columnDefinition.type)
@@ -207,19 +215,28 @@ module.exports = (baseProvider, options, app) => {
 				columnDefinition.isHidden,
 			);
 
-			const statement = assignTemplates(templates.columnDefinition, {
-				name: columnDefinition.name,
-				type: decorateType(type, columnDefinition),
-				primary_key: primaryKey + unique,
-				not_null: notNull,
-				default: defaultValue,
-				sparse,
-				maskedWithFunction,
-				encryptedWith,
-				terminator,
-				temporalTableTime,
-				...identityContainer,
-			});
+			const { name, persisted, computedColumn, computedColumnExpression } = columnDefinition;
+
+			const statement =
+				computedColumn && computedColumnExpression
+					? this.createComputedColumn({
+							name,
+							expression: computedColumnExpression,
+							persisted,
+						})
+					: assignTemplates(templates.columnDefinition, {
+							name,
+							type: decorateType(type, columnDefinition),
+							primary_key: primaryKey + unique,
+							not_null: notNull,
+							default: defaultValue,
+							sparse,
+							maskedWithFunction,
+							encryptedWith,
+							terminator,
+							temporalTableTime,
+							...identityContainer,
+						});
 
 			return commentIfDeactivated(statement, { isActivated: columnDefinition.isActivated });
 		},
@@ -464,6 +481,9 @@ module.exports = (baseProvider, options, app) => {
 				encryption,
 				hasMaxLength: columnDefinition.hasMaxLength || jsonSchema.type === 'jsonObject',
 				comment: jsonSchema.description,
+				computedColumn: jsonSchema.computedColumn,
+				computedColumnExpression: jsonSchema.computedColumnExpression,
+				persisted: jsonSchema.persisted,
 				...(canHaveIdentity(jsonSchema.mode) && {
 					identity: {
 						seed: Number(_.get(jsonSchema, 'identity.identitySeed', 0)),

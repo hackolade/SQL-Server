@@ -9,11 +9,12 @@ module.exports = app => {
 
 	const getTableName = (tableName, schemaName, brackets = true) => {
 		const withBrackets = name => (brackets ? `[${name}]` : name);
+
 		if (schemaName) {
 			return `${withBrackets(schemaName)}.${withBrackets(tableName)}`;
-		} else {
-			return withBrackets(tableName);
 		}
+
+		return withBrackets(tableName);
 	};
 
 	const getDefaultValue = (defaultValue, defaultConstraintName, type) => {

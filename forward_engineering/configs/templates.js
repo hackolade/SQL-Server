@@ -12,6 +12,7 @@ module.exports = {
 
 	columnDefinition:
 		'[${name}] ${type}${primary_key}${temporalTableTime}${sparse}${maskedWithFunction}${identity}${default}${collation}${not_null}${encryptedWith}',
+	computedColumnDefinition: '[${name}] AS ${expression}${persisted}',
 
 	index:
 		'CREATE${unique}${clustered}${columnstore} INDEX ${name}\n' +
