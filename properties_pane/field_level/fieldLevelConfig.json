@@ -325,6 +325,27 @@ making sure that you maintain a proper JSON format.
 				"defaultValue": true
 			},
 			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -976,6 +997,27 @@ making sure that you maintain a proper JSON format.
 				"addTimestampButton": false,
 				"propertyType": "details",
 				"template": "textarea"
+			},
+			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
 			},
 			{
 				"propertyName": "Not null",
@@ -1641,6 +1683,27 @@ making sure that you maintain a proper JSON format.
 				"template": "textarea"
 			},
 			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -2232,6 +2295,27 @@ making sure that you maintain a proper JSON format.
 				"addTimestampButton": false,
 				"propertyType": "details",
 				"template": "textarea"
+			},
+			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
 			},
 			{
 				"propertyName": "Not null",
@@ -2827,6 +2911,27 @@ making sure that you maintain a proper JSON format.
 				"template": "textarea"
 			},
 			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -2858,6 +2963,27 @@ making sure that you maintain a proper JSON format.
 				"template": "textarea"
 			},
 			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -2887,6 +3013,27 @@ making sure that you maintain a proper JSON format.
 				"addTimestampButton": false,
 				"propertyType": "details",
 				"template": "textarea"
+			},
+			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
 			},
 			{
 				"propertyName": "Not null",
@@ -3432,6 +3579,27 @@ making sure that you maintain a proper JSON format.
 				"template": "textarea"
 			},
 			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -3473,6 +3641,27 @@ making sure that you maintain a proper JSON format.
 				"addTimestampButton": false,
 				"propertyType": "details",
 				"template": "textarea"
+			},
+			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
 			},
 			{
 				"propertyName": "Not null",
@@ -4040,6 +4229,27 @@ making sure that you maintain a proper JSON format.
 				"propertyType": "text"
 			},
 			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
+			},
+			{
 				"propertyName": "Not null",
 				"propertyKeyword": "required",
 				"enableForReference": true,
@@ -4085,6 +4295,27 @@ making sure that you maintain a proper JSON format.
 				"addTimestampButton": false,
 				"propertyType": "details",
 				"template": "textarea"
+			},
+			{
+				"propertyName": "Computed column",
+				"propertyKeyword": "computedColumn",
+				"propertyTooltip": "A computed column is a special column that is always computed from other columns",
+				"propertyType": "checkbox"
+			},
+			{
+				"propertyName": "Computed expression",
+				"propertyKeyword": "computedColumnExpression",
+				"propertyTooltip": "An SQL statement for computing values for this column",
+				"propertyType": "details",
+				"template": "codeEditor",
+				"templateOptions": {
+					"editorDialect": "sql"
+				},
+				"markdown": false,
+				"dependency": {
+					"key": "computedColumn",
+					"value": true
+				}
 			},
 			{
 				"propertyName": "Not null",
