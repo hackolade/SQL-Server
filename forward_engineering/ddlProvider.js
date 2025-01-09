@@ -177,10 +177,10 @@ module.exports = (baseProvider, options, app) => {
 				: fullTableStatement;
 		},
 
-		createComputedColumn({ name, expression, persisted }) {
+		createComputedColumn({ name, computedExpression, persisted }) {
 			return assignTemplates(templates.computedColumnDefinition, {
 				name,
-				expression,
+				expression: computedExpression.replace(/^(?!\().*?(?<!\))$/, '($&)'),
 				persisted: persisted ? ' PERSISTED' : '',
 			});
 		},
@@ -215,13 +215,13 @@ module.exports = (baseProvider, options, app) => {
 				columnDefinition.isHidden,
 			);
 
-			const { name, persisted, computedColumn, computedColumnExpression } = columnDefinition;
+			const { name, persisted, computed, computedExpression } = columnDefinition;
 
 			const statement =
-				computedColumn && computedColumnExpression
+				computed && computedExpression
 					? this.createComputedColumn({
 							name,
-							expression: computedColumnExpression,
+							computedExpression,
 							persisted,
 						})
 					: assignTemplates(templates.columnDefinition, {
@@ -481,8 +481,8 @@ module.exports = (baseProvider, options, app) => {
 				encryption,
 				hasMaxLength: columnDefinition.hasMaxLength || jsonSchema.type === 'jsonObject',
 				comment: jsonSchema.description,
-				computedColumn: jsonSchema.computedColumn,
-				computedColumnExpression: jsonSchema.computedColumnExpression,
+				computed: jsonSchema.computed,
+				computedExpression: jsonSchema.computedExpression,
 				persisted: jsonSchema.persisted,
 				...(canHaveIdentity(jsonSchema.mode) && {
 					identity: {
