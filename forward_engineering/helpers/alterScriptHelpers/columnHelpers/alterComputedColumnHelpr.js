@@ -2,7 +2,6 @@
 
 module.exports = (app, ddlProvider) => {
 	const _ = app.require('lodash');
-	const { checkFieldPropertiesChanged } = require('../common')(app);
 	const { createColumnDefinitionBySchema } = require('./createColumnDefinition')(_);
 	const { AlterScriptDto } = require('../types/AlterScriptDto');
 
@@ -24,14 +23,14 @@ module.exports = (app, ddlProvider) => {
 		];
 	};
 
-	function generateSqlAlterScript({
+	const generateSqlAlterScript = ({
 		collectionSchema,
 		prevJsonSchema,
 		jsonSchema,
 		fullName,
 		columnName,
 		schemaName,
-	}) {
+	}) => {
 		const schemaData = { schemaName };
 		const columnDefinition = createColumnDefinitionBySchema({
 			name: columnName,
@@ -60,9 +59,9 @@ module.exports = (app, ddlProvider) => {
 		}
 
 		return sqlScripts;
-	}
+	};
 
-	const getChangedComputedColumnsScriptsDto = (collection, fullName, collectionSchema, schemaName) => {
+	const getChangedComputedColumnsScriptsDto = ({ collection, fullName, collectionSchema, schemaName }) => {
 		return _.flatten(
 			_.toPairs(collection.properties).reduce((result, [columnName, jsonSchema]) => {
 				const oldJsonSchema = _.omit(collection.role?.properties?.[columnName], ['compMod']);

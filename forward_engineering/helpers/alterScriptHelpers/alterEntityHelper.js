@@ -192,12 +192,12 @@ module.exports = (app, options) => {
 			collectionSchema,
 			schemaName,
 		);
-		const changedComputedScriptsDtos = getChangedComputedColumnsScriptsDto(
+		const changedComputedScriptsDtos = getChangedComputedColumnsScriptsDto({
 			collection,
 			fullName,
 			collectionSchema,
 			schemaName,
-		);
+		});
 
 		return [
 			...renameColumnScriptsDtos,
