@@ -1,7 +1,8 @@
 'use strict';
 
+const _ = require('lodash');
+
 module.exports = (app, ddlProvider) => {
-	const _ = app.require('lodash');
 	const { createColumnDefinitionBySchema } = require('./createColumnDefinition')(_);
 	const { AlterScriptDto } = require('../types/AlterScriptDto');
 
