@@ -36,11 +36,7 @@ module.exports = (app, ddlProvider) => {
 		if (isComputedRemoved) {
 			sqlScript.push(
 				AlterScriptDto.getInstance([ddlProvider.dropColumn(fullName, columnName)], true, true),
-				AlterScriptDto.getInstance(
-					[ddlProvider.alterColumn(fullName, columnName, columnDefinition)],
-					true,
-					false,
-				),
+				AlterScriptDto.getInstance([ddlProvider.alterColumn(fullName, columnDefinition)], true, false),
 			);
 		}
 
@@ -68,11 +64,7 @@ module.exports = (app, ddlProvider) => {
 			} else {
 				sqlScript.push(
 					AlterScriptDto.getInstance([ddlProvider.dropColumn(fullName, columnName)], true, true),
-					AlterScriptDto.getInstance(
-						[ddlProvider.alterColumn(fullName, columnName, columnDefinition)],
-						true,
-						false,
-					),
+					AlterScriptDto.getInstance([ddlProvider.alterColumn(fullName, columnDefinition)], true, false),
 				);
 			}
 		}
