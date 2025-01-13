@@ -6,6 +6,24 @@ module.exports = (app, ddlProvider) => {
 	const { createColumnDefinitionBySchema } = require('./createColumnDefinition')(_);
 	const { AlterScriptDto } = require('../types/AlterScriptDto');
 
+	const changeToComputed = (fullName, columnName, columnDefinition) => {
+		return [
+			AlterScriptDto.getInstance([ddlProvider.dropColumn(fullName, columnName)], true, true),
+			AlterScriptDto.getInstance(
+				[ddlProvider.alterComputedColumn(fullName, columnName, columnDefinition)],
+				true,
+				false,
+			),
+		];
+	};
+
+	const changeToNonComputed = (fullName, columnName, columnDefinition) => {
+		return [
+			AlterScriptDto.getInstance([ddlProvider.dropColumn(fullName, columnName)], true, true),
+			AlterScriptDto.getInstance([ddlProvider.alterColumn(fullName, columnDefinition)], true, false),
+		];
+	};
+
 	function generateSqlAlterScript({
 		collectionSchema,
 		prevJsonSchema,
@@ -15,15 +33,15 @@ module.exports = (app, ddlProvider) => {
 		schemaName,
 	}) {
 		const schemaData = { schemaName };
-		const sqlScript = [];
-
 		const columnDefinition = createColumnDefinitionBySchema({
-			name: fullName,
+			name: columnName,
 			jsonSchema,
 			parentJsonSchema: collectionSchema,
 			ddlProvider,
 			schemaData,
 		});
+
+		let sqlScripts = [];
 
 		const isComputedRemoved = prevJsonSchema.computed && !jsonSchema.computed;
 		const isComputedEnabled = !prevJsonSchema.computed && jsonSchema.computed;
@@ -33,43 +51,15 @@ module.exports = (app, ddlProvider) => {
 			(prevJsonSchema.computedExpression !== jsonSchema.computedExpression ||
 				prevJsonSchema.persisted !== jsonSchema.persisted);
 
-		if (isComputedRemoved) {
-			sqlScript.push(
-				AlterScriptDto.getInstance([ddlProvider.dropColumn(fullName, columnName)], true, true),
-				AlterScriptDto.getInstance([ddlProvider.alterColumn(fullName, columnDefinition)], true, false),
-			);
+		if ((isComputedRemoved || isComputedModified) && !jsonSchema.computedExpression) {
+			sqlScripts = changeToNonComputed(fullName, columnName, columnDefinition);
 		}
 
-		if (isComputedEnabled && jsonSchema.computedExpression) {
-			sqlScript.push(
-				AlterScriptDto.getInstance([ddlProvider.dropColumn(fullName, columnName)], true, true),
-				AlterScriptDto.getInstance(
-					[ddlProvider.alterComputedColumn(fullName, columnName, columnDefinition)],
-					true,
-					false,
-				),
-			);
+		if ((isComputedEnabled || isComputedModified) && jsonSchema.computedExpression) {
+			sqlScripts = changeToComputed(fullName, columnName, columnDefinition);
 		}
 
-		if (isComputedModified) {
-			if (jsonSchema.computedExpression) {
-				sqlScript.push(
-					AlterScriptDto.getInstance([ddlProvider.dropColumn(fullName, columnName)], true, true),
-					AlterScriptDto.getInstance(
-						[ddlProvider.alterComputedColumn(fullName, columnName, columnDefinition)],
-						true,
-						false,
-					),
-				);
-			} else {
-				sqlScript.push(
-					AlterScriptDto.getInstance([ddlProvider.dropColumn(fullName, columnName)], true, true),
-					AlterScriptDto.getInstance([ddlProvider.alterColumn(fullName, columnDefinition)], true, false),
-				);
-			}
-		}
-
-		return sqlScript;
+		return sqlScripts;
 	}
 
 	const getChangedComputedColumnsScriptsDto = (collection, fullName, collectionSchema, schemaName) => {
