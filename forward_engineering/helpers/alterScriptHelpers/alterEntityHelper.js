@@ -9,6 +9,10 @@ module.exports = (app, options) => {
 	const { generateIdToNameHashTable, generateIdToActivatedHashTable } = app.require('@hackolade/ddl-fe-utils');
 	const { setIndexKeys, modifyGroupItems } = require('./common')(app);
 	const { getRenameColumnScriptsDto } = require('./columnHelpers/renameColumnHelpers')(app, ddlProvider);
+	const { getChangedComputedColumnsScriptsDto } = require('./columnHelpers/alterComputedColumnHelpr')(
+		app,
+		ddlProvider,
+	);
 	const { getChangeTypeScriptsDto } = require('./columnHelpers/alterTypeHelper')(app, ddlProvider);
 	const { AlterScriptDto } = require('./types/AlterScriptDto');
 	const { getModifyCheckConstraintScriptDtos } = require('./entityHelpers/checkConstraintHelper');
@@ -188,8 +192,19 @@ module.exports = (app, options) => {
 			collectionSchema,
 			schemaName,
 		);
+		const changedComputedScriptsDtos = getChangedComputedColumnsScriptsDto(
+			collection,
+			fullName,
+			collectionSchema,
+			schemaName,
+		);
 
-		return [...renameColumnScriptsDtos, ...changeTypeScriptsDtos, ...modifyNotNullScriptDtos].filter(Boolean);
+		return [
+			...renameColumnScriptsDtos,
+			...changeTypeScriptsDtos,
+			...modifyNotNullScriptDtos,
+			...changedComputedScriptsDtos,
+		].filter(Boolean);
 	};
 
 	const hydrateIndex =

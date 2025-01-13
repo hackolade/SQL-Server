@@ -158,6 +158,10 @@ module.exports = _ => {
 		return `[${name}]`;
 	};
 
+	const wrapInBracketsIfNecessary = name => {
+		return name.replace(/^(?!\().*?(?<!\))$/, '($&)');
+	};
+
 	const escapeSpecialCharacters = (name = '') => {
 		return name.replace(/'/g, "''");
 	};
@@ -216,6 +220,7 @@ module.exports = _ => {
 		commentDeactivatedInlineKeys,
 		buildScript,
 		wrapInBrackets,
+		wrapInBracketsIfNecessary,
 		escapeSpecialCharacters,
 		getFullEntityName,
 		getFullTableName,

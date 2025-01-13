@@ -83,6 +83,8 @@ module.exports = {
 
 	alterColumn: 'ALTER COLUMN [${name}] ${type}${collation}${not_null}',
 
+	alterComputedColumn: 'ADD [${name}] AS ${expression}${persisted}',
+
 	renameColumn: "EXEC sp_rename '${fullTableName}.${oldColumnName}', '${newColumnName}', 'COLUMN';${terminator}",
 
 	dropView: 'DROP VIEW IF EXISTS ${name}${terminator}',

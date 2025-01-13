@@ -40,7 +40,7 @@ module.exports = (baseProvider, options, app) => {
 	const { wrapIfNotExistSchema, wrapIfNotExistDatabase, wrapIfNotExistTable, wrapIfNotExistView } =
 		require('./helpers/ifNotExistStatementHelper')(app);
 	const { getPartitionedTables, getCreateViewData } = require('./helpers/viewHelper')(app);
-	const { getFullTableName, escapeSpecialCharacters } = require('./utils/general')(_);
+	const { getFullTableName, escapeSpecialCharacters, wrapInBracketsIfNecessary } = require('./utils/general')(_);
 
 	const terminator = getTerminator(options);
 
@@ -180,7 +180,7 @@ module.exports = (baseProvider, options, app) => {
 		createComputedColumn({ name, computedExpression, persisted }) {
 			return assignTemplates(templates.computedColumnDefinition, {
 				name,
-				expression: computedExpression.replace(/^(?!\().*?(?<!\))$/, '($&)'),
+				expression: wrapInBracketsIfNecessary(computedExpression),
 				persisted: persisted ? ' PERSISTED' : '',
 			});
 		},
@@ -741,6 +741,22 @@ module.exports = (baseProvider, options, app) => {
 				name: columnDefinition.name,
 				type: decorateType(type, columnDefinition),
 				not_null: notNull,
+			});
+
+			return assignTemplates(templates.alterTable, {
+				tableName: fullTableName,
+				command,
+				terminator,
+			});
+		},
+
+		alterComputedColumn(fullTableName, columnName, columnDefinition) {
+			const { computedExpression, persisted } = columnDefinition;
+
+			const command = assignTemplates(templates.alterComputedColumn, {
+				name: columnName,
+				expression: wrapInBracketsIfNecessary(computedExpression),
+				persisted: persisted ? ' PERSISTED' : '',
 			});
 
 			return assignTemplates(templates.alterTable, {
