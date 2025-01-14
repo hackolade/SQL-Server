@@ -40,7 +40,7 @@ module.exports = (baseProvider, options, app) => {
 	const { wrapIfNotExistSchema, wrapIfNotExistDatabase, wrapIfNotExistTable, wrapIfNotExistView } =
 		require('./helpers/ifNotExistStatementHelper')(app);
 	const { getPartitionedTables, getCreateViewData } = require('./helpers/viewHelper')(app);
-	const { getFullTableName, escapeSpecialCharacters } = require('./utils/general')(_);
+	const { getFullTableName, escapeSpecialCharacters, wrapInBracketsIfNecessary } = require('./utils/general')(_);
 
 	const terminator = getTerminator(options);
 
@@ -177,6 +177,14 @@ module.exports = (baseProvider, options, app) => {
 				: fullTableStatement;
 		},
 
+		createComputedColumn({ name, computedExpression, persisted }) {
+			return assignTemplates(templates.computedColumnDefinition, {
+				name,
+				expression: wrapInBracketsIfNecessary(computedExpression),
+				persisted: persisted ? ' PERSISTED' : '',
+			});
+		},
+
 		convertColumnDefinition(columnDefinition) {
 			const type = hasType(columnDefinition.type)
 				? _.toUpper(columnDefinition.type)
@@ -207,19 +215,28 @@ module.exports = (baseProvider, options, app) => {
 				columnDefinition.isHidden,
 			);
 
-			const statement = assignTemplates(templates.columnDefinition, {
-				name: columnDefinition.name,
-				type: decorateType(type, columnDefinition),
-				primary_key: primaryKey + unique,
-				not_null: notNull,
-				default: defaultValue,
-				sparse,
-				maskedWithFunction,
-				encryptedWith,
-				terminator,
-				temporalTableTime,
-				...identityContainer,
-			});
+			const { name, persisted, computed, computedExpression } = columnDefinition;
+
+			const statement =
+				computed && computedExpression
+					? this.createComputedColumn({
+							name,
+							computedExpression,
+							persisted,
+						})
+					: assignTemplates(templates.columnDefinition, {
+							name,
+							type: decorateType(type, columnDefinition),
+							primary_key: primaryKey + unique,
+							not_null: notNull,
+							default: defaultValue,
+							sparse,
+							maskedWithFunction,
+							encryptedWith,
+							terminator,
+							temporalTableTime,
+							...identityContainer,
+						});
 
 			return commentIfDeactivated(statement, { isActivated: columnDefinition.isActivated });
 		},
@@ -464,6 +481,9 @@ module.exports = (baseProvider, options, app) => {
 				encryption,
 				hasMaxLength: columnDefinition.hasMaxLength || jsonSchema.type === 'jsonObject',
 				comment: jsonSchema.description,
+				computed: jsonSchema.computed,
+				computedExpression: jsonSchema.computedExpression,
+				persisted: jsonSchema.persisted,
 				...(canHaveIdentity(jsonSchema.mode) && {
 					identity: {
 						seed: Number(_.get(jsonSchema, 'identity.identitySeed', 0)),
@@ -721,6 +741,22 @@ module.exports = (baseProvider, options, app) => {
 				name: columnDefinition.name,
 				type: decorateType(type, columnDefinition),
 				not_null: notNull,
+			});
+
+			return assignTemplates(templates.alterTable, {
+				tableName: fullTableName,
+				command,
+				terminator,
+			});
+		},
+
+		alterComputedColumn(fullTableName, columnName, columnDefinition) {
+			const { computedExpression, persisted } = columnDefinition;
+
+			const command = assignTemplates(templates.alterComputedColumn, {
+				name: columnName,
+				expression: wrapInBracketsIfNecessary(computedExpression),
+				persisted: persisted ? ' PERSISTED' : '',
 			});
 
 			return assignTemplates(templates.alterTable, {

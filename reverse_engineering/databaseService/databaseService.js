@@ -642,12 +642,18 @@ const getTableColumnsDescription = async ({ client, dbName, tableName, schemaNam
 			SELECT
 				st.name [Table],
 				sc.name [Column],
-				sep.value [Description]
+				sep.value [Description],
+				sc.is_computed AS [Computed],
+				cc.definition AS [Computed_Expression],
+				cc.is_persisted AS [Persisted]
 			FROM sys.tables st
 			INNER JOIN sys.columns sc ON st.object_id = sc.object_id
 			LEFT JOIN sys.extended_properties sep ON st.object_id = sep.major_id
 				AND sc.column_id = sep.minor_id
 				AND sep.name = 'MS_Description'
+			LEFT JOIN sys.computed_columns cc
+				ON sc.object_id = cc.object_id
+				AND sc.column_id = cc.column_id
 			WHERE st.name = ${tableName}
 			AND st.schema_id=SCHEMA_ID(${schemaName})
 	`,

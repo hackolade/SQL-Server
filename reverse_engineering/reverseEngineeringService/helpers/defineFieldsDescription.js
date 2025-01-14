@@ -8,6 +8,9 @@ const defineFieldsDescription = columnsInfo => jsonSchema =>
 					[column.Column]: {
 						...jsonSchemaAcc.properties[column.Column],
 						description: column.Description || '',
+						computed: column.Computed,
+						computedExpression: column.Computed_Expression,
+						persisted: column.Persisted,
 					},
 				},
 			}),
