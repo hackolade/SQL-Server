@@ -197,6 +197,10 @@ module.exports = _ => {
 			return !_.isEqual(newProperty, oldProperty);
 		};
 
+	const compareObjectsByProperties = (obj1, obj2, properties) => {
+		return properties.some(prop => obj1[prop] !== obj2[prop]);
+	};
+
 	const getSchemaOfAlterCollection = collection => {
 		return { ...collection, ...(_.omit(collection?.role, 'properties') || {}) };
 	};
@@ -231,5 +235,6 @@ module.exports = _ => {
 		getSchemaOfAlterCollection,
 		getNamePrefixedWithSchemaName,
 		buildDefaultPKName,
+		compareObjectsByProperties,
 	};
 };

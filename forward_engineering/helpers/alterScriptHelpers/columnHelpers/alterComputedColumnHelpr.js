@@ -5,6 +5,7 @@ const _ = require('lodash');
 module.exports = (app, ddlProvider) => {
 	const { createColumnDefinitionBySchema } = require('./createColumnDefinition')(_);
 	const { AlterScriptDto } = require('../types/AlterScriptDto');
+	const { compareObjectsByProperties } = require('../../../utils/general')(_);
 
 	const changeToComputed = (fullName, columnName, columnDefinition) => {
 		return [
@@ -24,8 +25,7 @@ module.exports = (app, ddlProvider) => {
 		];
 	};
 
-	const getIsComputedModified = (obj1, obj2) =>
-		['computedExpression', 'persisted', 'unique', 'primaryKey'].some(prop => obj1[prop] !== obj2[prop]);
+	const propsToDetectChange = ['computed', 'computedExpression', 'persisted', 'unique', 'primaryKey'];
 
 	const generateSqlAlterScript = ({
 		collectionSchema,
@@ -54,7 +54,9 @@ module.exports = (app, ddlProvider) => {
 		const isComputedModified =
 			prevJsonSchema.computed &&
 			jsonSchema.computed &&
-			(getIsComputedModified(prevJsonSchema, jsonSchema) || toAddNotNull || toRemoveNotNull);
+			(compareObjectsByProperties(prevJsonSchema, jsonSchema, propsToDetectChange) ||
+				toAddNotNull ||
+				toRemoveNotNull);
 
 		if ((isComputedRemoved || isComputedModified) && !jsonSchema.computedExpression) {
 			sqlScripts = changeToNonComputed(fullName, columnName, columnDefinition);
