@@ -22,7 +22,7 @@ const getModifyNonNullColumnsScriptDtos = (_, ddlProvider) => (collection, colle
 			const oldName = jsonSchema.compMod.oldField.name;
 			const shouldRemoveForOldName = columnNamesToRemoveNotNullConstraint.includes(oldName);
 			const shouldAddForNewName = columnNamesToAddNotNullConstraint.includes(name);
-			return shouldAddForNewName && !shouldRemoveForOldName;
+			return shouldAddForNewName && !shouldRemoveForOldName && !jsonSchema.computed;
 		})
 		.map(([columnName, jsonSchema]) => {
 			const columnDefinition = createColumnDefinitionBySchema({
@@ -42,7 +42,8 @@ const getModifyNonNullColumnsScriptDtos = (_, ddlProvider) => (collection, colle
 			const oldName = jsonSchema.compMod.oldField.name;
 			const shouldRemoveForOldName = columnNamesToRemoveNotNullConstraint.includes(oldName);
 			const shouldAddForNewName = columnNamesToAddNotNullConstraint.includes(name);
-			return shouldRemoveForOldName && !shouldAddForNewName;
+
+			return shouldRemoveForOldName && !shouldAddForNewName && !jsonSchema.computed;
 		})
 		.map(([name, jsonSchema]) => {
 			const columnDefinition = createColumnDefinitionBySchema({
