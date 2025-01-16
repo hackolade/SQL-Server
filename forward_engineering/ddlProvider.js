@@ -178,17 +178,17 @@ module.exports = (baseProvider, options, app) => {
 		},
 
 		createComputedColumn({ name, computedExpression, persisted, primaryKey, unique, notNull }) {
-			let primary_key = persisted ? primaryKey : '';
+			let key = persisted ? primaryKey : '';
 
-			if (!primary_key) {
-				primary_key = unique;
+			if (!key) {
+				key = unique;
 			}
 
 			return assignTemplates(templates.computedColumnDefinition, {
 				name,
 				expression: wrapInBracketsIfNecessary(computedExpression.trim()),
 				persisted: persisted ? ' PERSISTED' : '',
-				primary_key,
+				key,
 				not_null: notNull,
 			});
 		},
