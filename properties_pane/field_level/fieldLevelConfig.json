@@ -592,15 +592,28 @@ making sure that you maintain a proper JSON format.
 							}
 						},
 						{
-							"type": "and",
+							"type": "or",
 							"values": [
 								{
 									"key": "computed",
-									"value": true
+									"value": false
 								},
 								{
-									"key": "persisted",
-									"value": true
+									"key": "computed",
+									"value": null
+								},
+								{
+									"type": "and",
+									"values": [
+										{
+											"key": "computed",
+											"value": true
+										},
+										{
+											"key": "persisted",
+											"value": true
+										}
+									]
 								}
 							]
 						}
@@ -1300,15 +1313,28 @@ making sure that you maintain a proper JSON format.
 							}
 						},
 						{
-							"type": "and",
+							"type": "or",
 							"values": [
 								{
 									"key": "computed",
-									"value": true
+									"value": false
 								},
 								{
-									"key": "persisted",
-									"value": true
+									"key": "computed",
+									"value": null
+								},
+								{
+									"type": "and",
+									"values": [
+										{
+											"key": "computed",
+											"value": true
+										},
+										{
+											"key": "persisted",
+											"value": true
+										}
+									]
 								}
 							]
 						}
@@ -1972,15 +1998,28 @@ making sure that you maintain a proper JSON format.
 							}
 						},
 						{
-							"type": "and",
+							"type": "or",
 							"values": [
 								{
 									"key": "computed",
-									"value": true
+									"value": false
 								},
 								{
-									"key": "persisted",
-									"value": true
+									"key": "computed",
+									"value": null
+								},
+								{
+									"type": "and",
+									"values": [
+										{
+											"key": "computed",
+											"value": true
+										},
+										{
+											"key": "persisted",
+											"value": true
+										}
+									]
 								}
 							]
 						}
@@ -2634,15 +2673,28 @@ making sure that you maintain a proper JSON format.
 							}
 						},
 						{
-							"type": "and",
+							"type": "or",
 							"values": [
 								{
 									"key": "computed",
-									"value": true
+									"value": false
 								},
 								{
-									"key": "persisted",
-									"value": true
+									"key": "computed",
+									"value": null
+								},
+								{
+									"type": "and",
+									"values": [
+										{
+											"key": "computed",
+											"value": true
+										},
+										{
+											"key": "persisted",
+											"value": true
+										}
+									]
 								}
 							]
 						}
@@ -3345,15 +3397,28 @@ making sure that you maintain a proper JSON format.
 							}
 						},
 						{
-							"type": "and",
+							"type": "or",
 							"values": [
 								{
 									"key": "computed",
-									"value": true
+									"value": false
 								},
 								{
-									"key": "persisted",
-									"value": true
+									"key": "computed",
+									"value": null
+								},
+								{
+									"type": "and",
+									"values": [
+										{
+											"key": "computed",
+											"value": true
+										},
+										{
+											"key": "persisted",
+											"value": true
+										}
+									]
 								}
 							]
 						}
@@ -4009,15 +4074,28 @@ making sure that you maintain a proper JSON format.
 							}
 						},
 						{
-							"type": "and",
+							"type": "or",
 							"values": [
 								{
 									"key": "computed",
-									"value": true
+									"value": false
 								},
 								{
-									"key": "persisted",
-									"value": true
+									"key": "computed",
+									"value": null
+								},
+								{
+									"type": "and",
+									"values": [
+										{
+											"key": "computed",
+											"value": true
+										},
+										{
+											"key": "persisted",
+											"value": true
+										}
+									]
 								}
 							]
 						}
@@ -4658,15 +4736,28 @@ making sure that you maintain a proper JSON format.
 							}
 						},
 						{
-							"type": "and",
+							"type": "or",
 							"values": [
 								{
 									"key": "computed",
-									"value": true
+									"value": false
 								},
 								{
-									"key": "persisted",
-									"value": true
+									"key": "computed",
+									"value": null
+								},
+								{
+									"type": "and",
+									"values": [
+										{
+											"key": "computed",
+											"value": true
+										},
+										{
+											"key": "persisted",
+											"value": true
+										}
+									]
 								}
 							]
 						}
