@@ -590,6 +590,19 @@ making sure that you maintain a proper JSON format.
 								"key": "unique",
 								"value": true
 							}
+						},
+						{
+							"type": "and",
+							"values": [
+								{
+									"key": "computed",
+									"value": true
+								},
+								{
+									"key": "persisted",
+									"value": true
+								}
+							]
 						}
 					]
 				}
@@ -1285,6 +1298,19 @@ making sure that you maintain a proper JSON format.
 								"key": "unique",
 								"value": true
 							}
+						},
+						{
+							"type": "and",
+							"values": [
+								{
+									"key": "computed",
+									"value": true
+								},
+								{
+									"key": "persisted",
+									"value": true
+								}
+							]
 						}
 					]
 				}
@@ -1944,6 +1970,19 @@ making sure that you maintain a proper JSON format.
 								"key": "unique",
 								"value": true
 							}
+						},
+						{
+							"type": "and",
+							"values": [
+								{
+									"key": "computed",
+									"value": true
+								},
+								{
+									"key": "persisted",
+									"value": true
+								}
+							]
 						}
 					]
 				}
@@ -2593,6 +2632,19 @@ making sure that you maintain a proper JSON format.
 								"key": "unique",
 								"value": true
 							}
+						},
+						{
+							"type": "and",
+							"values": [
+								{
+									"key": "computed",
+									"value": true
+								},
+								{
+									"key": "persisted",
+									"value": true
+								}
+							]
 						}
 					]
 				}
@@ -3291,6 +3343,19 @@ making sure that you maintain a proper JSON format.
 								"key": "unique",
 								"value": true
 							}
+						},
+						{
+							"type": "and",
+							"values": [
+								{
+									"key": "computed",
+									"value": true
+								},
+								{
+									"key": "persisted",
+									"value": true
+								}
+							]
 						}
 					]
 				}
@@ -3942,6 +4007,19 @@ making sure that you maintain a proper JSON format.
 								"key": "unique",
 								"value": true
 							}
+						},
+						{
+							"type": "and",
+							"values": [
+								{
+									"key": "computed",
+									"value": true
+								},
+								{
+									"key": "persisted",
+									"value": true
+								}
+							]
 						}
 					]
 				}
@@ -4578,6 +4656,19 @@ making sure that you maintain a proper JSON format.
 								"key": "unique",
 								"value": true
 							}
+						},
+						{
+							"type": "and",
+							"values": [
+								{
+									"key": "computed",
+									"value": true
+								},
+								{
+									"key": "persisted",
+									"value": true
+								}
+							]
 						}
 					]
 				}
