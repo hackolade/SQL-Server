@@ -177,11 +177,19 @@ module.exports = (baseProvider, options, app) => {
 				: fullTableStatement;
 		},
 
-		createComputedColumn({ name, computedExpression, persisted }) {
+		createComputedColumn({ name, computedExpression, persisted, primaryKey, unique, notNull }) {
+			let key = persisted ? primaryKey : '';
+
+			if (!key) {
+				key = unique;
+			}
+
 			return assignTemplates(templates.computedColumnDefinition, {
 				name,
-				expression: wrapInBracketsIfNecessary(computedExpression),
+				expression: wrapInBracketsIfNecessary(computedExpression.trim()),
 				persisted: persisted ? ' PERSISTED' : '',
+				key,
+				not_null: notNull,
 			});
 		},
 
@@ -223,6 +231,9 @@ module.exports = (baseProvider, options, app) => {
 							name,
 							computedExpression,
 							persisted,
+							primaryKey,
+							unique,
+							notNull,
 						})
 					: assignTemplates(templates.columnDefinition, {
 							name,
@@ -750,13 +761,9 @@ module.exports = (baseProvider, options, app) => {
 			});
 		},
 
-		alterComputedColumn(fullTableName, columnName, columnDefinition) {
-			const { computedExpression, persisted } = columnDefinition;
-
-			const command = assignTemplates(templates.alterComputedColumn, {
-				name: columnName,
-				expression: wrapInBracketsIfNecessary(computedExpression),
-				persisted: persisted ? ' PERSISTED' : '',
+		alterComputedColumn(fullTableName, name, columnDefinition) {
+			const command = assignTemplates(templates.addColumn, {
+				script: this.convertColumnDefinition(columnDefinition),
 			});
 
 			return assignTemplates(templates.alterTable, {

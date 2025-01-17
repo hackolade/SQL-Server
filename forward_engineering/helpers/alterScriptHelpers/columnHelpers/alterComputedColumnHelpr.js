@@ -5,6 +5,7 @@ const _ = require('lodash');
 module.exports = (app, ddlProvider) => {
 	const { createColumnDefinitionBySchema } = require('./createColumnDefinition')(_);
 	const { AlterScriptDto } = require('../types/AlterScriptDto');
+	const { compareObjectsByProperties } = require('../../../utils/general')(_);
 
 	const changeToComputed = (fullName, columnName, columnDefinition) => {
 		return [
@@ -24,6 +25,8 @@ module.exports = (app, ddlProvider) => {
 		];
 	};
 
+	const propsToDetectChange = ['computed', 'computedExpression', 'persisted', 'unique', 'primaryKey'];
+
 	const generateSqlAlterScript = ({
 		collectionSchema,
 		prevJsonSchema,
@@ -31,6 +34,8 @@ module.exports = (app, ddlProvider) => {
 		fullName,
 		columnName,
 		schemaName,
+		toAddNotNull,
+		toRemoveNotNull,
 	}) => {
 		const schemaData = { schemaName };
 		const columnDefinition = createColumnDefinitionBySchema({
@@ -40,6 +45,7 @@ module.exports = (app, ddlProvider) => {
 			ddlProvider,
 			schemaData,
 		});
+		columnDefinition.nullable = toRemoveNotNull;
 
 		let sqlScripts = [];
 
@@ -48,8 +54,9 @@ module.exports = (app, ddlProvider) => {
 		const isComputedModified =
 			prevJsonSchema.computed &&
 			jsonSchema.computed &&
-			(prevJsonSchema.computedExpression !== jsonSchema.computedExpression ||
-				prevJsonSchema.persisted !== jsonSchema.persisted);
+			(compareObjectsByProperties(prevJsonSchema, jsonSchema, propsToDetectChange) ||
+				toAddNotNull ||
+				toRemoveNotNull);
 
 		if ((isComputedRemoved || isComputedModified) && !jsonSchema.computedExpression) {
 			sqlScripts = changeToNonComputed(fullName, columnName, columnDefinition);
@@ -67,6 +74,14 @@ module.exports = (app, ddlProvider) => {
 			_.toPairs(collection.properties).reduce((result, [columnName, jsonSchema]) => {
 				const oldJsonSchema = _.omit(collection.role?.properties?.[columnName], ['compMod']);
 
+				const currentRequiredColumnNames = collection.required || [];
+				const previousRequiredColumnNames = collection.role.required || [];
+
+				const toAddNotNull =
+					_.difference(currentRequiredColumnNames, previousRequiredColumnNames).indexOf(columnName) !== -1;
+				const toRemoveNotNull =
+					_.difference(previousRequiredColumnNames, currentRequiredColumnNames).indexOf(columnName) !== -1;
+
 				result.push(
 					generateSqlAlterScript({
 						collectionSchema,
@@ -75,6 +90,8 @@ module.exports = (app, ddlProvider) => {
 						fullName,
 						columnName,
 						schemaName,
+						toAddNotNull,
+						toRemoveNotNull,
 					}),
 				);
 
